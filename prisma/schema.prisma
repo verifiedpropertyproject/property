@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // Pooled connection for normal queries (required on serverless platforms like Vercel,
+  // since each request may get a fresh connection — a direct Postgres connection per
+  // invocation would exhaust the database's connection limit fast).
+  url       = env("DATABASE_URL")
+  // Unpooled/direct connection, used only for migrations. Most pooling proxies (PgBouncer,
+  // Neon's pooler, Supabase's pooler) don't support the prepared statements Prisma Migrate
+  // needs, so migrations must go straight to the database instead of through the pooler.
+  directUrl = env("DIRECT_URL")
+}
+
+// role/type/status fields are plain strings rather than native Postgres enums, validated in
+// application code. This was originally a SQLite constraint (no enum support there); kept as
+// strings after the Postgres switch too, since the whole app already treats them this way and
+// converting now would touch a lot of code for no functional benefit.
+// role:         "ADMIN" | "BUYER" | "OWNER" | "AGENT"
+//   OWNER lists their own property directly. AGENT lists on behalf of someone else
+//   and must record who they're representing (see Property.representingName below).
+// propertyType: "HOUSE" | "APARTMENT" | "LAND" | "COMMERCIAL" | "OTHER"
+//   "OTHER" requires propertyTypeOther to be set (what it actually is).
+// listingType:  "SALE" | "RENT"
+// status:       "PENDING" | "APPROVED" | "REJECTED" | "CHANGES_REQUESTED"
+//   This is the admin review workflow status — separate from availabilityStatus below.
+// availabilityStatus: "AVAILABLE" | "RESERVED" | "SOLD" | "RENTED"
+//   Set by the lister (Owner/Agent) or overridden by an admin. Changing this never affects
+//   the review `status` above — a listing can be re-marked Available/Sold/etc. freely without
+//   triggering re-review, unlike editing the listing's core details.
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  phone         String?
+  password      String?
+  role          String?
+  image         String?
+  emailVerified DateTime?
+  suspended     Boolean   @default(false)
+  // Account-level "Verified" badge for Owners/Agents (identity/legitimacy trust signal),
+  // admin-controlled and distinct from Property.verified (which is per-listing).
+  verified      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  properties              Property[]
+  documents               PropertyDocument[]
+  enquiries               Enquiry[]
+  savedProperties         SavedProperty[]
+  sentNotifications       Notification[]           @relation("sender")
+  receivedNotifications   Notification[]           @relation("receiver")
+  verificationTokens      EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+}
+
+// MVP note: there's no real email service wired up. A token is generated and
+// its verification link is shown directly on screen (registration success page,
+// and a "resend" action on the dashboard) as a stand-in for actually emailing it.
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Same MVP fallback pattern as EmailVerificationToken: link is emailed if SMTP
+// is configured, otherwise shown directly on screen.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique @default(cuid())
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Property {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  location     String
+  propertyType String
+  // Only set (and required) when propertyType is "OTHER" — what it actually is.
+  propertyTypeOther String?
+  listingType  String
+  price        Float
+  bedrooms     Int?
+  bathrooms    Int?
+  acreage      Float?
+  // A path under /public (e.g. "/uploads/properties/<id>/<file>.jpg") produced by a real
+  // upload — not a user-supplied external URL. See lib/propertyImageStorage.ts.
+  imageUrl     String?
+  status       String   @default("PENDING")
+  adminNote    String?
+  verified     Boolean  @default(false)
+  featured     Boolean  @default(false)
+  views        Int      @default(0)
+  // Off by default — an admin must explicitly opt a listing in before the lister's contact
+  // (phone) is shown to the public on that listing's page.
+  showContact  Boolean  @default(false)
+  availabilityStatus String @default("AVAILABLE")
+  createdAt    DateTime @default(now())
+
+  // Only set (and required) when listed by an AGENT — who they're selling on behalf of.
+  representingName    String?
+  representingContact String?
+
+  sellerId String
+  // Deleting a seller removes their listings too (which in turn cascades to
+  // that listing's own enquiries/saves via the rules below).
+  seller   User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  enquiries     Enquiry[]
+  savedBy       SavedProperty[]
+  notifications Notification[]
+  documents     PropertyDocument[]
+}
+
+// documentType: "TITLE_DEED" | "OFFICIAL_SEARCH" | "OWNERSHIP_DOCUMENT" | "SALE_AGREEMENT" |
+//               "AUTHORIZATION_LETTER" | "AGENCY_MANAGEMENT_AGREEMENT" |
+//               "AGENCY_COMPANY_DOCUMENT" | "AGENT_LICENSE" | "OTHER" |
+//               null (unspecified — the type is optional)
+// See lib/documentTypes.ts for the authoritative list and display labels.
+//
+// Files are stored on disk under a private `uploads/` directory (NOT under `public/`, so they
+// can't be fetched by guessing a URL) and are only ever served through an authenticated route
+// that checks the requester is the property's own lister or an admin — these are sensitive
+// ownership documents, not public listing photos.
+model PropertyDocument {
+  id           String   @id @default(cuid())
+  documentType String?
+  fileName     String // original filename, shown to users
+  storedName   String // randomized filename actually used on disk, to avoid collisions
+  mimeType     String?
+  fileSize     Int
+  createdAt    DateTime @default(now())
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+}
+
+// status: "PENDING" | "APPROVED" | "REJECTED" — an admin must approve an enquiry
+// before the seller can see it.
+model Enquiry {
+  id        String   @id @default(cuid())
+  message   String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  buyerId String
+  buyer   User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+}
+
+model SavedProperty {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  buyerId String
+  buyer   User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([buyerId, propertyId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  senderId   String
+  receiverId String
+  propertyId String?
+
+  // Deleting either party in a notification removes it too — there's no "deleted user"
+  // placeholder concept in this MVP, so keeping an orphaned notification around isn't useful.
+  sender   User      @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User      @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+}

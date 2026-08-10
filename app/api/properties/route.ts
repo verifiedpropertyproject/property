@@ -1,0 +1,188 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/lib/apiError";
+import { savePropertyImage } from "@/lib/propertyImageStorage";
+import {
+  PROPERTY_TYPES,
+  LISTING_TYPES,
+  PRICE_MIN,
+  PRICE_MAX,
+  BEDROOMS_MAX,
+  BATHROOMS_MAX,
+  ACREAGE_MAX,
+  TITLE_MIN_LENGTH,
+  TITLE_MAX_LENGTH,
+  DESCRIPTION_MIN_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  LOCATION_MIN_LENGTH,
+  IMAGE_MAX_SIZE_BYTES,
+  ALLOWED_IMAGE_MIME_TYPES,
+} from "@/lib/propertyConstants";
+import type { User } from "@prisma/client";
+
+function str(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+    }
+
+    if (!["OWNER", "AGENT"].includes(session.user.role || "")) {
+      return NextResponse.json({ error: "Only property owners and agents can list properties." }, { status: 403 });
+    }
+
+    const formData = await req.formData();
+
+    const title = str(formData, "title");
+    const description = str(formData, "description");
+    const location = str(formData, "location");
+    const propertyType = str(formData, "propertyType");
+    const propertyTypeOther = str(formData, "propertyTypeOther");
+    const listingType = str(formData, "listingType");
+    const priceRaw = str(formData, "price");
+    const bedroomsRaw = str(formData, "bedrooms");
+    const bathroomsRaw = str(formData, "bathrooms");
+    const acreageRaw = str(formData, "acreage");
+    const representingName = str(formData, "representingName");
+    const representingContact = str(formData, "representingContact");
+    const imageFile = formData.get("image");
+
+    if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
+      return NextResponse.json(
+        { error: "Title, description, location, property type, listing type, and price are required." },
+        { status: 400 }
+      );
+    }
+
+    if (title.length < TITLE_MIN_LENGTH || title.length > TITLE_MAX_LENGTH) {
+      return NextResponse.json(
+        { error: `Title must be between ${TITLE_MIN_LENGTH} and ${TITLE_MAX_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
+    if (description.length < DESCRIPTION_MIN_LENGTH || description.length > DESCRIPTION_MAX_LENGTH) {
+      return NextResponse.json(
+        {
+          error: `Description must be between ${DESCRIPTION_MIN_LENGTH} and ${DESCRIPTION_MAX_LENGTH} characters — give buyers enough to go on.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    if (location.length < LOCATION_MIN_LENGTH) {
+      return NextResponse.json({ error: `Location must be at least ${LOCATION_MIN_LENGTH} characters.` }, { status: 400 });
+    }
+
+    if (!(PROPERTY_TYPES as readonly string[]).includes(propertyType)) {
+      return NextResponse.json({ error: "Invalid property type." }, { status: 400 });
+    }
+
+    if (propertyType === "OTHER" && !propertyTypeOther) {
+      return NextResponse.json(
+        { error: "Since you selected \"Other\", please specify what type of property it is." },
+        { status: 400 }
+      );
+    }
+
+    if (!(LISTING_TYPES as readonly string[]).includes(listingType)) {
+      return NextResponse.json({ error: "Invalid listing type." }, { status: 400 });
+    }
+
+    // Agents are selling on someone else's behalf, so they must say who that is.
+    if (session.user.role === "AGENT" && !representingName) {
+      return NextResponse.json(
+        { error: "As an agent, you must state who you're representing (the property owner's name)." },
+        { status: 400 }
+      );
+    }
+
+    const parsedPrice = Number(priceRaw);
+    if (Number.isNaN(parsedPrice) || parsedPrice < PRICE_MIN || parsedPrice > PRICE_MAX) {
+      return NextResponse.json(
+        { error: `Price must be between KSh ${PRICE_MIN.toLocaleString()} and KSh ${PRICE_MAX.toLocaleString()}.` },
+        { status: 400 }
+      );
+    }
+
+    const parsedBedrooms = bedroomsRaw ? Number(bedroomsRaw) : null;
+    const parsedBathrooms = bathroomsRaw ? Number(bathroomsRaw) : null;
+    const parsedAcreage = acreageRaw ? Number(acreageRaw) : null;
+
+    if (parsedBedrooms !== null && (Number.isNaN(parsedBedrooms) || parsedBedrooms < 0 || parsedBedrooms > BEDROOMS_MAX)) {
+      return NextResponse.json({ error: `Bedrooms must be between 0 and ${BEDROOMS_MAX}.` }, { status: 400 });
+    }
+    if (
+      parsedBathrooms !== null &&
+      (Number.isNaN(parsedBathrooms) || parsedBathrooms < 0 || parsedBathrooms > BATHROOMS_MAX)
+    ) {
+      return NextResponse.json({ error: `Bathrooms must be between 0 and ${BATHROOMS_MAX}.` }, { status: 400 });
+    }
+    if (parsedAcreage !== null && (Number.isNaN(parsedAcreage) || parsedAcreage <= 0 || parsedAcreage > ACREAGE_MAX)) {
+      return NextResponse.json({ error: `Acreage must be greater than 0 and at most ${ACREAGE_MAX}.` }, { status: 400 });
+    }
+
+    if (!(imageFile instanceof File) || imageFile.size === 0) {
+      return NextResponse.json({ error: "A photo is required for the listing." }, { status: 400 });
+    }
+    if (imageFile.size > IMAGE_MAX_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: `Image is too large. Max size is ${IMAGE_MAX_SIZE_BYTES / (1024 * 1024)}MB.` },
+        { status: 400 }
+      );
+    }
+    if (!ALLOWED_IMAGE_MIME_TYPES.includes(imageFile.type)) {
+      return NextResponse.json({ error: "Image must be a JPEG, PNG, or WEBP file." }, { status: 400 });
+    }
+
+    const property = await prisma.property.create({
+      data: {
+        title,
+        description,
+        location,
+        propertyType,
+        propertyTypeOther: propertyType === "OTHER" ? propertyTypeOther : null,
+        listingType,
+        price: parsedPrice,
+        bedrooms: parsedBedrooms,
+        bathrooms: parsedBathrooms,
+        acreage: parsedAcreage,
+        status: "PENDING",
+        sellerId: session.user.id,
+        // Only meaningful for agent listings — left null for owner listings.
+        representingName: session.user.role === "AGENT" ? representingName : null,
+        representingContact: session.user.role === "AGENT" && representingContact ? representingContact : null,
+      },
+    });
+
+    const imageUrl = await savePropertyImage(imageFile, property.id);
+    await prisma.property.update({ where: { id: property.id }, data: { imageUrl } });
+    property.imageUrl = imageUrl;
+
+    // Notify every admin that a new property needs review
+    const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
+
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map((admin: User) => ({
+          message: `${session.user.name || session.user.email} listed a new property for review: "${title}"`,
+          senderId: session.user.id,
+          receiverId: admin.id,
+          propertyId: property.id,
+        })),
+      });
+    }
+
+    return NextResponse.json(property, { status: 201 });
+  } catch (err) {
+    return handleApiError(err);
+  }
+}
