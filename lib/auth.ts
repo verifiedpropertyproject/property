@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import type { Role } from "@/types/next-auth";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -79,7 +80,7 @@ export const authOptions: NextAuthOptions = {
           const dbUser = await prisma.user.findUnique({ where: { email } });
           if (dbUser) {
             token.id = dbUser.id;
-            token.role = dbUser.role;
+            token.role = dbUser.role as Role | null;
           }
         }
       }
