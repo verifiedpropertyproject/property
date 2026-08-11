@@ -6,7 +6,7 @@ export { DOCUMENT_TYPES, DOCUMENT_TYPE_LABELS } from "@/lib/documentTypes";
 
 // Deliberately not under /public — files are only ever reachable through the
 // authenticated download route (app/api/documents/[id]/route.ts), not by URL.
-// Local-disk fallback root, used when BLOB_READ_WRITE_TOKEN isn't set (e.g. local dev).
+// Local-disk fallback root, used when DOCUMENTS_BLOB_READ_WRITE_TOKEN isn't set (e.g. local dev).
 const UPLOAD_ROOT = path.join(process.cwd(), "uploads");
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB per file
@@ -30,8 +30,13 @@ export function randomStoredName(originalName: string) {
   return `${crypto.randomUUID()}${ext}`;
 }
 
+// Documents use their own PRIVATE blob store (separate from the public one used for property
+// photos), since a single Vercel Blob store can't mix public and private access. Its token is
+// under a custom prefix so it doesn't collide with the photos store's BLOB_READ_WRITE_TOKEN.
+const DOCUMENTS_BLOB_TOKEN = process.env.doc_READ_WRITE_TOKEN;
+
 function isBlobConfigured() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return Boolean(DOCUMENTS_BLOB_TOKEN);
 }
 
 function localPath(propertyId: string, storedName: string) {
@@ -55,6 +60,7 @@ export async function saveDocument(file: File, propertyId: string, storedName: s
     await put(blobPathname(propertyId, storedName), file, {
       access: "private",
       contentType: file.type,
+      token: DOCUMENTS_BLOB_TOKEN,
     });
     return;
   }
@@ -68,7 +74,10 @@ export async function saveDocument(file: File, propertyId: string, storedName: s
 export async function readDocument(propertyId: string, storedName: string): Promise<Buffer> {
   if (isBlobConfigured()) {
     const { get } = await import("@vercel/blob");
-    const result = await get(blobPathname(propertyId, storedName), { access: "private" });
+    const result = await get(blobPathname(propertyId, storedName), {
+      access: "private",
+      token: DOCUMENTS_BLOB_TOKEN,
+    });
     if (!result || result.statusCode !== 200) {
       throw new Error("Document not found in storage.");
     }
@@ -90,7 +99,7 @@ export async function readDocument(propertyId: string, storedName: string): Prom
 export async function deleteDocument(propertyId: string, storedName: string): Promise<void> {
   if (isBlobConfigured()) {
     const { del } = await import("@vercel/blob");
-    await del(blobPathname(propertyId, storedName)).catch(() => {});
+    await del(blobPathname(propertyId, storedName), { token: DOCUMENTS_BLOB_TOKEN }).catch(() => {});
     return;
   }
 
