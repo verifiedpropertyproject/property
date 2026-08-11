@@ -38,7 +38,6 @@ const COLORS = {
   white: "#FFFFFF",
 };
 
-// Reusable field style so every input/select lines up the same way
 const fieldWrapperStyle: React.CSSProperties = {
   flex: "1 1 160px",
   minWidth: "140px",
@@ -59,6 +58,9 @@ const fieldInputStyle: React.CSSProperties = {
   border: `1px solid ${COLORS.border}`,
   width: "100%",
   color: COLORS.textDark,
+  boxSizing: "border-box",
+  fontSize: "14px",
+  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
 };
 
 export default async function Home({ searchParams }: { searchParams: SearchParams }) {
@@ -106,43 +108,134 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         backgroundColor: COLORS.pageBg,
         color: COLORS.textDark,
         fontFamily: "system-ui, -apple-system, sans-serif",
+        width: "100%",
         maxWidth: "1280px",
         margin: "0 auto",
-        padding: "24px",
+        padding: "clamp(16px, 4vw, 40px)",
+        boxSizing: "border-box",
+        overflowX: "hidden",
       }}
     >
+      {/* Global styles for hover states + animations (can't be done with inline style objects) */}
+      <style>{`
+        * { box-sizing: border-box; }
+
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .dk-hero { animation: fadeIn 0.5s ease both; }
+
+        .dk-card {
+          animation: fadeInUp 0.45s ease both;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .dk-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 12px 24px rgba(11,46,31,0.12);
+          border-color: ${COLORS.primaryGreen}55;
+        }
+
+        .dk-card-img-wrap { overflow: hidden; border-radius: 8px; }
+        .dk-card-img {
+          transition: transform 0.4s ease;
+        }
+        .dk-card:hover .dk-card-img {
+          transform: scale(1.06);
+        }
+
+        .dk-title {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          transition: color 0.2s ease;
+        }
+        .dk-card:hover .dk-title {
+          color: ${COLORS.primaryGreen};
+        }
+
+        .dk-btn {
+          transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+        }
+        .dk-btn:hover {
+          background-color: ${COLORS.primaryGreenHover};
+          box-shadow: 0 4px 12px rgba(31,122,76,0.35);
+        }
+        .dk-btn:active {
+          transform: scale(0.97);
+        }
+
+        .dk-link {
+          transition: color 0.2s ease;
+        }
+        .dk-link:hover {
+          color: ${COLORS.primaryGreenHover};
+          text-decoration: underline;
+        }
+
+        .dk-input:focus, .dk-input:focus-visible {
+          outline: none;
+          border-color: ${COLORS.primaryGreen} !important;
+          box-shadow: 0 0 0 3px ${COLORS.primaryGreen}22;
+        }
+
+        .dk-clear-link {
+          transition: opacity 0.2s ease;
+        }
+        .dk-clear-link:hover {
+          opacity: 0.7;
+        }
+      `}</style>
+
       {/* ---------- Hero: intro (1fr) + search panel (3fr), side by side on desktop ---------- */}
       <div
+        className="dk-hero"
         style={{
           display: "flex",
           flexWrap: "wrap",
-          gap: "32px",
+          gap: "28px",
           alignItems: "flex-start",
-          marginBottom: "24px",
+          marginBottom: "28px",
         }}
       >
         {/* Left column — intro / account access */}
-        <header style={{ flex: "1 1 280px", minWidth: "260px" }}>
-          <h1 style={{ color: COLORS.darkGreen, marginBottom: "10px", fontSize: "28px", lineHeight: 1.2 }}>
+        <header style={{ flex: "1 1 280px", minWidth: "0" }}>
+          <h1
+            style={{
+              color: COLORS.darkGreen,
+              marginBottom: "10px",
+              fontSize: "clamp(22px, 3vw, 28px)",
+              lineHeight: 1.25,
+              wordBreak: "break-word",
+            }}
+          >
             Kenya&apos;s Trusted Marketplace for Verified Properties
           </h1>
-          <p style={{ color: COLORS.textGray, margin: 0 }}>
+          <p style={{ color: COLORS.textGray, margin: 0, lineHeight: 1.6 }}>
             Buy and sell land, homes and commercial property with verified ownership and professional due diligence.
           </p>
 
           {session?.user ? (
             <p style={{ marginTop: "16px" }}>
-              <Link href="/dashboard" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
+              <Link href="/dashboard" className="dk-link" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
                 Go to your dashboard
               </Link>
             </p>
           ) : (
             <p style={{ marginTop: "16px" }}>
-              <Link href="/login" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
+              <Link href="/login" className="dk-link" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
                 Log in
               </Link>{" "}
               |{" "}
-              <Link href="/register" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
+              <Link href="/register" className="dk-link" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
                 Create an account
               </Link>
             </p>
@@ -153,11 +246,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         <section
           style={{
             flex: "3 1 560px",
-            minWidth: "300px",
+            minWidth: "0",
+            width: "100%",
             backgroundColor: COLORS.sectionBg,
             border: `1px solid ${COLORS.border}`,
-            borderRadius: "12px",
-            padding: "20px",
+            borderRadius: "14px",
+            padding: "clamp(16px, 3vw, 24px)",
           }}
         >
           <h2 style={{ color: COLORS.darkGreen, marginTop: 0, marginBottom: "14px", fontSize: "18px" }}>
@@ -165,13 +259,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </h2>
 
           <form method="get">
-            {/* Fields laid out horizontally, wrapping only on narrow screens */}
             <div
               style={{
                 display: "flex",
                 flexWrap: "wrap",
                 gap: "14px",
-                marginBottom: "16px",
+                marginBottom: "18px",
               }}
             >
               <div style={fieldWrapperStyle}>
@@ -181,13 +274,19 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   name="location"
                   defaultValue={searchParams.location}
                   placeholder="e.g. Kitengela"
+                  className="dk-input"
                   style={fieldInputStyle}
                 />
               </div>
 
               <div style={fieldWrapperStyle}>
                 <label style={fieldLabelStyle}>Property Type</label>
-                <select name="propertyType" defaultValue={searchParams.propertyType || ""} style={fieldInputStyle}>
+                <select
+                  name="propertyType"
+                  defaultValue={searchParams.propertyType || ""}
+                  className="dk-input"
+                  style={fieldInputStyle}
+                >
                   <option value="">Any type</option>
                   {PROPERTY_TYPES.map((t) => (
                     <option key={t} value={t}>
@@ -199,7 +298,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
               <div style={fieldWrapperStyle}>
                 <label style={fieldLabelStyle}>Buy or Rent</label>
-                <select name="listingType" defaultValue={searchParams.listingType || ""} style={fieldInputStyle}>
+                <select
+                  name="listingType"
+                  defaultValue={searchParams.listingType || ""}
+                  className="dk-input"
+                  style={fieldInputStyle}
+                >
                   <option value="">Any</option>
                   <option value="SALE">For sale</option>
                   <option value="RENT">For rent</option>
@@ -211,6 +315,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 <select
                   name="availabilityStatus"
                   defaultValue={searchParams.availabilityStatus || ""}
+                  className="dk-input"
                   style={fieldInputStyle}
                 >
                   <option value="">Any</option>
@@ -229,6 +334,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   defaultValue={searchParams.minPrice}
                   min="0"
                   placeholder="Any"
+                  className="dk-input"
                   style={fieldInputStyle}
                 />
               </div>
@@ -241,27 +347,30 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   defaultValue={searchParams.maxPrice}
                   min="0"
                   placeholder="Any"
+                  className="dk-input"
                   style={fieldInputStyle}
                 />
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px" }}>
               <button
                 type="submit"
+                className="dk-btn"
                 style={{
                   backgroundColor: COLORS.primaryGreen,
                   color: COLORS.white,
                   border: "none",
                   borderRadius: "8px",
-                  padding: "10px 24px",
+                  padding: "11px 26px",
                   fontWeight: 600,
+                  fontSize: "14px",
                   cursor: "pointer",
                 }}
               >
                 Search Properties
               </button>
-              <a href="/" style={{ color: COLORS.primaryGreen, fontWeight: 500, textDecoration: "none" }}>
+              <a href="/" className="dk-clear-link" style={{ color: COLORS.primaryGreen, fontWeight: 500, textDecoration: "none" }}>
                 Clear filters
               </a>
             </div>
@@ -269,11 +378,11 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         </section>
       </div>
 
-      <hr style={{ border: "none", borderTop: `1px solid ${COLORS.border}`, margin: "24px 0" }} />
+      <hr style={{ border: "none", borderTop: `1px solid ${COLORS.border}`, margin: "28px 0" }} />
 
-      {/* ---------- Listings section — responsive grid, not a stacked list ---------- */}
+      {/* ---------- Listings section — responsive grid ---------- */}
       <section>
-        <h2 style={{ color: COLORS.darkGreen, marginBottom: "16px" }}>
+        <h2 style={{ color: COLORS.darkGreen, marginBottom: "18px" }}>
           Verified Listings ({properties.length})
         </h2>
 
@@ -286,33 +395,36 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               padding: 0,
               margin: 0,
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))",
               gap: "20px",
             }}
           >
-            {properties.map((p: PropertyWithSeller) => (
+            {properties.map((p: PropertyWithSeller, index: number) => (
               <li
                 key={p.id}
+                className="dk-card"
                 style={{
                   backgroundColor: COLORS.white,
                   border: `1px solid ${COLORS.border}`,
-                  borderRadius: "12px",
-                  padding: "16px",
+                  borderRadius: "14px",
+                  padding: "14px",
                   display: "flex",
                   flexDirection: "column",
+                  minWidth: 0,
+                  animationDelay: `${Math.min(index, 10) * 0.06}s`,
                 }}
               >
                 {/* Image */}
                 {p.imageUrl && (
-                  <Link href={`/properties/${p.id}`} style={{ marginBottom: "10px" }}>
+                  <Link href={`/properties/${p.id}`} className="dk-card-img-wrap" style={{ marginBottom: "10px", display: "block" }}>
                     <img
                       src={p.imageUrl}
                       alt={p.title}
+                      className="dk-card-img"
                       style={{
                         width: "100%",
                         height: "160px",
                         objectFit: "cover",
-                        borderRadius: "8px",
                         display: "block",
                       }}
                     />
@@ -320,17 +432,17 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 )}
 
                 {/* Status badges */}
-                <div style={{ marginBottom: "8px" }}>
+                <div style={{ marginBottom: "8px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {p.featured && (
                     <span
                       style={{
                         backgroundColor: COLORS.darkGreen,
                         color: COLORS.white,
-                        fontSize: "12px",
+                        fontSize: "11px",
                         fontWeight: 700,
-                        padding: "2px 8px",
+                        padding: "3px 8px",
                         borderRadius: "4px",
-                        marginRight: "6px",
+                        letterSpacing: "0.02em",
                       }}
                     >
                       FEATURED
@@ -340,9 +452,9 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                     style={{
                       backgroundColor: COLORS.lightGreenBg,
                       color: COLORS.primaryGreen,
-                      fontSize: "12px",
+                      fontSize: "11px",
                       fontWeight: 700,
-                      padding: "2px 8px",
+                      padding: "3px 8px",
                       borderRadius: "4px",
                     }}
                   >
@@ -352,11 +464,13 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
                 {/* Title */}
                 <Link href={`/properties/${p.id}`} style={{ textDecoration: "none" }}>
-                  <strong style={{ color: COLORS.textDark, fontSize: "16px" }}>{p.title}</strong>
+                  <strong className="dk-title" style={{ color: COLORS.textDark, fontSize: "16px", lineHeight: 1.35 }}>
+                    {p.title}
+                  </strong>
                 </Link>
 
                 {/* Verified / type / listing type */}
-                <div style={{ margin: "6px 0", fontSize: "14px" }}>
+                <div style={{ margin: "6px 0", fontSize: "13px", color: COLORS.textGray, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   <span style={{ color: p.verified ? COLORS.primaryGreen : COLORS.textGray, fontWeight: 600 }}>
                     {p.verified ? "Verified" : "Not Verified"}
                   </span>{" "}
@@ -365,12 +479,21 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 </div>
 
                 {/* Price */}
-                <div style={{ color: COLORS.primaryGreen, fontWeight: 700, fontSize: "16px", marginBottom: "6px" }}>
+                <div style={{ color: COLORS.primaryGreen, fontWeight: 700, fontSize: "17px", marginBottom: "6px" }}>
                   KSh {p.price.toLocaleString()}
                 </div>
 
                 {/* Location + specs */}
-                <div style={{ color: COLORS.textGray, fontSize: "14px", marginBottom: "8px" }}>
+                <div
+                  style={{
+                    color: COLORS.textGray,
+                    fontSize: "13px",
+                    marginBottom: "8px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
                   {p.location}
                   {p.bedrooms !== null && <> — {p.bedrooms} bed</>}
                   {p.bathrooms !== null && <> — {p.bathrooms} bath</>}
@@ -378,7 +501,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 </div>
 
                 {/* Seller info */}
-                <small style={{ color: COLORS.textGray, display: "block" }}>
+                <small style={{ color: COLORS.textGray, display: "block", overflowWrap: "break-word" }}>
                   Listed by {p.seller.name || p.seller.email} ({p.seller.role === "AGENT" ? "Agent" : "Owner"})
                   {p.seller.verified && (
                     <span style={{ color: COLORS.primaryGreen }}>
