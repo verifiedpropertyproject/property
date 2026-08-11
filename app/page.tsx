@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
+import LogoMarquee from "@/components/LogoMarquee";
+import Header from "@/components/Header";
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
 
 type PropertyWithSeller = Property & { seller: Pick<User, "name" | "email" | "role" | "phone" | "verified"> };
@@ -103,19 +105,20 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   }
 
   return (
-    <div
-      style={{
-        backgroundColor: COLORS.pageBg,
-        color: COLORS.textDark,
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        width: "100%",
-        maxWidth: "1280px",
-        margin: "0 auto",
-        padding: "clamp(16px, 4vw, 40px)",
-        boxSizing: "border-box",
-        overflowX: "hidden",
-      }}
-    >
+    <div style={{ backgroundColor: COLORS.pageBg, overflowX: "hidden" }}>
+      <Header />
+
+      <div
+        style={{
+          color: COLORS.textDark,
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          width: "100%",
+          maxWidth: "1280px",
+          margin: "0 auto",
+          padding: "clamp(16px, 4vw, 40px)",
+          boxSizing: "border-box",
+        }}
+      >
       {/* Global styles for hover states + animations (can't be done with inline style objects) */}
       <style>{`
         * { box-sizing: border-box; }
@@ -192,6 +195,20 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         }
         .dk-clear-link:hover {
           opacity: 0.7;
+        }
+
+        /* ---------- Responsive refinements ---------- */
+        @media (max-width: 640px) {
+          .dk-search-btn-row {
+            flex-direction: column;
+            align-items: stretch !important;
+          }
+          .dk-search-btn-row button {
+            width: 100%;
+          }
+          .dk-search-btn-row a {
+            text-align: center;
+          }
         }
       `}</style>
 
@@ -353,7 +370,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               </div>
             </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px" }}>
+            <div className="dk-search-btn-row" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px" }}>
               <button
                 type="submit"
                 className="dk-btn"
@@ -377,6 +394,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </form>
         </section>
       </div>
+      {/* end hero */}
 
       <hr style={{ border: "none", borderTop: `1px solid ${COLORS.border}`, margin: "28px 0" }} />
 
@@ -530,6 +548,9 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </ul>
         )}
       </section>
+
+      <LogoMarquee />
+      </div>
     </div>
   );
 }
