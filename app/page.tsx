@@ -6,6 +6,7 @@ import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
 import LogoMarquee from "@/components/LogoMarquee";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
 
 type PropertyWithSeller = Property & { seller: Pick<User, "name" | "email" | "role" | "phone" | "verified"> };
@@ -551,6 +552,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
       <LogoMarquee />
       </div>
+
+      <Footer />
     </div>
   );
 }
