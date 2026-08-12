@@ -19,13 +19,15 @@ type Props = {
   session?: Session | null;
 };
 
-
-
-export default function BuySellCard({ session }: Props) {
-  const role = session?.user?.role;
+export default function BuySellCards({ session }: Props) {
+  // Widened to string: the app's Role enum may not include a literal
+  // "SELLER" value (sellers might just be non-AGENT users), so comparing
+  // against the narrow enum type fails the Vercel build. Compare as
+  // plain strings instead.
+  const role = session?.user?.role as string | undefined;
 
   const sellHref =
-    role === "SELLER" || role === "AGENT" ? "/dashboard/properties/new" : "/register?role=SELLER";
+    role === "AGENT" ? "/dashboard/properties/new" : "/register?role=SELLER";
   const buyHref = role === "BUYER" ? "#find-a-property" : "/register?role=BUYER";
 
   return (
