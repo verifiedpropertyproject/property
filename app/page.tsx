@@ -8,7 +8,7 @@ import LogoMarquee from "@/components/LogoMarquee";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
-import BuySellCards from "@/components/BuySellCards";
+import BuySellCard from "@/components/BuySellCard";
 import HashScroll from "@/components/HashScroll";
 
 
@@ -556,7 +556,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </ul>
         )}
       </section>
-                <BuySellCards session={session} />
+                <BuySellCard session={session} />
 
 
       <LogoMarquee />
