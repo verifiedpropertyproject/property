@@ -49,6 +49,148 @@ const hintTextStyle: React.CSSProperties = {
   display: "block",
 };
 
+// Shared page shell so the success/verify screens match the form screen's chrome.
+// Defined at module scope (not inside RegisterPage) so its identity is stable across
+// re-renders — nesting it inside the component redefined it on every keystroke, which
+// made React remount the whole subtree (including the focused input) on each change.
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: COLORS.sectionBg,
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        padding: "clamp(16px, 4vw, 40px)",
+        boxSizing: "border-box",
+      }}
+    >
+      <style>{`
+        * { box-sizing: border-box; }
+
+        @keyframes dk-fade-in-up {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes dk-shake {
+          10%, 90% { transform: translateX(-1px); }
+          20%, 80% { transform: translateX(2px); }
+          30%, 50%, 70% { transform: translateX(-4px); }
+          40%, 60% { transform: translateX(4px); }
+        }
+
+        .dk-login-card {
+          animation: dk-fade-in-up 0.5s ease both;
+        }
+
+        .dk-input:focus, .dk-input:focus-visible,
+        .dk-select:focus, .dk-select:focus-visible {
+          outline: none;
+          border-color: ${COLORS.primaryGreen} !important;
+          box-shadow: 0 0 0 3px ${COLORS.primaryGreen}22;
+        }
+
+        .dk-error {
+          animation: dk-shake 0.4s ease;
+        }
+
+        .dk-btn-primary {
+          transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+        }
+        .dk-btn-primary:hover:not(:disabled) {
+          background-color: ${COLORS.primaryGreenHover};
+          box-shadow: 0 6px 16px rgba(31,122,76,0.35);
+        }
+        .dk-btn-primary:active:not(:disabled) {
+          transform: scale(0.98);
+        }
+        .dk-btn-primary:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .dk-btn-google {
+          transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .dk-btn-google:hover {
+          background-color: ${COLORS.sectionBg};
+          border-color: #D1D5DB;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .dk-link {
+          transition: color 0.2s ease;
+        }
+        .dk-link:hover {
+          color: ${COLORS.primaryGreenHover};
+          text-decoration: underline;
+        }
+
+        @keyframes dk-spin {
+          to { transform: rotate(360deg); }
+        }
+        .dk-spinner {
+          display: inline-block;
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(255,255,255,0.4);
+          border-top-color: ${COLORS.white};
+          border-radius: 50%;
+          animation: dk-spin 0.7s linear infinite;
+          margin-right: 8px;
+          vertical-align: -2px;
+        }
+      `}</style>
+
+      <div
+        className="dk-login-card"
+        style={{
+          width: "100%",
+          maxWidth: "460px",
+          backgroundColor: COLORS.white,
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: "16px",
+          padding: "clamp(24px, 5vw, 40px)",
+          boxShadow: "0 4px 24px rgba(11,46,31,0.08)",
+        }}
+      >
+        {/* Logo / brand mark */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "28px" }}>
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "8px",
+              backgroundColor: COLORS.primaryGreen,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: COLORS.white,
+              fontWeight: 800,
+              fontSize: "14px",
+              flexShrink: 0,
+            }}
+          >
+            360
+          </div>
+          <div style={{ lineHeight: 1.1 }}>
+            <div style={{ fontWeight: 800, fontSize: "16px", color: COLORS.darkGreen, letterSpacing: "0.01em" }}>
+              DAKTOP360
+            </div>
+            <div style={{ fontSize: "10px", color: COLORS.textGray, letterSpacing: "0.03em" }}>
+              REALTORS LIMITED
+            </div>
+          </div>
+        </div>
+
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -120,145 +262,6 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
-  }
-
-  // Shared page shell so the success/verify screens match the form screen's chrome
-  function Shell({ children }: { children: React.ReactNode }) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: COLORS.sectionBg,
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          padding: "clamp(16px, 4vw, 40px)",
-          boxSizing: "border-box",
-        }}
-      >
-        <style>{`
-          * { box-sizing: border-box; }
-
-          @keyframes dk-fade-in-up {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          @keyframes dk-shake {
-            10%, 90% { transform: translateX(-1px); }
-            20%, 80% { transform: translateX(2px); }
-            30%, 50%, 70% { transform: translateX(-4px); }
-            40%, 60% { transform: translateX(4px); }
-          }
-
-          .dk-login-card {
-            animation: dk-fade-in-up 0.5s ease both;
-          }
-
-          .dk-input:focus, .dk-input:focus-visible,
-          .dk-select:focus, .dk-select:focus-visible {
-            outline: none;
-            border-color: ${COLORS.primaryGreen} !important;
-            box-shadow: 0 0 0 3px ${COLORS.primaryGreen}22;
-          }
-
-          .dk-error {
-            animation: dk-shake 0.4s ease;
-          }
-
-          .dk-btn-primary {
-            transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-          }
-          .dk-btn-primary:hover:not(:disabled) {
-            background-color: ${COLORS.primaryGreenHover};
-            box-shadow: 0 6px 16px rgba(31,122,76,0.35);
-          }
-          .dk-btn-primary:active:not(:disabled) {
-            transform: scale(0.98);
-          }
-          .dk-btn-primary:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-          }
-
-          .dk-btn-google {
-            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-          }
-          .dk-btn-google:hover {
-            background-color: ${COLORS.sectionBg};
-            border-color: #D1D5DB;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-          }
-
-          .dk-link {
-            transition: color 0.2s ease;
-          }
-          .dk-link:hover {
-            color: ${COLORS.primaryGreenHover};
-            text-decoration: underline;
-          }
-
-          @keyframes dk-spin {
-            to { transform: rotate(360deg); }
-          }
-          .dk-spinner {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255,255,255,0.4);
-            border-top-color: ${COLORS.white};
-            border-radius: 50%;
-            animation: dk-spin 0.7s linear infinite;
-            margin-right: 8px;
-            vertical-align: -2px;
-          }
-        `}</style>
-
-        <div
-          className="dk-login-card"
-          style={{
-            width: "100%",
-            maxWidth: "460px",
-            backgroundColor: COLORS.white,
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: "16px",
-            padding: "clamp(24px, 5vw, 40px)",
-            boxShadow: "0 4px 24px rgba(11,46,31,0.08)",
-          }}
-        >
-          {/* Logo / brand mark */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "28px" }}>
-            <div
-              style={{
-                width: "40px",
-                height: "40px",
-                borderRadius: "8px",
-                backgroundColor: COLORS.primaryGreen,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: COLORS.white,
-                fontWeight: 800,
-                fontSize: "14px",
-                flexShrink: 0,
-              }}
-            >
-              360
-            </div>
-            <div style={{ lineHeight: 1.1 }}>
-              <div style={{ fontWeight: 800, fontSize: "16px", color: COLORS.darkGreen, letterSpacing: "0.01em" }}>
-                DAKTOP360
-              </div>
-              <div style={{ fontSize: "10px", color: COLORS.textGray, letterSpacing: "0.03em" }}>
-                REALTORS LIMITED
-              </div>
-            </div>
-          </div>
-
-          {children}
-        </div>
-      </div>
-    );
   }
 
   if (emailSent) {

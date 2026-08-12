@@ -8,6 +8,9 @@ import LogoMarquee from "@/components/LogoMarquee";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
+import BuySellCards from "@/components/BuySellCards";
+import HashScroll from "@/components/HashScroll";
+
 
 type PropertyWithSeller = Property & { seller: Pick<User, "name" | "email" | "role" | "phone" | "verified"> };
 
@@ -107,6 +110,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
   return (
     <div style={{ backgroundColor: COLORS.pageBg, overflowX: "hidden" }}>
+            <HashScroll />
       <Header />
 
       <div
@@ -481,6 +485,9 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   </span>
                 </div>
 
+
+
+
                 {/* Title */}
                 <Link href={`/properties/${p.id}`} style={{ textDecoration: "none" }}>
                   <strong className="dk-title" style={{ color: COLORS.textDark, fontSize: "16px", lineHeight: 1.35 }}>
@@ -549,6 +556,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </ul>
         )}
       </section>
+                <BuySellCards session={session} />
+
 
       <LogoMarquee />
       </div>
