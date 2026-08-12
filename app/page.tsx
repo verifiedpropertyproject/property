@@ -110,7 +110,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
   return (
     <div style={{ backgroundColor: COLORS.pageBg, overflowX: "hidden" }}>
-            <HashScroll />
+            {/* <HashScroll /> */}
       <Header />
 
       <div
