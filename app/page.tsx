@@ -239,7 +239,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               wordBreak: "break-word",
             }}
           >
-            Kenya&apos;s Trusted Marketplace for Verified Properties
+            East Africa&apos;s Trusted Marketplace for Verified Properties
           </h1>
           <p style={{ color: COLORS.textGray, margin: 0, lineHeight: 1.6 }}>
             Buy and sell land, homes and commercial property with verified ownership and professional due diligence.
