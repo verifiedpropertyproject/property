@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
-import Header from "@/components/Header";
+
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
 import BuySellCard from "@/components/BuySellCard";
 
@@ -67,7 +67,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
   return (
     <div>
-      <Header />
 
       <div>
         <header>
