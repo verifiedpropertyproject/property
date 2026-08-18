@@ -4,12 +4,9 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
-import LogoMarquee from "@/components/LogoMarquee";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
 import BuySellCard from "@/components/BuySellCard";
-import HashScroll from "@/components/HashScroll";
 
 
 type PropertyWithSeller = Property & { seller: Pick<User, "name" | "email" | "role" | "phone" | "verified"> };
@@ -284,9 +281,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
       <BuySellCard session={session} />
 
-      <LogoMarquee />
 
-      <Footer />
     </div>
   );
 }

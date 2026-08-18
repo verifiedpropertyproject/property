@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import type { FormEvent, CSSProperties } from "react";
+import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   PROPERTY_TYPES,
@@ -33,46 +33,6 @@ type EditableProperty = {
   imageUrl: string | null;
   representingName: string | null;
   representingContact: string | null;
-};
-
-// --- Color palette (matches Daktop360 homepage / admin components) ---
-const COLORS = {
-  primaryGreen: "#1F7A4C",
-  primaryGreenHover: "#176339",
-  dangerRed: "#DC2626",
-  dangerBg: "#FEF2F2",
-  successGreen: "#15803D",
-  successBg: "#F0FDF4",
-  textDark: "#111827",
-  textGray: "#6B7280",
-  border: "#E5E7EB",
-  sectionBg: "#F7FAF8",
-  white: "#FFFFFF",
-  disabledBg: "#F3F4F6",
-};
-
-const fieldLabelStyle: CSSProperties = {
-  color: COLORS.textDark,
-  fontWeight: 500,
-  fontSize: "13px",
-  display: "block",
-  marginBottom: "6px",
-};
-
-const fieldInputStyle: CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: "8px",
-  border: `1px solid ${COLORS.border}`,
-  width: "100%",
-  color: COLORS.textDark,
-  boxSizing: "border-box",
-  fontSize: "14px",
-  fontFamily: "inherit",
-  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-};
-
-const fieldGroupStyle: CSSProperties = {
-  marginBottom: "16px",
 };
 
 export default function PropertyEditForm({ property, isAgent }: { property: EditableProperty; isAgent: boolean }) {
@@ -159,103 +119,52 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        fontFamily: "system-ui, -apple-system, sans-serif",
-        backgroundColor: COLORS.sectionBg,
-        border: `1px solid ${COLORS.border}`,
-        borderRadius: "14px",
-        padding: "24px",
-        maxWidth: "560px",
-      }}
-    >
-      <style>{`
-        .dk-edit-input:focus, .dk-edit-input:focus-visible {
-          outline: none;
-          border-color: ${COLORS.primaryGreen} !important;
-          box-shadow: 0 0 0 3px ${COLORS.primaryGreen}22;
-        }
-        .dk-edit-file::file-selector-button {
-          background-color: ${COLORS.white};
-          color: ${COLORS.textDark};
-          border: 1px solid ${COLORS.border};
-          border-radius: 6px;
-          padding: 6px 12px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-right: 10px;
-          transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-        .dk-edit-file:hover::file-selector-button {
-          background-color: ${COLORS.sectionBg};
-          border-color: ${COLORS.primaryGreen};
-        }
-        .dk-edit-btn:hover:not(:disabled) {
-          background-color: ${COLORS.primaryGreenHover} !important;
-        }
-        .dk-edit-btn:active:not(:disabled) {
-          transform: scale(0.97);
-        }
-        .dk-edit-btn:disabled {
-          cursor: not-allowed;
-        }
-      `}</style>
-
-      <div style={fieldGroupStyle}>
-        <label style={fieldLabelStyle}>
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label>
           Title
           <input
-            className="dk-edit-input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             minLength={TITLE_MIN_LENGTH}
             maxLength={TITLE_MAX_LENGTH}
             required
-            style={{ ...fieldInputStyle, marginTop: "2px" }}
           />
         </label>
       </div>
 
-      <div style={fieldGroupStyle}>
-        <label style={fieldLabelStyle}>
+      <div>
+        <label>
           Description
           <textarea
-            className="dk-edit-input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             minLength={DESCRIPTION_MIN_LENGTH}
             maxLength={DESCRIPTION_MAX_LENGTH}
             required
-            style={{ ...fieldInputStyle, marginTop: "2px", resize: "vertical" }}
           />
         </label>
       </div>
 
-      <div style={fieldGroupStyle}>
-        <label style={fieldLabelStyle}>
+      <div>
+        <label>
           Location
           <input
-            className="dk-edit-input"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             minLength={LOCATION_MIN_LENGTH}
             required
-            style={{ ...fieldInputStyle, marginTop: "2px" }}
           />
         </label>
       </div>
 
-      <div style={fieldGroupStyle}>
-        <label style={fieldLabelStyle}>
+      <div>
+        <label>
           Property type
           <select
-            className="dk-edit-input"
             value={propertyType}
             onChange={(e) => setPropertyType(e.target.value)}
-            style={{ ...fieldInputStyle, marginTop: "2px", backgroundColor: COLORS.white }}
           >
             {PROPERTY_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -267,29 +176,25 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       </div>
 
       {propertyType === "OTHER" && (
-        <div style={fieldGroupStyle}>
-          <label style={fieldLabelStyle}>
+        <div>
+          <label>
             Please specify property type
             <input
-              className="dk-edit-input"
               value={propertyTypeOther}
               onChange={(e) => setPropertyTypeOther(e.target.value)}
               placeholder="e.g. Boathouse, Warehouse, Farm"
               required
-              style={{ ...fieldInputStyle, marginTop: "2px" }}
             />
           </label>
         </div>
       )}
 
-      <div style={fieldGroupStyle}>
-        <label style={fieldLabelStyle}>
+      <div>
+        <label>
           Listing type
           <select
-            className="dk-edit-input"
             value={listingType}
             onChange={(e) => setListingType(e.target.value)}
-            style={{ ...fieldInputStyle, marginTop: "2px", backgroundColor: COLORS.white }}
           >
             <option value="SALE">For sale</option>
             <option value="RENT">For rent</option>
@@ -297,109 +202,87 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
         </label>
       </div>
 
-      <div style={fieldGroupStyle}>
-        <label style={fieldLabelStyle}>
+      <div>
+        <label>
           Price (KSh)
           <input
             type="number"
             step="0.01"
             min={PRICE_MIN}
             max={PRICE_MAX}
-            className="dk-edit-input"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
-            style={{ ...fieldInputStyle, marginTop: "2px" }}
           />
-          <small style={{ display: "block", color: COLORS.textGray, fontSize: "12px", marginTop: "6px" }}>
+          <small>
             Minimum KSh {PRICE_MIN.toLocaleString()} — maximum KSh {PRICE_MAX.toLocaleString()}
           </small>
         </label>
       </div>
 
-      <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-        <div style={{ ...fieldGroupStyle, flex: "1 1 140px" }}>
-          <label style={fieldLabelStyle}>
+      <div>
+        <div>
+          <label>
             Bedrooms (optional)
             <input
               type="number"
               min="0"
               max={BEDROOMS_MAX}
-              className="dk-edit-input"
               value={bedrooms}
               onChange={(e) => setBedrooms(e.target.value)}
-              style={{ ...fieldInputStyle, marginTop: "2px" }}
             />
           </label>
         </div>
 
-        <div style={{ ...fieldGroupStyle, flex: "1 1 140px" }}>
-          <label style={fieldLabelStyle}>
+        <div>
+          <label>
             Bathrooms (optional)
             <input
               type="number"
               min="0"
               max={BATHROOMS_MAX}
-              className="dk-edit-input"
               value={bathrooms}
               onChange={(e) => setBathrooms(e.target.value)}
-              style={{ ...fieldInputStyle, marginTop: "2px" }}
             />
           </label>
         </div>
 
-        <div style={{ ...fieldGroupStyle, flex: "1 1 140px" }}>
-          <label style={fieldLabelStyle}>
+        <div>
+          <label>
             Acreage (optional)
             <input
               type="number"
               step="0.01"
               min="0"
               max={ACREAGE_MAX}
-              className="dk-edit-input"
               value={acreage}
               onChange={(e) => setAcreage(e.target.value)}
-              style={{ ...fieldInputStyle, marginTop: "2px" }}
             />
           </label>
         </div>
       </div>
 
-      <div style={fieldGroupStyle}>
+      <div>
         {property.imageUrl && (
-          <div style={{ marginBottom: "10px" }}>
-            <span style={{ ...fieldLabelStyle, marginBottom: "8px" }}>Current photo:</span>
+          <div>
+            <span>Current photo:</span>
             <img
               src={property.imageUrl}
               alt="Current listing photo"
               width={240}
-              style={{ borderRadius: "8px", border: `1px solid ${COLORS.border}`, display: "block" }}
             />
           </div>
         )}
-        <label style={fieldLabelStyle}>
+        <label>
           {property.imageUrl ? "Replace photo (optional)" : "Photo"}
           <input
             ref={imageInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             required={!property.imageUrl}
-            className="dk-edit-file"
-            style={{
-              marginTop: "2px",
-              display: "block",
-              width: "100%",
-              boxSizing: "border-box",
-              padding: "8px 0 8px 10px",
-              color: COLORS.textGray,
-              fontSize: "13px",
-              border: `1px solid ${COLORS.border}`,
-              borderRadius: "8px",
-              backgroundColor: COLORS.white,
-            }}
           />
           {!property.imageUrl && (
-            <small style={{ display: "block", color: COLORS.textGray, fontSize: "12px", marginTop: "6px" }}>
+            <small>
               Required — JPEG, PNG, or WEBP, max 5MB.
             </small>
           )}
@@ -408,28 +291,24 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
 
       {isAgent && (
         <>
-          <div style={fieldGroupStyle}>
-            <label style={fieldLabelStyle}>
+          <div>
+            <label>
               Representing (owner&apos;s name)
               <input
-                className="dk-edit-input"
                 value={representingName}
                 onChange={(e) => setRepresentingName(e.target.value)}
                 placeholder="Who you're selling this on behalf of"
                 required
-                style={{ ...fieldInputStyle, marginTop: "2px" }}
               />
             </label>
           </div>
-          <div style={fieldGroupStyle}>
-            <label style={fieldLabelStyle}>
+          <div>
+            <label>
               Owner&apos;s contact (optional)
               <input
-                className="dk-edit-input"
                 value={representingContact}
                 onChange={(e) => setRepresentingContact(e.target.value)}
                 placeholder="Phone or email"
-                style={{ ...fieldInputStyle, marginTop: "2px" }}
               />
             </label>
           </div>
@@ -437,52 +316,20 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       )}
 
       {error && (
-        <p
-          style={{
-            backgroundColor: COLORS.dangerBg,
-            color: COLORS.dangerRed,
-            border: `1px solid ${COLORS.dangerRed}33`,
-            borderRadius: "8px",
-            padding: "8px 12px",
-            fontSize: "13px",
-            margin: "0 0 16px 0",
-          }}
-        >
+        <p>
           {error}
         </p>
       )}
 
       {success && (
-        <p
-          style={{
-            backgroundColor: COLORS.successBg,
-            color: COLORS.successGreen,
-            border: `1px solid ${COLORS.successGreen}33`,
-            borderRadius: "8px",
-            padding: "8px 12px",
-            fontSize: "13px",
-            margin: "0 0 16px 0",
-          }}
-        >
+        <p>
           {success}
         </p>
       )}
 
       <button
         type="submit"
-        className="dk-edit-btn"
         disabled={loading}
-        style={{
-          backgroundColor: loading ? COLORS.disabledBg : COLORS.primaryGreen,
-          color: loading ? "#9CA3AF" : COLORS.white,
-          border: "none",
-          borderRadius: "8px",
-          padding: "11px 22px",
-          fontSize: "14px",
-          fontWeight: 600,
-          cursor: loading ? "not-allowed" : "pointer",
-          transition: "background-color 0.2s ease, transform 0.15s ease",
-        }}
       >
         {loading ? "Saving..." : "Save and resubmit for review"}
       </button>
