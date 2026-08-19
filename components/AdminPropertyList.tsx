@@ -145,6 +145,9 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
                 ? ` — agreed by lister on ${new Date(p.commissionAgreedAt).toLocaleDateString()}`
                 : " — not yet on record for this listing"}
               <CommissionRateForm propertyId={p.id} currentRate={p.commissionRate} />
+              {p.commissionAgreedAt && (
+                <a href={`/api/properties/${p.id}/commission-agreement`}>Download signed certificate (PDF)</a>
+              )}
             </div>
 
             <div>

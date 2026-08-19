@@ -205,6 +205,13 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
             <small>{property.commissionAgreementText}</small>
           </p>
         )}
+        {property.commissionAgreedAt && (
+          <p>
+            <a href={`/api/properties/${property.id}/commission-agreement`}>
+              Download signed certificate (PDF)
+            </a>
+          </p>
+        )}
       </div>
 
       <div>

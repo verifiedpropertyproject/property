@@ -38,6 +38,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
   const [representingContact, setRepresentingContact] = useState("");
   const [pin, setPin] = useState<PickedLocation | null>(null);
   const [commissionAgreed, setCommissionAgreed] = useState(false);
+  const [signedName, setSignedName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -62,6 +63,11 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
 
     if (!commissionAgreed) {
       setError("You must agree to the platform's commission terms to list a property.");
+      return;
+    }
+
+    if (signedName.trim().length < 2) {
+      setError("Please type your full legal name to sign the commission agreement.");
       return;
     }
 
@@ -92,6 +98,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
         formData.append("image", imageFile);
       }
       formData.append("commissionAgreed", "true");
+      formData.append("signedName", signedName.trim());
 
       const res = await fetch("/api/properties", {
         method: "POST",
@@ -309,12 +316,21 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
           <small>{commissionAgreementText(DEFAULT_COMMISSION_RATE)}</small>
         </p>
         <label>
+          Type your full legal name to sign
+          <input
+            value={signedName}
+            onChange={(e) => setSignedName(e.target.value)}
+            placeholder="Full legal name"
+          />
+        </label>
+        <label>
           <input
             type="checkbox"
             checked={commissionAgreed}
             onChange={(e) => setCommissionAgreed(e.target.checked)}
           />
-          {" "}I have read and agree to the commission terms above.
+          {" "}I, the person named above, have read and agree to the commission terms above. This
+          serves as my electronic signature.
         </label>
       </div>
 

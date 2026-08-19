@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { savePropertyImage } from "@/lib/propertyImageStorage";
+import { generateCommissionCertificatePdf } from "@/lib/commissionCertificate";
+import { saveCommissionCertificate } from "@/lib/commissionCertificateStorage";
 import {
   PROPERTY_TYPES,
   LISTING_TYPES,
@@ -20,6 +22,7 @@ import {
   IMAGE_MAX_SIZE_BYTES,
   ALLOWED_IMAGE_MIME_TYPES,
   DEFAULT_COMMISSION_RATE,
+  COMMISSION_AGREEMENT_VERSION,
   commissionAgreementText,
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
@@ -60,6 +63,7 @@ export async function POST(req: Request) {
     const address = str(formData, "address");
     const placeId = str(formData, "placeId");
     const commissionAgreed = str(formData, "commissionAgreed") === "true";
+    const signedName = str(formData, "signedName");
     const imageFile = formData.get("image");
 
     if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
@@ -115,6 +119,13 @@ export async function POST(req: Request) {
     if (!commissionAgreed) {
       return NextResponse.json(
         { error: "You must agree to the platform's commission terms to list a property." },
+        { status: 400 }
+      );
+    }
+
+    if (signedName.length < 2) {
+      return NextResponse.json(
+        { error: "Please type your full legal name to sign the commission agreement." },
         { status: 400 }
       );
     }
@@ -176,6 +187,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Image must be a JPEG, PNG, or WEBP file." }, { status: 400 });
     }
 
+    // Best-effort — proxies/load balancers set these, but neither is guaranteed present.
+    const ipAddress =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null;
+    const userAgent = req.headers.get("user-agent");
+
     const property = await prisma.property.create({
       data: {
         title,
@@ -208,6 +224,46 @@ export async function POST(req: Request) {
     const imageUrl = await savePropertyImage(imageFile, property.id);
     await prisma.property.update({ where: { id: property.id }, data: { imageUrl } });
     property.imageUrl = imageUrl;
+
+    // Full audit-trail row for this signing — separate from the denormalized
+    // commissionRate/commissionAgreedAt/commissionAgreementText cache on Property itself, and
+    // never overwritten afterward (an admin changing Property.commissionRate later doesn't
+    // touch this).
+    const agreement = await prisma.commissionAgreement.create({
+      data: {
+        userId: session.user.id,
+        propertyId: property.id,
+        rate: DEFAULT_COMMISSION_RATE,
+        agreementVersion: COMMISSION_AGREEMENT_VERSION,
+        agreementText: commissionAgreementText(DEFAULT_COMMISSION_RATE),
+        signedName,
+        ipAddress,
+        userAgent,
+      },
+    });
+
+    try {
+      const pdfBytes = await generateCommissionCertificatePdf({
+        agreementId: agreement.id,
+        propertyId: property.id,
+        propertyTitle: title,
+        sellerName: session.user.name ?? null,
+        sellerEmail: session.user.email || "(email not on file)",
+        signedName,
+        rate: DEFAULT_COMMISSION_RATE,
+        agreementVersion: COMMISSION_AGREEMENT_VERSION,
+        agreementText: agreement.agreementText,
+        signedAt: agreement.signedAt,
+        ipAddress,
+        userAgent,
+      });
+      const certificateKey = await saveCommissionCertificate(pdfBytes, property.id, agreement.id);
+      await prisma.commissionAgreement.update({ where: { id: agreement.id }, data: { certificateUrl: certificateKey } });
+    } catch (certErr) {
+      // Non-fatal: the signed record itself (name/IP/timestamp/text) is already saved in the
+      // database either way — the PDF is a convenience artifact, not the source of truth.
+      console.error("Failed to generate/store commission certificate:", certErr);
+    }
 
     // Notify every admin that a new property needs review
     const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });

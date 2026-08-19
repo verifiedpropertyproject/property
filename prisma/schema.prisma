@@ -54,6 +54,7 @@ model User {
   receivedNotifications   Notification[]           @relation("receiver")
   verificationTokens      EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
+  commissionAgreements    CommissionAgreement[]
 }
 
 // MVP note: there's no real email service wired up. A token is generated and
@@ -137,6 +138,41 @@ model Property {
   savedBy       SavedProperty[]
   notifications Notification[]
   documents     PropertyDocument[]
+  // Full signed history — Property.commissionRate/commissionAgreedAt/commissionAgreementText
+  // above are a denormalized "latest at signing" cache for quick reads; this relation is the
+  // actual audit trail (signed name, IP, user agent, generated certificate) and is never
+  // overwritten. An admin changing Property.commissionRate later does NOT create a new row here
+  // or touch the original signed record — see commission-rate/route.ts.
+  commissionAgreements CommissionAgreement[]
+}
+
+// One row per commission-agreement signing (created once, at listing creation — never edited
+// afterward). Property.commissionRate can drift from the rate captured here if an admin later
+// adjusts it; that's intentional and surfaced explicitly wherever this is displayed.
+model CommissionAgreement {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  rate             Float
+  agreementVersion Int
+  agreementText    String
+  // Typed full legal name, entered as the signature at listing creation.
+  signedName String
+  ipAddress  String?
+  userAgent  String?
+  signedAt   DateTime @default(now())
+
+  // Vercel Blob URL of the generated PDF certificate. Deliberately never sent to the client —
+  // it's fetched server-side and streamed through an authenticated route (see
+  // app/api/properties/[id]/commission-agreement/route.ts) so the certificate (which contains
+  // the signer's name and IP) isn't reachable via a leaked/guessed direct link.
+  certificateUrl String?
+
+  createdAt DateTime @default(now())
 }
 
 // documentType: "TITLE_DEED" | "OFFICIAL_SEARCH" | "OWNERSHIP_DOCUMENT" | "SALE_AGREEMENT" |

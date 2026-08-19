@@ -40,6 +40,11 @@ export const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 // for new listings — past agreements keep reading correctly since they store their own snapshot.
 export const DEFAULT_COMMISSION_RATE = 0.03;
 
+// Bump this if the agreement wording below ever changes materially — each signed
+// CommissionAgreement row snapshots the version it was shown, so historical certificates keep
+// reading correctly regardless of later wording changes.
+export const COMMISSION_AGREEMENT_VERSION = 1;
+
 export function commissionAgreementText(rate: number): string {
   const pct = (rate * 100).toFixed(rate * 100 % 1 === 0 ? 0 : 2);
   return `By listing this property, I agree that if it sells through this platform, the platform retains a commission of ${pct}% of the final sale price. This is a legal agreement between the lister and the platform and does not involve any payment processing by the platform.`;
