@@ -4,9 +4,15 @@ import crypto from "crypto";
 
 // Property photos ARE meant to be public (unlike supporting documents), so — unlike
 // lib/documentStorage.ts — these are stored publicly either way: as public Vercel Blob objects
-// in production (when BLOB_READ_WRITE_TOKEN is set), or under /public locally otherwise. Either
-// way, imageUrl ends up directly usable as an <img src>.
+// in production, or under /public locally otherwise. Either way, imageUrl ends up directly
+// usable as an <img src>.
+//
+// This project has two separate Vercel Blob stores (photos here, documents in
+// lib/documentStorage.ts), so each needs its own explicitly-named token rather than relying on
+// @vercel/blob's default BLOB_READ_WRITE_TOKEN lookup — that name isn't safe to share between
+// two stores connected to the same project.
 const PUBLIC_UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads", "properties");
+const PROPERTY_BLOB_TOKEN = process.env.PROPERTY_BLOB_READ_WRITE_TOKEN;
 
 const EXTENSION_BY_MIME: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -15,7 +21,7 @@ const EXTENSION_BY_MIME: Record<string, string> = {
 };
 
 function isBlobConfigured() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return Boolean(PROPERTY_BLOB_TOKEN);
 }
 
 export async function savePropertyImage(file: File, propertyId: string): Promise<string> {
@@ -27,6 +33,7 @@ export async function savePropertyImage(file: File, propertyId: string): Promise
     const result = await put(`properties/${propertyId}/${fileName}`, file, {
       access: "public",
       contentType: file.type,
+      token: PROPERTY_BLOB_TOKEN,
     });
     return result.url;
   }
@@ -48,7 +55,7 @@ export async function deletePropertyImage(imageUrl: string | null) {
   if (imageUrl.startsWith("http")) {
     if (!isBlobConfigured()) return; // not one of ours to delete (e.g. a legacy external URL)
     const { del } = await import("@vercel/blob");
-    await del(imageUrl).catch(() => {});
+    await del(imageUrl, { token: PROPERTY_BLOB_TOKEN }).catch(() => {});
     return;
   }
 
