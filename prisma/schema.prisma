@@ -96,6 +96,12 @@ model Property {
   // place id in this app, kept as a generic string so swapping providers later doesn't need a
   // schema change).
   placeId      String?
+  // Snapshotted 3% commission agreement, accepted once by the seller/agent when the listing is
+  // created. commissionRate defaults to 3% but an admin can adjust it per-listing afterward —
+  // agreedAt/agreementText stay as the original signed record even if the rate later changes.
+  commissionRate         Float     @default(0.03)
+  commissionAgreedAt     DateTime?
+  commissionAgreementText String?
   propertyType String
   // Only set (and required) when propertyType is "OTHER" — what it actually is.
   propertyTypeOther String?

@@ -19,6 +19,8 @@ import {
   LOCATION_MIN_LENGTH,
   IMAGE_MAX_SIZE_BYTES,
   ALLOWED_IMAGE_MIME_TYPES,
+  DEFAULT_COMMISSION_RATE,
+  commissionAgreementText,
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
 
@@ -57,6 +59,7 @@ export async function POST(req: Request) {
     const longitudeRaw = str(formData, "longitude");
     const address = str(formData, "address");
     const placeId = str(formData, "placeId");
+    const commissionAgreed = str(formData, "commissionAgreed") === "true";
     const imageFile = formData.get("image");
 
     if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
@@ -105,6 +108,13 @@ export async function POST(req: Request) {
     if (session.user.role === "AGENT" && !representingName) {
       return NextResponse.json(
         { error: "As an agent, you must state who you're representing (the property owner's name)." },
+        { status: 400 }
+      );
+    }
+
+    if (!commissionAgreed) {
+      return NextResponse.json(
+        { error: "You must agree to the platform's commission terms to list a property." },
         { status: 400 }
       );
     }
@@ -187,6 +197,11 @@ export async function POST(req: Request) {
         longitude: parsedLongitude,
         address: parsedLatitude !== null ? address || null : null,
         placeId: parsedLatitude !== null ? placeId || null : null,
+        // Rate + text are generated here, not taken from the client, so the legal snapshot
+        // can't be tampered with — the checkbox just confirms consent to what we generate.
+        commissionRate: DEFAULT_COMMISSION_RATE,
+        commissionAgreedAt: new Date(),
+        commissionAgreementText: commissionAgreementText(DEFAULT_COMMISSION_RATE),
       },
     });
 

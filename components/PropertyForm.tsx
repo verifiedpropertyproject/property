@@ -17,6 +17,8 @@ import {
   DESCRIPTION_MIN_LENGTH,
   DESCRIPTION_MAX_LENGTH,
   LOCATION_MIN_LENGTH,
+  DEFAULT_COMMISSION_RATE,
+  commissionAgreementText,
 } from "@/lib/propertyConstants";
 
 export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
@@ -35,6 +37,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
   const [representingName, setRepresentingName] = useState("");
   const [representingContact, setRepresentingContact] = useState("");
   const [pin, setPin] = useState<PickedLocation | null>(null);
+  const [commissionAgreed, setCommissionAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,6 +57,11 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
 
     if (!imageInputRef.current?.files?.[0]) {
       setError("A photo is required for the listing.");
+      return;
+    }
+
+    if (!commissionAgreed) {
+      setError("You must agree to the platform's commission terms to list a property.");
       return;
     }
 
@@ -83,6 +91,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
       if (imageFile) {
         formData.append("image", imageFile);
       }
+      formData.append("commissionAgreed", "true");
 
       const res = await fetch("/api/properties", {
         method: "POST",
@@ -294,6 +303,20 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
           </div>
         </>
       )}
+
+      <div>
+        <p>
+          <small>{commissionAgreementText(DEFAULT_COMMISSION_RATE)}</small>
+        </p>
+        <label>
+          <input
+            type="checkbox"
+            checked={commissionAgreed}
+            onChange={(e) => setCommissionAgreed(e.target.checked)}
+          />
+          {" "}I have read and agree to the commission terms above.
+        </label>
+      </div>
 
       {error && (
         <p>

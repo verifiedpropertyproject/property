@@ -99,6 +99,9 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
               longitude: property.longitude,
               address: property.address,
               placeId: property.placeId,
+              commissionRate: property.commissionRate,
+              commissionAgreedAt: property.commissionAgreedAt,
+              commissionAgreementText: property.commissionAgreementText,
             }}
           />
         </section>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AvailabilityForm from "@/components/AvailabilityForm";
+import CommissionRateForm from "@/components/CommissionRateForm";
 
 type ManagedProperty = {
   id: string;
@@ -17,6 +18,8 @@ type ManagedProperty = {
   price: number;
   views: number;
   representingName: string | null;
+  commissionRate: number;
+  commissionAgreedAt: string | Date | null;
   seller: { name: string | null; email: string; phone: string | null; role: string | null; verified: boolean };
   _count: { savedBy: number };
 };
@@ -134,6 +137,14 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
 
             <div>
               <AvailabilityForm propertyId={p.id} currentStatus={p.availabilityStatus} />
+            </div>
+
+            <div>
+              Commission: {(p.commissionRate * 100).toFixed(p.commissionRate * 100 % 1 === 0 ? 0 : 2)}%
+              {p.commissionAgreedAt
+                ? ` — agreed by lister on ${new Date(p.commissionAgreedAt).toLocaleDateString()}`
+                : " — not yet on record for this listing"}
+              <CommissionRateForm propertyId={p.id} currentRate={p.commissionRate} />
             </div>
 
             <div>

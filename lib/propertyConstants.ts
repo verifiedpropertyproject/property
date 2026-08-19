@@ -32,6 +32,18 @@ export const DEFAULT_MAP_ZOOM = 7;
 export const PICKED_MAP_ZOOM = 15;
 
 export const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+// The wording shown to a seller/agent when they list a property, and the exact string
+// snapshotted into Property.commissionAgreementText when they accept it. Keeping this as a
+// function of the rate (rather than a fixed string) means it always describes whatever rate a
+// particular listing was agreed at, including if an admin later changes DEFAULT_COMMISSION_RATE
+// for new listings — past agreements keep reading correctly since they store their own snapshot.
+export const DEFAULT_COMMISSION_RATE = 0.03;
+
+export function commissionAgreementText(rate: number): string {
+  const pct = (rate * 100).toFixed(rate * 100 % 1 === 0 ? 0 : 2);
+  return `By listing this property, I agree that if it sells through this platform, the platform retains a commission of ${pct}% of the final sale price. This is a legal agreement between the lister and the platform and does not involve any payment processing by the platform.`;
+}
 export const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export function getPropertyTypeLabel(propertyType: string, propertyTypeOther?: string | null) {

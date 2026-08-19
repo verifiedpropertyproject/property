@@ -38,6 +38,9 @@ type EditableProperty = {
   longitude: number | null;
   address: string | null;
   placeId: string | null;
+  commissionRate: number;
+  commissionAgreedAt: string | Date | null;
+  commissionAgreementText: string | null;
 };
 
 export default function PropertyEditForm({ property, isAgent }: { property: EditableProperty; isAgent: boolean }) {
@@ -186,6 +189,22 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
 
       <div>
         <LocationPicker value={pin} onChange={setPin} />
+      </div>
+
+      <div>
+        <p>
+          <strong>Commission agreement:</strong>{" "}
+          {property.commissionAgreedAt
+            ? `${(property.commissionRate * 100).toFixed(
+                (property.commissionRate * 100) % 1 === 0 ? 0 : 2
+              )}% — agreed on ${new Date(property.commissionAgreedAt).toLocaleDateString()}`
+            : "Not yet on record for this listing."}
+        </p>
+        {property.commissionAgreementText && (
+          <p>
+            <small>{property.commissionAgreementText}</small>
+          </p>
+        )}
       </div>
 
       <div>
