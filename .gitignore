@@ -11,3 +11,5 @@ uploads/*
 !uploads/.gitkeep
 public/uploads/properties/*
 !public/uploads/properties/.gitkeep
+"next-env.d.ts" 
+"package-lock.json" 

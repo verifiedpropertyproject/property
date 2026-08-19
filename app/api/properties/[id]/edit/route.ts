@@ -67,6 +67,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const acreageRaw = str(formData, "acreage");
     const representingName = str(formData, "representingName");
     const representingContact = str(formData, "representingContact");
+    const latitudeRaw = str(formData, "latitude");
+    const longitudeRaw = str(formData, "longitude");
+    const address = str(formData, "address");
+    const placeId = str(formData, "placeId");
+    const clearLocation = str(formData, "clearLocation") === "true";
     const imageFile = formData.get("image");
 
     if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
@@ -143,6 +148,23 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: `Acreage must be greater than 0 and at most ${ACREAGE_MAX}.` }, { status: 400 });
     }
 
+    let parsedLatitude: number | null = null;
+    let parsedLongitude: number | null = null;
+    if (!clearLocation && (latitudeRaw || longitudeRaw)) {
+      parsedLatitude = Number(latitudeRaw);
+      parsedLongitude = Number(longitudeRaw);
+      if (
+        Number.isNaN(parsedLatitude) ||
+        Number.isNaN(parsedLongitude) ||
+        parsedLatitude < -90 ||
+        parsedLatitude > 90 ||
+        parsedLongitude < -180 ||
+        parsedLongitude > 180
+      ) {
+        return NextResponse.json({ error: "Invalid map pin coordinates." }, { status: 400 });
+      }
+    }
+
     let validatedImage: File | null = null;
     if (imageFile instanceof File && imageFile.size > 0) {
       if (imageFile.size > IMAGE_MAX_SIZE_BYTES) {
@@ -193,6 +215,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         adminNote: null,
         representingName: session.user.role === "AGENT" ? representingName : null,
         representingContact: session.user.role === "AGENT" && representingContact ? representingContact : null,
+        latitude: parsedLatitude,
+        longitude: parsedLongitude,
+        address: parsedLatitude !== null ? address || null : null,
+        placeId: parsedLatitude !== null ? placeId || null : null,
       },
     });
 

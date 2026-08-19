@@ -25,6 +25,12 @@ export const DESCRIPTION_MIN_LENGTH = 20;
 export const DESCRIPTION_MAX_LENGTH = 5000;
 export const LOCATION_MIN_LENGTH = 3;
 
+// Where the map picker centers when a listing has no pin yet. Nairobi, since that's where
+// this app's listings are concentrated — just a starting viewport, not a validation bound.
+export const DEFAULT_MAP_CENTER = { lat: -1.286389, lng: 36.817223 };
+export const DEFAULT_MAP_ZOOM = 7;
+export const PICKED_MAP_ZOOM = 15;
+
 export const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 export const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 

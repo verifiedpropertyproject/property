@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import LocationPicker, { type PickedLocation } from "@/components/LocationPicker";
 import {
   PROPERTY_TYPES,
   PROPERTY_TYPE_LABELS,
@@ -33,6 +34,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
   const [acreage, setAcreage] = useState("");
   const [representingName, setRepresentingName] = useState("");
   const [representingContact, setRepresentingContact] = useState("");
+  const [pin, setPin] = useState<PickedLocation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -71,6 +73,12 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
       formData.append("acreage", acreage);
       formData.append("representingName", representingName);
       formData.append("representingContact", representingContact);
+      if (pin) {
+        formData.append("latitude", String(pin.latitude));
+        formData.append("longitude", String(pin.longitude));
+        formData.append("address", pin.address);
+        if (pin.placeId) formData.append("placeId", pin.placeId);
+      }
       const imageFile = imageInputRef.current?.files?.[0];
       if (imageFile) {
         formData.append("image", imageFile);
@@ -137,6 +145,10 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
             required
           />
         </label>
+      </div>
+
+      <div>
+        <LocationPicker value={pin} onChange={setPin} />
       </div>
 
       <div>

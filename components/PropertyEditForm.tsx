@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import LocationPicker, { type PickedLocation } from "@/components/LocationPicker";
 import {
   PROPERTY_TYPES,
   PROPERTY_TYPE_LABELS,
@@ -33,6 +34,10 @@ type EditableProperty = {
   imageUrl: string | null;
   representingName: string | null;
   representingContact: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  address: string | null;
+  placeId: string | null;
 };
 
 export default function PropertyEditForm({ property, isAgent }: { property: EditableProperty; isAgent: boolean }) {
@@ -50,6 +55,16 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
   const [acreage, setAcreage] = useState(property.acreage !== null ? String(property.acreage) : "");
   const [representingName, setRepresentingName] = useState(property.representingName || "");
   const [representingContact, setRepresentingContact] = useState(property.representingContact || "");
+  const [pin, setPin] = useState<PickedLocation | null>(
+    property.latitude !== null && property.longitude !== null
+      ? {
+          latitude: property.latitude,
+          longitude: property.longitude,
+          address: property.address || "",
+          placeId: property.placeId,
+        }
+      : null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -91,6 +106,16 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       formData.append("acreage", acreage);
       formData.append("representingName", representingName);
       formData.append("representingContact", representingContact);
+      if (pin) {
+        formData.append("latitude", String(pin.latitude));
+        formData.append("longitude", String(pin.longitude));
+        formData.append("address", pin.address);
+        if (pin.placeId) formData.append("placeId", pin.placeId);
+      } else {
+        // No pin currently set in the form (either never set, or explicitly cleared) —
+        // tell the server so it can null out any previously-saved location.
+        formData.append("clearLocation", "true");
+      }
       const imageFile = imageInputRef.current?.files?.[0];
       if (imageFile) {
         formData.append("image", imageFile);
@@ -157,6 +182,10 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
             required
           />
         </label>
+      </div>
+
+      <div>
+        <LocationPicker value={pin} onChange={setPin} />
       </div>
 
       <div>

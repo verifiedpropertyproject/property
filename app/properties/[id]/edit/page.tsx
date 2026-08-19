@@ -95,6 +95,10 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
               imageUrl: property.imageUrl,
               representingName: property.representingName,
               representingContact: property.representingContact,
+              latitude: property.latitude,
+              longitude: property.longitude,
+              address: property.address,
+              placeId: property.placeId,
             }}
           />
         </section>

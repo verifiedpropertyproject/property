@@ -86,6 +86,16 @@ model Property {
   title        String
   description  String
   location     String
+  // Structured pin location, set via the map picker on the listing form. All four are
+  // optional/together — older listings (and any new listing where the lister skips the map)
+  // simply have none of them set, and everything else keeps working as before.
+  latitude     Float?
+  longitude    Float?
+  address      String?
+  // Free-text place reference from the geocoder used to pick the pin (OpenStreetMap/Nominatim
+  // place id in this app, kept as a generic string so swapping providers later doesn't need a
+  // schema change).
+  placeId      String?
   propertyType String
   // Only set (and required) when propertyType is "OTHER" — what it actually is.
   propertyTypeOther String?

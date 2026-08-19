@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import EnquireForm from "@/components/EnquireForm";
 import SaveButton from "@/components/SaveButton";
 import AvailabilityForm from "@/components/AvailabilityForm";
+import LocationView from "@/components/LocationView";
 import { getPropertyTypeLabel } from "@/lib/propertyConstants";
 
 const AVAILABILITY_LABELS: Record<string, string> = {
@@ -143,6 +144,16 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             {property.bathrooms !== null && <p>Bathrooms: {property.bathrooms}</p>}
             {property.acreage !== null && <p>Acreage: {property.acreage}</p>}
           </div>
+
+          {property.latitude !== null && property.longitude !== null && (
+            <div>
+              <LocationView
+                latitude={property.latitude}
+                longitude={property.longitude}
+                address={property.address}
+              />
+            </div>
+          )}
 
           <p>{property.description}</p>
 
