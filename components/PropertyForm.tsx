@@ -7,6 +7,7 @@ import LocationPicker, { type PickedLocation } from "@/components/LocationPicker
 import {
   PROPERTY_TYPES,
   PROPERTY_TYPE_LABELS,
+  PROPERTY_TYPE_SUGGESTIONS,
   PRICE_MIN,
   PRICE_MAX,
   BEDROOMS_MAX,
@@ -19,6 +20,7 @@ import {
   LOCATION_MIN_LENGTH,
   DEFAULT_COMMISSION_RATE,
   commissionAgreementText,
+  getPropertyTypeFields,
 } from "@/lib/propertyConstants";
 
 export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
@@ -42,6 +44,18 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const fields = getPropertyTypeFields(propertyType);
+
+  function handlePropertyTypeChange(nextType: string) {
+    setPropertyType(nextType);
+    // Clear out detail fields that no longer apply, so switching e.g. House -> Land can't
+    // silently carry a leftover "3 bedrooms" into a land listing.
+    const nextFields = getPropertyTypeFields(nextType);
+    if (!nextFields.bedrooms) setBedrooms("");
+    if (!nextFields.bathrooms) setBathrooms("");
+    if (!nextFields.acreage) setAcreage("");
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
@@ -53,6 +67,11 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
 
     if (propertyType === "OTHER" && !propertyTypeOther.trim()) {
       setError('Since you selected "Other", please specify what type of property it is.');
+      return;
+    }
+
+    if (fields.acreageRequired && !acreage.trim()) {
+      setError(`${fields.acreageLabel} is required for a land listing.`);
       return;
     }
 
@@ -172,7 +191,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
           Property type
           <select
             value={propertyType}
-            onChange={(e) => setPropertyType(e.target.value)}
+            onChange={(e) => handlePropertyTypeChange(e.target.value)}
           >
             {PROPERTY_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -191,8 +210,14 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
               value={propertyTypeOther}
               onChange={(e) => setPropertyTypeOther(e.target.value)}
               placeholder="e.g. Boathouse, Warehouse, Farm"
+              list="property-type-suggestions"
               required
             />
+            <datalist id="property-type-suggestions">
+              {PROPERTY_TYPE_SUGGESTIONS.map((suggestion) => (
+                <option key={suggestion} value={suggestion} />
+              ))}
+            </datalist>
           </label>
         </div>
       )}
@@ -228,47 +253,57 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
         </label>
       </div>
 
-      <div>
+      {(fields.bedrooms || fields.bathrooms || fields.acreage) && (
         <div>
-          <label>
-            Bedrooms (optional)
-            <input
-              type="number"
-              min="0"
-              max={BEDROOMS_MAX}
-              value={bedrooms}
-              onChange={(e) => setBedrooms(e.target.value)}
-            />
-          </label>
-        </div>
+          {fields.bedrooms && (
+            <div>
+              <label>
+                Bedrooms (optional)
+                <input
+                  type="number"
+                  min="0"
+                  max={BEDROOMS_MAX}
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                />
+              </label>
+            </div>
+          )}
 
-        <div>
-          <label>
-            Bathrooms (optional)
-            <input
-              type="number"
-              min="0"
-              max={BATHROOMS_MAX}
-              value={bathrooms}
-              onChange={(e) => setBathrooms(e.target.value)}
-            />
-          </label>
-        </div>
+          {fields.bathrooms && (
+            <div>
+              <label>
+                Bathrooms (optional)
+                <input
+                  type="number"
+                  min="0"
+                  max={BATHROOMS_MAX}
+                  value={bathrooms}
+                  onChange={(e) => setBathrooms(e.target.value)}
+                />
+              </label>
+            </div>
+          )}
 
-        <div>
-          <label>
-            Acreage (optional)
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max={ACREAGE_MAX}
-              value={acreage}
-              onChange={(e) => setAcreage(e.target.value)}
-            />
-          </label>
+          {fields.acreage && (
+            <div>
+              <label>
+                {fields.acreageLabel}
+                {!fields.acreageRequired && " (optional)"}
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={ACREAGE_MAX}
+                  value={acreage}
+                  onChange={(e) => setAcreage(e.target.value)}
+                  required={fields.acreageRequired}
+                />
+              </label>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       <div>
         <label>

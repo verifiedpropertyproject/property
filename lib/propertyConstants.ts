@@ -10,6 +10,94 @@ export const PROPERTY_TYPE_LABELS: Record<string, string> = {
 
 export const LISTING_TYPES = ["SALE", "RENT"] as const;
 
+// Suggestions offered (via an HTML <datalist>) on the free-text "Please specify property type"
+// field that appears when propertyType is "OTHER". Purely advisory — the field stays free text
+// so nothing here is validated or enforced, it just steers listers toward consistent wording
+// (e.g. "Studio Apartment" every time, instead of a dozen near-duplicate typo'd variants) so
+// admins reviewing/searching listings see cleaner, more comparable values.
+export const PROPERTY_TYPE_SUGGESTIONS = [
+  // Residential
+  "Apartment",
+  "Studio Apartment",
+  "Serviced Apartment",
+  "Furnished Apartment",
+  "Penthouse",
+  "Duplex",
+  "Triplex",
+  "Villa",
+  "Luxury Villa",
+  "Townhouse",
+  "Maisonette",
+  "Bungalow",
+  "Mansion",
+  "Cottage",
+  "Farmhouse",
+  "Residential House",
+  "Bedsitter",
+  "Single Room",
+  "Hostel",
+  "Boarding House",
+  "Gated Community House",
+  "Container House",
+  "Boathouse",
+  // Commercial / business
+  "Commercial Building",
+  "Office",
+  "Office Suite",
+  "Co-working Space",
+  "Shop",
+  "Retail Space",
+  "Showroom",
+  "Warehouse",
+  "Storage Unit",
+  "Hotel",
+  "Guesthouse",
+  "Bed and Breakfast",
+  "Restaurant/Bar Premises",
+  "Petrol Station",
+  "Mixed-Use Building",
+  // Land
+  "Residential Land",
+  "Commercial Land",
+  "Agricultural Land",
+  "Industrial Land",
+  "Beach Plot",
+  "Ranch",
+  "Farm",
+  // Industrial / special-purpose
+  "Factory",
+  "Godown",
+  "Workshop",
+  "Parking Lot",
+  "Event Space",
+] as const;
+
+// Which of the "detail" inputs (bedrooms/bathrooms/size) actually make sense for a given
+// property type, and how the size field should be labeled/required for it. Drives both the
+// form (which fields to show, per type) and the API (which submitted values to trust/keep —
+// a LAND listing that sneaks a "bedrooms" value into the request still gets it dropped server
+// side, since PROPERTY_TYPE_FIELDS is the single source of truth on both ends).
+//
+// - HOUSE/APARTMENT: bedrooms + bathrooms matter; plot size is a nice-to-have, not required.
+// - LAND: no rooms at all — the only thing that matters is how much land it is, so acreage is
+//   required rather than optional.
+// - COMMERCIAL: no bedrooms, but bathrooms and floor/plot size are still relevant.
+// - OTHER: unknown shape, so show everything and let the lister include what applies.
+export const PROPERTY_TYPE_FIELDS: Record<
+  string,
+  { bedrooms: boolean; bathrooms: boolean; acreage: boolean; acreageRequired: boolean; acreageLabel: string }
+> = {
+  HOUSE: { bedrooms: true, bathrooms: true, acreage: true, acreageRequired: false, acreageLabel: "Plot size (acres)" },
+  APARTMENT: { bedrooms: true, bathrooms: true, acreage: false, acreageRequired: false, acreageLabel: "Size (acres)" },
+  LAND: { bedrooms: false, bathrooms: false, acreage: true, acreageRequired: true, acreageLabel: "Land size (acres)" },
+  COMMERCIAL: { bedrooms: false, bathrooms: true, acreage: true, acreageRequired: false, acreageLabel: "Floor/plot size (acres)" },
+  OTHER: { bedrooms: true, bathrooms: true, acreage: true, acreageRequired: false, acreageLabel: "Size (acres)" },
+};
+
+export function getPropertyTypeFields(propertyType: string) {
+  return PROPERTY_TYPE_FIELDS[propertyType] || PROPERTY_TYPE_FIELDS.OTHER;
+}
+
 // Practical bounds so the form and the API actually stop nonsense input instead of just
 // accepting anything — a listing for KSh 5 or 500 bedrooms is never real data.
 export const PRICE_MIN = 10_000;

@@ -19,6 +19,7 @@ import {
   LOCATION_MIN_LENGTH,
   IMAGE_MAX_SIZE_BYTES,
   ALLOWED_IMAGE_MIME_TYPES,
+  getPropertyTypeFields,
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
 
@@ -131,9 +132,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       );
     }
 
-    const parsedBedrooms = bedroomsRaw ? Number(bedroomsRaw) : null;
-    const parsedBathrooms = bathroomsRaw ? Number(bathroomsRaw) : null;
-    const parsedAcreage = acreageRaw ? Number(acreageRaw) : null;
+    // Which of bedrooms/bathrooms/acreage actually apply to this property type — see
+    // lib/propertyConstants.ts. Values submitted for a field that doesn't apply are dropped
+    // here rather than trusted from the client.
+    const typeFields = getPropertyTypeFields(propertyType);
+
+    const parsedBedrooms = typeFields.bedrooms && bedroomsRaw ? Number(bedroomsRaw) : null;
+    const parsedBathrooms = typeFields.bathrooms && bathroomsRaw ? Number(bathroomsRaw) : null;
+    const parsedAcreage = typeFields.acreage && acreageRaw ? Number(acreageRaw) : null;
 
     if (parsedBedrooms !== null && (Number.isNaN(parsedBedrooms) || parsedBedrooms < 0 || parsedBedrooms > BEDROOMS_MAX)) {
       return NextResponse.json({ error: `Bedrooms must be between 0 and ${BEDROOMS_MAX}.` }, { status: 400 });
@@ -146,6 +152,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
     if (parsedAcreage !== null && (Number.isNaN(parsedAcreage) || parsedAcreage <= 0 || parsedAcreage > ACREAGE_MAX)) {
       return NextResponse.json({ error: `Acreage must be greater than 0 and at most ${ACREAGE_MAX}.` }, { status: 400 });
+    }
+    if (typeFields.acreageRequired && parsedAcreage === null) {
+      return NextResponse.json({ error: `${typeFields.acreageLabel} is required for a land listing.` }, { status: 400 });
     }
 
     let parsedLatitude: number | null = null;

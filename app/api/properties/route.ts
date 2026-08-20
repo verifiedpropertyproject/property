@@ -24,6 +24,7 @@ import {
   DEFAULT_COMMISSION_RATE,
   COMMISSION_AGREEMENT_VERSION,
   commissionAgreementText,
+  getPropertyTypeFields,
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
 
@@ -138,9 +139,15 @@ export async function POST(req: Request) {
       );
     }
 
-    const parsedBedrooms = bedroomsRaw ? Number(bedroomsRaw) : null;
-    const parsedBathrooms = bathroomsRaw ? Number(bathroomsRaw) : null;
-    const parsedAcreage = acreageRaw ? Number(acreageRaw) : null;
+    // Which of bedrooms/bathrooms/acreage actually apply to this property type — the single
+    // source of truth shared with the form. Values submitted for a field that doesn't apply
+    // (e.g. "bedrooms" on a LAND listing) are dropped here rather than trusted from the
+    // client, since a hand-crafted request could otherwise bypass what the form hides.
+    const typeFields = getPropertyTypeFields(propertyType);
+
+    const parsedBedrooms = typeFields.bedrooms && bedroomsRaw ? Number(bedroomsRaw) : null;
+    const parsedBathrooms = typeFields.bathrooms && bathroomsRaw ? Number(bathroomsRaw) : null;
+    const parsedAcreage = typeFields.acreage && acreageRaw ? Number(acreageRaw) : null;
 
     if (parsedBedrooms !== null && (Number.isNaN(parsedBedrooms) || parsedBedrooms < 0 || parsedBedrooms > BEDROOMS_MAX)) {
       return NextResponse.json({ error: `Bedrooms must be between 0 and ${BEDROOMS_MAX}.` }, { status: 400 });
@@ -153,6 +160,9 @@ export async function POST(req: Request) {
     }
     if (parsedAcreage !== null && (Number.isNaN(parsedAcreage) || parsedAcreage <= 0 || parsedAcreage > ACREAGE_MAX)) {
       return NextResponse.json({ error: `Acreage must be greater than 0 and at most ${ACREAGE_MAX}.` }, { status: 400 });
+    }
+    if (typeFields.acreageRequired && parsedAcreage === null) {
+      return NextResponse.json({ error: `${typeFields.acreageLabel} is required for a land listing.` }, { status: 400 });
     }
 
     // The map pin is optional, but if either coordinate is present both must be, and both
