@@ -11,6 +11,7 @@ import AdminPropertyList from "@/components/AdminPropertyList";
 import EnquiryApprovalList from "@/components/EnquiryApprovalList";
 import AdminUserList from "@/components/AdminUserList";
 import SignOutButton from "@/components/SignOutButton";
+import NotificationBell from "@/components/NotificationBell";
 import ResendVerificationButton from "@/components/ResendVerificationButton";
 import PhoneForm from "@/components/PhoneForm";
 import { ROLE_LABELS, getRoleLabel } from "@/lib/propertyConstants";
@@ -31,6 +32,7 @@ type MyPropertyWithEnquiries = Property & {
 type ManagedProperty = Property & {
   seller: Pick<User, "name" | "email" | "phone" | "role" | "verified">;
   _count: { savedBy: number };
+  documents: { id: string; documentType: string | null; verified: boolean }[];
 };
 
 type SavedWithProperty = SavedProperty & { property: Property };
@@ -172,6 +174,10 @@ export default async function DashboardPage({
           include: {
             seller: { select: { name: true, email: true, phone: true, role: true, verified: true } },
             _count: { select: { savedBy: true } },
+            documents: {
+              select: { id: true, documentType: true, verified: true },
+              orderBy: { createdAt: "asc" },
+            },
           },
           orderBy: { createdAt: "desc" },
         })
@@ -238,11 +244,13 @@ export default async function DashboardPage({
             </p>
           </div>
           <div>
+            <NotificationBell />
             <SignOutButton />
           </div>
         </header>
 
         <section>
+          <h2>Phone number</h2>
           <PhoneForm currentPhone={currentUser.phone} />
         </section>
 

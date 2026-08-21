@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
+import NotificationBell from "@/components/NotificationBell";
 
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import BuySellCard from "@/components/BuySellCard";
@@ -79,6 +80,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
           {session?.user ? (
             <p>
+              <NotificationBell />
+              {" "}
               <Link href="/dashboard">
                 Go to your dashboard
               </Link>

@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import CommissionRateForm from "@/components/CommissionRateForm";
+import DocumentVerifyButton from "@/components/DocumentVerifyButton";
+import VerificationStatusForm from "@/components/VerificationStatusForm";
 import { getRoleLabel } from "@/lib/propertyConstants";
+import { DOCUMENT_TYPE_LABELS } from "@/lib/documentStorage";
 
 type ManagedProperty = {
   id: string;
@@ -14,6 +17,10 @@ type ManagedProperty = {
   adminNote: string | null;
   verified: boolean;
   daktopVerified: boolean;
+  locationVerified: boolean;
+  ownershipVerified: boolean;
+  surveyVerified: boolean;
+  daktopDecision: string;
   featured: boolean;
   showContact: boolean;
   availabilityStatus: string;
@@ -24,6 +31,7 @@ type ManagedProperty = {
   commissionAgreedAt: string | Date | null;
   seller: { name: string | null; email: string; phone: string | null; role: string | null; verified: boolean };
   _count: { savedBy: number };
+  documents: { id: string; documentType: string | null; verified: boolean }[];
 };
 
 export default function AdminPropertyList({ properties }: { properties: ManagedProperty[] }) {
@@ -177,6 +185,33 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
             <Link href={`/properties/${p.id}/documents`}>
               View supporting documents
             </Link>
+
+            <div>
+              <h4>Daktop verification{p.daktopVerified ? " — DAKTOP VERIFIED" : ""}</h4>
+
+              {p.documents.length === 0 ? (
+                <p>No documents submitted yet.</p>
+              ) : (
+                <ul>
+                  {p.documents.map((doc) => (
+                    <li key={doc.id}>
+                      {doc.documentType ? DOCUMENT_TYPE_LABELS[doc.documentType] : "Document"} received:{" "}
+                      {doc.verified ? "\u2713" : "Pending"}
+                      {" "}
+                      <DocumentVerifyButton documentId={doc.id} verified={doc.verified} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <VerificationStatusForm
+                propertyId={p.id}
+                currentLocationVerified={p.locationVerified}
+                currentOwnershipVerified={p.ownershipVerified}
+                currentSurveyVerified={p.surveyVerified}
+                currentDaktopDecision={p.daktopDecision}
+              />
+            </div>
 
             <div>
               <button

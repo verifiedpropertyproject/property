@@ -10,6 +10,13 @@ import DeleteDocumentButton from "@/components/DeleteDocumentButton";
 import DocumentVerifyButton from "@/components/DocumentVerifyButton";
 import VerificationStatusForm from "@/components/VerificationStatusForm";
 
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pending review",
+  APPROVED: "Approved — live on the site",
+  CHANGES_REQUESTED: "Changes requested",
+  REJECTED: "Rejected",
+};
+
 export default async function PropertyDocumentsPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
 
@@ -65,9 +72,29 @@ export default async function PropertyDocumentsPage({ params }: { params: { id: 
         <p>
           For: <strong>{property.title}</strong>
         </p>
-        <p>
-          Upload documents that help us verify this property and your authority to list it.
-        </p>
+
+        <section>
+          <h2>Where this listing stands</h2>
+          <p>
+            This is the last step of creating your listing. Your property details are already
+            saved — adding documents below is optional but helps us verify it faster.
+          </p>
+          <p>
+            Current status: <strong>{STATUS_LABELS[property.status] || property.status}</strong>
+          </p>
+          {property.status === "PENDING" && (
+            <p>
+              You don&apos;t need to click anything else after this page. Once you&apos;re done
+              adding documents (or if you have none to add right now), your listing stays in the
+              review queue and Daktop will check it.
+            </p>
+          )}
+          {property.status === "CHANGES_REQUESTED" && property.adminNote && (
+            <p>
+              Daktop asked for a change before this can be reviewed further: &quot;{property.adminNote}&quot;
+            </p>
+          )}
+        </section>
 
         {isAdmin && (
           <section>
@@ -92,49 +119,63 @@ export default async function PropertyDocumentsPage({ params }: { params: { id: 
         )}
 
         <section>
-          <h2>Documents</h2>
+          <h2>
+            {documents.length === 0
+              ? "Documents you've submitted"
+              : `Documents you've submitted (${documents.length})`}
+          </h2>
           {documents.length === 0 ? (
-            <p>No documents uploaded yet.</p>
+            <p>
+              You haven&apos;t uploaded any documents yet. Add at least one below — a title deed
+              or similar proof of ownership helps your listing get reviewed faster.
+            </p>
           ) : (
-            <ul>
-              {documents.map((doc: PropertyDocument) => (
+            <ol>
+              {documents.map((doc: PropertyDocument, index: number) => (
                 <li key={doc.id}>
-                  <div>
+                  <p>
+                    Document {index + 1}:{" "}
                     {doc.documentType ? DOCUMENT_TYPE_LABELS[doc.documentType] : "Unspecified type"}
-                    {" — "}
-                    {doc.verified ? "Received \u2713" : "Pending"}
-                  </div>
-                  <div>
-                    <a href={`/api/documents/${doc.id}`}>
-                      {doc.fileName}
-                    </a>{" "}
-                    <span>
-                      ({(doc.fileSize / 1024).toFixed(0)} KB)
-                    </span>
-                  </div>
-                  <small>
-                    Uploaded {new Date(doc.createdAt).toLocaleString()}
-                  </small>
+                  </p>
+                  <p>
+                    File: <a href={`/api/documents/${doc.id}`}>{doc.fileName}</a>{" "}
+                    ({(doc.fileSize / 1024).toFixed(0)} KB)
+                  </p>
+                  <p>
+                    Submitted by you on {new Date(doc.createdAt).toLocaleString()}
+                  </p>
+                  <p>
+                    Daktop review: {doc.verified ? "Received \u2713" : "Pending review"}
+                  </p>
                   {isAdmin && (
-                    <div>
+                    <p>
                       <DocumentVerifyButton documentId={doc.id} verified={doc.verified} />
-                    </div>
+                    </p>
                   )}
                   {isOwner && (
-                    <div>
+                    <p>
                       <DeleteDocumentButton documentId={doc.id} fileName={doc.fileName} />
-                    </div>
+                    </p>
                   )}
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
         </section>
 
         {isOwner && (
           <section>
-            <h2>+ Upload Document</h2>
+            <h2>Add another document</h2>
+            <p>
+              You can upload as many documents as you have — one at a time or several at once —
+              and you can keep coming back to add more later, even after your first upload.
+            </p>
             <DocumentUploadForm propertyId={property.id} />
+            <p>
+              Done for now?{" "}
+              <Link href="/dashboard">Return to your dashboard</Link> — your listing stays in the
+              review queue whether or not you add more documents.
+            </p>
           </section>
         )}
       </div>

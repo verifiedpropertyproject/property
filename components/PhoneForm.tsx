@@ -49,41 +49,33 @@ export default function PhoneForm({ currentPhone }: { currentPhone: string | nul
 
   return (
     <form onSubmit={handleSubmit}>
-      <label>
-        Phone number
+      <label htmlFor="phone">Phone number</label>
+
+      <p>
         <input
+          id="phone"
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           pattern={PHONE_INPUT_PATTERN}
           placeholder="07XXXXXXXX or +2547XXXXXXXX"
         />
-        <small>
-          {PHONE_FORMAT_HINT}
-        </small>
-        {currentPhone && phone === currentPhone && (
-          <small>✓ Current phone number</small>
-        )}
-      </label>
+      </p>
 
-      <button
-        type="submit"
-        disabled={loading}
-      >
-        {loading ? "Saving..." : "Save"}
-      </button>
+      <p>{PHONE_FORMAT_HINT}</p>
 
-      {error && (
-        <p>
-          {error}
-        </p>
+      {currentPhone && phone === currentPhone && (
+        <p>This matches the phone number currently saved on your account.</p>
       )}
 
-      {success && (
-        <p>
-          {success}
-        </p>
-      )}
+      <p>
+        <button type="submit" disabled={loading}>
+          {loading ? "Saving..." : "Save"}
+        </button>
+      </p>
+
+      {error && <p>{error}</p>}
+      {success && <p>{success}</p>}
     </form>
   );
 }

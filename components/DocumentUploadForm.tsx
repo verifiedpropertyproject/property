@@ -52,7 +52,9 @@ export default function DocumentUploadForm({ propertyId }: { propertyId: string 
         return;
       }
 
-      setSuccess(`Uploaded ${data.documents.length} document${data.documents.length === 1 ? "" : "s"}.`);
+      setSuccess(
+        `Submitted ${data.documents.length} document${data.documents.length === 1 ? "" : "s"}. You can add another below if you have more.`
+      );
       setDocumentType("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       router.refresh();
@@ -109,7 +111,7 @@ export default function DocumentUploadForm({ propertyId }: { propertyId: string 
         type="submit"
         disabled={loading}
       >
-        {loading ? "Uploading..." : "+ Upload Document"}
+        {loading ? "Submitting..." : "Submit document"}
       </button>
     </form>
   );
