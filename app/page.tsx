@@ -9,7 +9,6 @@ import NotificationBell from "@/components/NotificationBell";
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import BuySellCard from "@/components/BuySellCard";
 
-
 type PropertyWithSeller = Property & { seller: Pick<User, "name" | "email" | "role" | "phone" | "verified"> };
 
 type SearchParams = {
@@ -26,13 +25,6 @@ const AVAILABILITY_LABELS: Record<string, string> = {
   RESERVED: "Reserved",
   SOLD: "Sold",
   RENTED: "Rented",
-};
-
-const AVAILABILITY_STYLES: Record<string, string> = {
-  AVAILABLE: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
-  RESERVED: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
-  SOLD: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
-  RENTED: "bg-sky-50 text-sky-700 ring-1 ring-sky-200",
 };
 
 export default async function Home({ searchParams }: { searchParams: SearchParams }) {
@@ -74,83 +66,55 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   }
 
   return (
-    <div className="bg-[#F7F8F6]">
-
-      {/* Hero + search */}
-      <div className="relative overflow-hidden bg-[#0E3B2E]">
-        {/* soft background glow, subject-appropriate: skyline silhouette feel without an image asset */}
-        <div className="pointer-events-none absolute inset-0 opacity-[0.07]">
-          <div className="absolute -right-24 top-0 h-full w-2/3 bg-gradient-to-l from-white to-transparent" />
+    <div className="page">
+      <div className="hero">
+        <div className="utilityBar">
+          {session?.user ? (
+            <>
+              <NotificationBell />
+              <Link href="/dashboard">Go to your dashboard</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login">Log in</Link>
+              <span className="heroDivider">|</span>
+              <Link href="/register">Create an account</Link>
+            </>
+          )}
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-6 pt-14 pb-40 sm:px-8">
-          <header className="max-w-2xl">
-            <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-[2.75rem]">
-              East Africa&apos;s Trusted Marketplace for{" "}
-              <span className="text-[#C99A3A]">Verified Properties</span>
+        <div className="heroInner">
+          <header>
+            <span className="heroEyebrow">Verified Listings, Trusted Partners</span>
+            <h1 className="heroTitle">
+              East Africa&apos;s Trusted Marketplace for Verified Properties
             </h1>
-            <p className="mt-4 text-base leading-relaxed text-emerald-100/80 sm:text-lg">
-              Buy and sell land, homes and commercial property with verified ownership and professional due diligence.
+            <p className="heroSubtitle">
+              Buy and sell land, homes and commercial property with verified ownership and professional due
+              diligence.
             </p>
-
-            {session?.user ? (
-              <p className="mt-6 flex items-center gap-4 text-sm font-medium text-white">
-                <NotificationBell />
-                <Link
-                  href="/dashboard"
-                  className="rounded-lg bg-[#C99A3A] px-5 py-2.5 text-white shadow-sm transition hover:bg-[#b8862b]"
-                >
-                  Go to your dashboard
-                </Link>
-              </p>
-            ) : (
-              <p className="mt-6 flex items-center gap-3 text-sm font-semibold">
-                <Link
-                  href="/login"
-                  className="rounded-lg border border-white/25 px-5 py-2.5 text-white transition hover:bg-white/10"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className="rounded-lg bg-[#C99A3A] px-5 py-2.5 text-white shadow-sm transition hover:bg-[#b8862b]"
-                >
-                  Create an account
-                </Link>
-              </p>
-            )}
           </header>
         </div>
 
-        {/* Search card — floats over the hero/listings boundary like the reference */}
-        <section className="relative z-10 mx-auto -mt-24 max-w-6xl px-6 sm:px-8">
-          <div className="rounded-2xl bg-white p-6 shadow-xl ring-1 ring-black/5 sm:p-8">
-            <h2 className="mb-5 text-lg font-bold text-[#0E3B2E]">Find a Property</h2>
+        <div className="searchWrap">
+          <div className="searchCard">
+            <p className="searchTitle">Find a Property</p>
 
             <form method="get">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Location / County
-                  </label>
+              <div className="searchGrid">
+                <div className="field">
+                  <label>Location / County</label>
                   <input
                     type="text"
                     name="location"
                     defaultValue={searchParams.location}
                     placeholder="e.g. Kitengela"
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:border-[#0E3B2E] focus:bg-white focus:ring-1 focus:ring-[#0E3B2E]"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Property Type
-                  </label>
-                  <select
-                    name="propertyType"
-                    defaultValue={searchParams.propertyType || ""}
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#0E3B2E] focus:bg-white focus:ring-1 focus:ring-[#0E3B2E]"
-                  >
+                <div className="field">
+                  <label>Property Type</label>
+                  <select name="propertyType" defaultValue={searchParams.propertyType || ""}>
                     <option value="">Any type</option>
                     {PROPERTY_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -160,30 +124,18 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Buy or Rent
-                  </label>
-                  <select
-                    name="listingType"
-                    defaultValue={searchParams.listingType || ""}
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#0E3B2E] focus:bg-white focus:ring-1 focus:ring-[#0E3B2E]"
-                  >
+                <div className="field">
+                  <label>Buy or Rent</label>
+                  <select name="listingType" defaultValue={searchParams.listingType || ""}>
                     <option value="">Any</option>
                     <option value="SALE">For sale</option>
                     <option value="RENT">For rent</option>
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Availability
-                  </label>
-                  <select
-                    name="availabilityStatus"
-                    defaultValue={searchParams.availabilityStatus || ""}
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none focus:border-[#0E3B2E] focus:bg-white focus:ring-1 focus:ring-[#0E3B2E]"
-                  >
+                <div className="field">
+                  <label>Availability</label>
+                  <select name="availabilityStatus" defaultValue={searchParams.availabilityStatus || ""}>
                     <option value="">Any</option>
                     <option value="AVAILABLE">Available</option>
                     <option value="RESERVED">Reserved</option>
@@ -192,159 +144,109 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Min Price (KSh)
-                  </label>
+                <div className="field">
+                  <label>Min Price (KSh)</label>
                   <input
                     type="number"
                     name="minPrice"
                     defaultValue={searchParams.minPrice}
                     min="0"
                     placeholder="Any"
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:border-[#0E3B2E] focus:bg-white focus:ring-1 focus:ring-[#0E3B2E]"
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Max Price (KSh)
-                  </label>
+                <div className="field">
+                  <label>Max Price (KSh)</label>
                   <input
                     type="number"
                     name="maxPrice"
                     defaultValue={searchParams.maxPrice}
                     min="0"
                     placeholder="Any"
-                    className="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:border-[#0E3B2E] focus:bg-white focus:ring-1 focus:ring-[#0E3B2E]"
                   />
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-4">
-                <button
-                  type="submit"
-                  className="rounded-lg bg-[#C99A3A] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#b8862b]"
-                >
+              <div className="searchActions">
+                <button type="submit" className="searchSubmit">
                   Search Properties
                 </button>
-                <a
-                  href="/"
-                  className="text-sm font-medium text-gray-500 underline-offset-2 transition hover:text-[#0E3B2E] hover:underline"
-                >
+                <a href="/" className="clearLink">
                   Clear filters
                 </a>
               </div>
             </form>
           </div>
-        </section>
+        </div>
       </div>
 
-      {/* Listings */}
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-12 sm:px-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-[#0E3B2E]">
-            Verified Listings <span className="text-gray-400">({properties.length})</span>
-          </h2>
+      <section className="listingsSection">
+        <div className="listingsHeader">
+          <h2 className="listingsTitle">Verified Listings ({properties.length})</h2>
         </div>
 
         {properties.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center text-sm text-gray-500">
-            No properties match your search. Try adjusting your filters.
-          </p>
+          <p className="emptyState">No properties match your search. Try adjusting your filters.</p>
         ) : (
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <ul className="listingsGrid">
             {properties.map((p: PropertyWithSeller) => (
-              <li
-                key={p.id}
-                className="group flex flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
-              >
+              <li key={p.id} className="card">
                 {p.imageUrl && (
-                  <Link href={`/properties/${p.id}`} className="relative block aspect-[4/3] overflow-hidden bg-gray-100">
-                    <img
-                      src={p.imageUrl}
-                      alt={p.title}
-                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-                      {p.featured && (
-                        <span className="rounded-md bg-[#0E3B2E] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-                          Featured
-                        </span>
-                      )}
-                      {p.daktopVerified && (
-                        <span className="rounded-md bg-[#C99A3A] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-                          Daktop Verified
-                        </span>
-                      )}
+                  <Link href={`/properties/${p.id}`} className="cardImageWrap">
+                    <img src={p.imageUrl} alt={p.title} />
+                    <div className="cardBadges">
+                      <div className="badgeGroup">
+                        {p.featured && <span className="badgeFeatured">Featured</span>}
+                        {p.daktopVerified && <span className="badgeVerified">Daktop Verified</span>}
+                      </div>
+                      <span className="badgeStatus">
+                        {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
+                      </span>
                     </div>
-                    <span
-                      className={`absolute right-3 top-3 rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                        AVAILABILITY_STYLES[p.availabilityStatus] || "bg-gray-100 text-gray-600 ring-1 ring-gray-200"
-                      }`}
-                    >
-                      {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
-                    </span>
                   </Link>
                 )}
 
-                <div className="flex flex-1 flex-col gap-2 p-4">
-                  <Link href={`/properties/${p.id}`}>
-                    <strong className="line-clamp-1 text-base font-bold text-gray-900 transition group-hover:text-[#0E3B2E]">
-                      {p.title}
-                    </strong>
+                <div className="cardBody">
+                  <Link href={`/properties/${p.id}`} className="cardTitleRow">
+                    <strong className="cardTitle">{p.title}</strong>
                   </Link>
 
-                  <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-gray-500">
-                    <span
-                      className={
-                        p.verified
-                          ? "text-emerald-600"
-                          : "text-gray-400"
-                      }
-                    >
+                  <div className="cardMetaLine">
+                    <span className={p.verified ? "verifiedTag" : "notVerifiedTag"}>
                       {p.verified ? "Verified" : "Not Verified"}
                     </span>
-                    <span className="text-gray-300">—</span>
-                    <span>{getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)}</span>
-                    <span className="text-gray-300">—</span>
-                    <span>{p.listingType === "SALE" ? "For sale" : "For rent"}</span>
+                    — {getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)} —{" "}
+                    {p.listingType === "SALE" ? "For sale" : "For rent"}
                   </div>
 
-                  <div className="text-lg font-extrabold text-[#0E3B2E]">
-                    KSh {p.price.toLocaleString()}
-                  </div>
+                  <div className="cardPrice">KSh {p.price.toLocaleString()}</div>
 
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                  <div className="cardLocation">
                     <span>{p.location}</span>
                     {p.bedrooms !== null && <span>— {p.bedrooms} bed</span>}
                     {p.bathrooms !== null && <span>— {p.bathrooms} bath</span>}
                     {p.acreage !== null && <span>— {p.acreage} acres</span>}
                   </div>
 
-                  <hr className="my-1 border-gray-100" />
+                  <div className="cardFooter">
+                    <span className="sellerLine">
+                      Listed by {p.seller.name || p.seller.email} ({getRoleLabel(p.seller.role)})
+                      {p.seller.verified && (
+                        <span className="verifiedSeller"> — Verified {getRoleLabel(p.seller.role)}</span>
+                      )}
+                      {p.representingName && <> — representing {p.representingName}</>}
+                    </span>
 
-                  <small className="text-xs text-gray-500">
-                    Listed by{" "}
-                    <span className="font-medium text-gray-700">{p.seller.name || p.seller.email}</span>{" "}
-                    ({getRoleLabel(p.seller.role)})
-                    {p.seller.verified && (
-                      <span className="text-emerald-600"> — Verified {getRoleLabel(p.seller.role)}</span>
-                    )}
-                    {p.representingName && <> — representing {p.representingName}</>}
-                  </small>
-
-                  {p.showContact && p.seller.phone && (
-                    <small className="text-xs font-medium text-gray-600">
-                      Contact: {p.seller.phone}
-                    </small>
-                  )}
-
-                  <div className="mt-auto flex items-center justify-between pt-2">
-                    {session?.user?.role === "BUYER" && (
-                      <SaveButton propertyId={p.id} initiallySaved={savedPropertyIds.has(p.id)} />
+                    {p.showContact && p.seller.phone && (
+                      <span className="contactLine">Contact: {p.seller.phone}</span>
                     )}
                   </div>
+
+                  {session?.user?.role === "BUYER" && (
+                    <div className="saveButtonWrap">
+                      <SaveButton propertyId={p.id} initiallySaved={savedPropertyIds.has(p.id)} />
+                    </div>
+                  )}
                 </div>
               </li>
             ))}
@@ -352,10 +254,271 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         )}
       </section>
 
-      <div className="mx-auto max-w-6xl px-6 pb-20 sm:px-8">
-        <BuySellCard session={session} />
-      </div>
+      <BuySellCard session={session} />
 
+      <style>{`
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap");
+
+        .page {
+          --forest-900: #0a2f23;
+          --forest-800: #0b3d2e;
+          --forest-700: #0f4c38;
+          --gold-500: #c9992e;
+          --gold-600: #b3841f;
+          --cream-50: #fbfaf7;
+          --ink-900: #17211d;
+          --ink-600: #55625b;
+          --ink-400: #8a958f;
+          --line: #e6e8e3;
+          --card-shadow: 0 1px 2px rgba(10, 47, 35, 0.06), 0 8px 24px rgba(10, 47, 35, 0.06);
+          font-family: "Inter", system-ui, sans-serif;
+          color: var(--ink-900);
+          background: var(--cream-50);
+        }
+
+        .page h1, .page h2, .page strong { font-family: "Poppins", "Inter", system-ui, sans-serif; }
+
+        /* Hero */
+        .hero {
+          position: relative;
+          padding: 64px 6vw 140px;
+          background:
+            linear-gradient(100deg, rgba(6, 26, 20, 0.92) 0%, rgba(6, 26, 20, 0.55) 45%, rgba(6, 26, 20, 0.15) 75%),
+            url("https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=1600&auto=format&fit=crop") center/cover no-repeat;
+          color: #fff;
+          overflow: visible;
+        }
+        .heroInner { max-width: 640px; }
+        .heroEyebrow {
+          display: inline-block;
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--gold-500);
+          margin: 0 0 14px;
+        }
+        .heroTitle {
+          font-size: clamp(30px, 4vw, 44px);
+          line-height: 1.15;
+          font-weight: 700;
+          margin: 0 0 18px;
+          color: #fff;
+        }
+        .heroSubtitle {
+          font-size: 17px;
+          line-height: 1.6;
+          color: rgba(255, 255, 255, 0.82);
+          max-width: 480px;
+          margin: 0 0 28px;
+        }
+        .utilityBar {
+          display: flex;
+          justify-content: flex-end;
+          gap: 16px;
+          margin-bottom: 36px;
+        }
+        .utilityBar a {
+          color: rgba(255, 255, 255, 0.85);
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 500;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .utilityBar a:hover { color: #fff; text-decoration: underline; }
+        .heroDivider { color: rgba(255, 255, 255, 0.5); font-size: 13px; }
+
+        /* Search card */
+        .searchWrap {
+          max-width: 1180px;
+          margin: -96px auto 0;
+          padding: 0 6vw;
+          position: relative;
+          z-index: 2;
+        }
+        .searchCard {
+          background: var(--forest-800);
+          border-radius: 18px;
+          padding: 28px 28px 22px;
+          box-shadow: 0 20px 45px rgba(6, 26, 20, 0.35);
+        }
+        .searchTitle {
+          color: #fff;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          margin: 0 0 18px;
+          text-transform: uppercase;
+          opacity: 0.85;
+        }
+        .searchGrid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 14px 16px;
+        }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field label {
+          font-size: 12px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.7);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+        .field input, .field select {
+          height: 44px;
+          border-radius: 10px;
+          border: none;
+          padding: 0 14px;
+          font-size: 14px;
+          font-family: "Inter", sans-serif;
+          color: var(--ink-900);
+          background: #fff;
+          outline: none;
+        }
+        .field input::placeholder { color: var(--ink-400); }
+        .field input:focus, .field select:focus { box-shadow: 0 0 0 2px var(--gold-500); }
+        .searchActions {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-top: 20px;
+          padding-top: 18px;
+          border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .searchSubmit {
+          background: var(--gold-500);
+          color: var(--forest-900);
+          border: none;
+          height: 46px;
+          padding: 0 30px;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+        .searchSubmit:hover { background: var(--gold-600); }
+        .clearLink {
+          font-size: 13px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.75);
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .clearLink:hover { color: #fff; }
+
+        /* Listings */
+        .listingsSection { max-width: 1180px; margin: 0 auto; padding: 72px 6vw 96px; }
+        .listingsHeader {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          margin-bottom: 28px;
+        }
+        .listingsTitle { font-size: 24px; font-weight: 700; color: var(--forest-900); margin: 0; }
+        .listingsGrid {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+          gap: 24px;
+        }
+        .emptyState {
+          padding: 48px 24px;
+          text-align: center;
+          color: var(--ink-600);
+          background: #fff;
+          border: 1px dashed var(--line);
+          border-radius: 14px;
+        }
+
+        /* Property card */
+        .card {
+          background: #fff;
+          border-radius: 14px;
+          overflow: hidden;
+          border: 1px solid var(--line);
+          box-shadow: var(--card-shadow);
+          display: flex;
+          flex-direction: column;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 4px 8px rgba(10, 47, 35, 0.08), 0 16px 32px rgba(10, 47, 35, 0.1);
+        }
+        .cardImageWrap { position: relative; aspect-ratio: 4 / 3; background: #eef1ee; display: block; }
+        .cardImageWrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .cardBadges {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          right: 12px;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 8px;
+        }
+        .badgeGroup { display: flex; gap: 6px; flex-wrap: wrap; }
+        .badgeFeatured, .badgeVerified, .badgeStatus {
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.03em;
+          padding: 4px 9px;
+          border-radius: 6px;
+          text-transform: uppercase;
+          color: #fff;
+          white-space: nowrap;
+        }
+        .badgeFeatured { background: var(--gold-500); color: var(--forest-900); }
+        .badgeVerified { background: var(--forest-800); }
+        .badgeStatus { background: rgba(23, 33, 29, 0.75); backdrop-filter: blur(2px); }
+        .cardBody { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .cardTitleRow { text-decoration: none; color: inherit; }
+        .cardTitle { font-size: 16px; font-weight: 700; color: var(--ink-900); line-height: 1.35; }
+        .cardMetaLine {
+          font-size: 13px;
+          color: var(--ink-600);
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .verifiedTag { font-weight: 600; color: var(--forest-700); }
+        .notVerifiedTag { font-weight: 600; color: var(--ink-400); }
+        .cardPrice { font-size: 19px; font-weight: 700; color: var(--forest-800); margin: 2px 0; }
+        .cardLocation { font-size: 13px; color: var(--ink-600); display: flex; flex-wrap: wrap; gap: 4px; }
+        .cardFooter {
+          margin-top: 6px;
+          padding-top: 10px;
+          border-top: 1px solid var(--line);
+          font-size: 12.5px;
+          color: var(--ink-600);
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .sellerLine { color: var(--ink-600); }
+        .verifiedSeller { color: var(--forest-700); font-weight: 600; }
+        .contactLine { color: var(--forest-800); font-weight: 600; }
+        .saveButtonWrap { margin-top: 10px; }
+
+        /* Responsive */
+        @media (max-width: 860px) {
+          .searchGrid { grid-template-columns: repeat(2, 1fr); }
+          .searchWrap { margin-top: -70px; }
+          .hero { padding: 40px 6vw 120px; }
+        }
+        @media (max-width: 560px) {
+          .searchGrid { grid-template-columns: 1fr; }
+          .searchActions { flex-direction: column; align-items: stretch; }
+          .searchSubmit { width: 100%; }
+          .listingsHeader { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+      `}</style>
     </div>
   );
 }
