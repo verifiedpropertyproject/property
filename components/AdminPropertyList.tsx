@@ -8,7 +8,7 @@ import CommissionRateForm from "@/components/CommissionRateForm";
 import DocumentVerifyButton from "@/components/DocumentVerifyButton";
 import VerificationStatusForm from "@/components/VerificationStatusForm";
 import { getRoleLabel } from "@/lib/propertyConstants";
-import { DOCUMENT_TYPE_LABELS } from "@/lib/documentStorage";
+import { DOCUMENT_TYPE_LABELS } from "@/lib/documentTypes";
 
 type ManagedProperty = {
   id: string;
