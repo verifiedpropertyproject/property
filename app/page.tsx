@@ -4,8 +4,10 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
-import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
+import NotificationBell from "@/components/NotificationBell";
 
+import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
+import BuySellCard from "@/components/BuySellCard";
 
 
 type PropertyWithSeller = Property & { seller: Pick<User, "name" | "email" | "role" | "phone" | "verified"> };
@@ -106,8 +108,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
   return (
     <div style={{ backgroundColor: COLORS.pageBg, overflowX: "hidden" }}>
-          
-      
 
       <div
         style={{
@@ -242,7 +242,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </p>
 
           {session?.user ? (
-            <p style={{ marginTop: "16px" }}>
+            <p style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <NotificationBell />
               <Link href="/dashboard" className="dk-link" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
                 Go to your dashboard
               </Link>
@@ -467,6 +468,21 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                       FEATURED
                     </span>
                   )}
+                  {p.daktopVerified && (
+                    <span
+                      style={{
+                        backgroundColor: COLORS.primaryGreen,
+                        color: COLORS.white,
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        padding: "3px 8px",
+                        borderRadius: "4px",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      DAKTOP VERIFIED
+                    </span>
+                  )}
                   <span
                     style={{
                       backgroundColor: COLORS.lightGreenBg,
@@ -480,9 +496,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                     {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
                   </span>
                 </div>
-
-
-
 
                 {/* Title */}
                 <Link href={`/properties/${p.id}`} style={{ textDecoration: "none" }}>
@@ -524,11 +537,11 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
                 {/* Seller info */}
                 <small style={{ color: COLORS.textGray, display: "block", overflowWrap: "break-word" }}>
-                  Listed by {p.seller.name || p.seller.email} ({p.seller.role === "AGENT" ? "Agent" : "Owner"})
+                  Listed by {p.seller.name || p.seller.email} ({getRoleLabel(p.seller.role)})
                   {p.seller.verified && (
                     <span style={{ color: COLORS.primaryGreen }}>
                       {" "}
-                      — Verified {p.seller.role === "AGENT" ? "Agent" : "Owner"}
+                      — Verified {getRoleLabel(p.seller.role)}
                     </span>
                   )}
                   {p.representingName && <> — representing {p.representingName}</>}
@@ -552,13 +565,11 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </ul>
         )}
       </section>
-                
 
+      <BuySellCard session={session} />
 
-      
       </div>
 
-      
     </div>
   );
 }
