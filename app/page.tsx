@@ -2,13 +2,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
 import NotificationBell from "@/components/NotificationBell";
-
-import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import BuySellCard from "@/components/BuySellCard";
-
+import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
+import { Search, MapPin, Bed, Bath, Maximize2, ShieldCheck, XCircle, ArrowRight } from "lucide-react";
 
 type PropertyWithSeller = Property & { seller: Pick<User, "name" | "email" | "role" | "phone" | "verified"> };
 
@@ -28,62 +28,18 @@ const AVAILABILITY_LABELS: Record<string, string> = {
   RENTED: "Rented",
 };
 
-// --- Color palette (matches the Daktop360 reference design) ---
-const COLORS = {
-  darkGreen: "#0B2E1F",
-  primaryGreen: "#1F7A4C",
-  primaryGreenHover: "#176339",
-  lightGreenBg: "#E8F5EC",
-  pageBg: "#FFFFFF",
-  sectionBg: "#F7FAF8",
-  textDark: "#111827",
-  textGray: "#6B7280",
-  border: "#E5E7EB",
-  white: "#FFFFFF",
-};
-
-const fieldWrapperStyle: React.CSSProperties = {
-  flex: "1 1 160px",
-  minWidth: "140px",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const fieldLabelStyle: React.CSSProperties = {
-  color: COLORS.textDark,
-  fontWeight: 500,
-  fontSize: "13px",
-  marginBottom: "6px",
-};
-
-const fieldInputStyle: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: "8px",
-  border: `1px solid ${COLORS.border}`,
-  width: "100%",
-  color: COLORS.textDark,
-  boxSizing: "border-box",
-  fontSize: "14px",
-  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-};
+const inputStyles = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-[#1F7A4C] focus:ring-2 focus:ring-[#1F7A4C]/20 transition-all bg-white placeholder:text-gray-400";
+const labelStyles = "block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wider";
 
 export default async function Home({ searchParams }: { searchParams: SearchParams }) {
   const session = await getServerSession(authOptions);
 
   const where: Prisma.PropertyWhereInput = { status: "APPROVED", seller: { suspended: false } };
 
-  if (searchParams.location) {
-    where.location = { contains: searchParams.location };
-  }
-  if (searchParams.propertyType) {
-    where.propertyType = searchParams.propertyType;
-  }
-  if (searchParams.listingType) {
-    where.listingType = searchParams.listingType;
-  }
-  if (searchParams.availabilityStatus) {
-    where.availabilityStatus = searchParams.availabilityStatus;
-  }
+  if (searchParams.location) where.location = { contains: searchParams.location };
+  if (searchParams.propertyType) where.propertyType = searchParams.propertyType;
+  if (searchParams.listingType) where.listingType = searchParams.listingType;
+  if (searchParams.availabilityStatus) where.availabilityStatus = searchParams.availabilityStatus;
   if (searchParams.minPrice || searchParams.maxPrice) {
     where.price = {};
     if (searchParams.minPrice) where.price.gte = Number(searchParams.minPrice);
@@ -96,7 +52,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
   });
 
-  // So each listing's Save button can show the correct initial state without a client-side fetch
   let savedPropertyIds = new Set<string>();
   if (session?.user?.role === "BUYER") {
     const saved = await prisma.savedProperty.findMany({
@@ -107,469 +62,235 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   }
 
   return (
-    <div style={{ backgroundColor: COLORS.pageBg, overflowX: "hidden" }}>
-
-      <div
-        style={{
-          color: COLORS.textDark,
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          width: "100%",
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "clamp(16px, 4vw, 40px)",
-          boxSizing: "border-box",
-        }}
-      >
-      {/* Global styles for hover states + animations (can't be done with inline style objects) */}
-      <style>{`
-        * { box-sizing: border-box; }
-
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .dk-hero { animation: fadeIn 0.5s ease both; }
-
-        .dk-card {
-          animation: fadeInUp 0.45s ease both;
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-        }
-        .dk-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 12px 24px rgba(11,46,31,0.12);
-          border-color: ${COLORS.primaryGreen}55;
-        }
-
-        .dk-card-img-wrap { overflow: hidden; border-radius: 8px; }
-        .dk-card-img {
-          transition: transform 0.4s ease;
-        }
-        .dk-card:hover .dk-card-img {
-          transform: scale(1.06);
-        }
-
-        .dk-title {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          transition: color 0.2s ease;
-        }
-        .dk-card:hover .dk-title {
-          color: ${COLORS.primaryGreen};
-        }
-
-        .dk-btn {
-          transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-        }
-        .dk-btn:hover {
-          background-color: ${COLORS.primaryGreenHover};
-          box-shadow: 0 4px 12px rgba(31,122,76,0.35);
-        }
-        .dk-btn:active {
-          transform: scale(0.97);
-        }
-
-        .dk-link {
-          transition: color 0.2s ease;
-        }
-        .dk-link:hover {
-          color: ${COLORS.primaryGreenHover};
-          text-decoration: underline;
-        }
-
-        .dk-input:focus, .dk-input:focus-visible {
-          outline: none;
-          border-color: ${COLORS.primaryGreen} !important;
-          box-shadow: 0 0 0 3px ${COLORS.primaryGreen}22;
-        }
-
-        .dk-clear-link {
-          transition: opacity 0.2s ease;
-        }
-        .dk-clear-link:hover {
-          opacity: 0.7;
-        }
-
-        /* ---------- Responsive refinements ---------- */
-        @media (max-width: 640px) {
-          .dk-search-btn-row {
-            flex-direction: column;
-            align-items: stretch !important;
-          }
-          .dk-search-btn-row button {
-            width: 100%;
-          }
-          .dk-search-btn-row a {
-            text-align: center;
-          }
-        }
-      `}</style>
-
-      {/* ---------- Hero: intro (1fr) + search panel (3fr), side by side on desktop ---------- */}
-      <div
-        className="dk-hero"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "28px",
-          alignItems: "flex-start",
-          marginBottom: "28px",
-        }}
-      >
-        {/* Left column — intro / account access */}
-        <header style={{ flex: "1 1 280px", minWidth: "0" }}>
-          <h1
-            style={{
-              color: COLORS.darkGreen,
-              marginBottom: "10px",
-              fontSize: "clamp(22px, 3vw, 28px)",
-              lineHeight: 1.25,
-              wordBreak: "break-word",
-            }}
-          >
-            East Africa&apos;s Trusted Marketplace for Verified Properties
-          </h1>
-          <p style={{ color: COLORS.textGray, margin: 0, lineHeight: 1.6 }}>
-            Buy and sell land, homes and commercial property with verified ownership and professional due diligence.
-          </p>
-
-          {session?.user ? (
-            <p style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "10px" }}>
-              <NotificationBell />
-              <Link href="/dashboard" className="dk-link" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
-                Go to your dashboard
-              </Link>
+    <div className="min-h-screen bg-slate-50/50 text-gray-900 font-sans antialiased">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+        
+        {/* --- Hero Section --- */}
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left Intro Column */}
+          <header className="lg:col-span-4 space-y-4 pt-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#E8F5EC] text-[#1F7A4C]">
+              <ShieldCheck className="w-4 h-4" /> 100% Verified Listings
+            </span>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0B2E1F] tracking-tight leading-tight">
+              East Africa&apos;s Trusted Real Estate Marketplace
+            </h1>
+            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+              Buy and sell land, homes, and commercial properties with verified ownership and transparent background checks.
             </p>
-          ) : (
-            <p style={{ marginTop: "16px" }}>
-              <Link href="/login" className="dk-link" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
-                Log in
-              </Link>{" "}
-              |{" "}
-              <Link href="/register" className="dk-link" style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none" }}>
-                Create an account
-              </Link>
-            </p>
-          )}
-        </header>
 
-        {/* Right column — search panel */}
-        <section
-          style={{
-            flex: "3 1 560px",
-            minWidth: "0",
-            width: "100%",
-            backgroundColor: COLORS.sectionBg,
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: "14px",
-            padding: "clamp(16px, 3vw, 24px)",
-          }}
-        >
-          <h2 style={{ color: COLORS.darkGreen, marginTop: 0, marginBottom: "14px", fontSize: "18px" }}>
-            Find a Property
-          </h2>
-
-          <form method="get">
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "14px",
-                marginBottom: "18px",
-              }}
-            >
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Location / County</label>
-                <input
-                  type="text"
-                  name="location"
-                  defaultValue={searchParams.location}
-                  placeholder="e.g. Kitengela"
-                  className="dk-input"
-                  style={fieldInputStyle}
-                />
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Property Type</label>
-                <select
-                  name="propertyType"
-                  defaultValue={searchParams.propertyType || ""}
-                  className="dk-input"
-                  style={fieldInputStyle}
-                >
-                  <option value="">Any type</option>
-                  {PROPERTY_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {PROPERTY_TYPE_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Buy or Rent</label>
-                <select
-                  name="listingType"
-                  defaultValue={searchParams.listingType || ""}
-                  className="dk-input"
-                  style={fieldInputStyle}
-                >
-                  <option value="">Any</option>
-                  <option value="SALE">For sale</option>
-                  <option value="RENT">For rent</option>
-                </select>
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Availability</label>
-                <select
-                  name="availabilityStatus"
-                  defaultValue={searchParams.availabilityStatus || ""}
-                  className="dk-input"
-                  style={fieldInputStyle}
-                >
-                  <option value="">Any</option>
-                  <option value="AVAILABLE">Available</option>
-                  <option value="RESERVED">Reserved</option>
-                  <option value="SOLD">Sold</option>
-                  <option value="RENTED">Rented</option>
-                </select>
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Min Price (KSh)</label>
-                <input
-                  type="number"
-                  name="minPrice"
-                  defaultValue={searchParams.minPrice}
-                  min="0"
-                  placeholder="Any"
-                  className="dk-input"
-                  style={fieldInputStyle}
-                />
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Max Price (KSh)</label>
-                <input
-                  type="number"
-                  name="maxPrice"
-                  defaultValue={searchParams.maxPrice}
-                  min="0"
-                  placeholder="Any"
-                  className="dk-input"
-                  style={fieldInputStyle}
-                />
-              </div>
-            </div>
-
-            <div className="dk-search-btn-row" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px" }}>
-              <button
-                type="submit"
-                className="dk-btn"
-                style={{
-                  backgroundColor: COLORS.primaryGreen,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: "8px",
-                  padding: "11px 26px",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  cursor: "pointer",
-                }}
-              >
-                Search Properties
-              </button>
-              <a href="/" className="dk-clear-link" style={{ color: COLORS.primaryGreen, fontWeight: 500, textDecoration: "none" }}>
-                Clear filters
-              </a>
-            </div>
-          </form>
-        </section>
-      </div>
-      {/* end hero */}
-
-      <hr style={{ border: "none", borderTop: `1px solid ${COLORS.border}`, margin: "28px 0" }} />
-
-      {/* ---------- Listings section — responsive grid ---------- */}
-      <section>
-        <h2 style={{ color: COLORS.darkGreen, marginBottom: "18px" }}>
-          Verified Listings ({properties.length})
-        </h2>
-
-        {properties.length === 0 ? (
-          <p style={{ color: COLORS.textGray }}>No properties match your search. Try adjusting your filters.</p>
-        ) : (
-          <ul
-            style={{
-              listStyle: "none",
-              padding: 0,
-              margin: 0,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))",
-              gap: "20px",
-            }}
-          >
-            {properties.map((p: PropertyWithSeller, index: number) => (
-              <li
-                key={p.id}
-                className="dk-card"
-                style={{
-                  backgroundColor: COLORS.white,
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: "14px",
-                  padding: "14px",
-                  display: "flex",
-                  flexDirection: "column",
-                  minWidth: 0,
-                  animationDelay: `${Math.min(index, 10) * 0.06}s`,
-                }}
-              >
-                {/* Image */}
-                {p.imageUrl && (
-                  <Link href={`/properties/${p.id}`} className="dk-card-img-wrap" style={{ marginBottom: "10px", display: "block" }}>
-                    <img
-                      src={p.imageUrl}
-                      alt={p.title}
-                      className="dk-card-img"
-                      style={{
-                        width: "100%",
-                        height: "160px",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
+            <div className="pt-2">
+              {session?.user ? (
+                <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100 shadow-sm w-fit">
+                  <NotificationBell />
+                  <Link href="/dashboard" className="text-sm font-semibold text-[#1F7A4C] hover:text-[#176339] flex items-center gap-1 transition-colors">
+                    Dashboard <ArrowRight className="w-4 h-4" />
                   </Link>
-                )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
+                  <Link href="/login" className="text-[#1F7A4C] hover:underline font-semibold">Log in</Link>
+                  <span>•</span>
+                  <Link href="/register" className="px-4 py-2 rounded-lg bg-[#1F7A4C] text-white hover:bg-[#176339] transition-all shadow-sm">
+                    Create an account
+                  </Link>
+                </div>
+              )}
+            </div>
+          </header>
 
-                {/* Status badges */}
-                <div style={{ marginBottom: "8px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {p.featured && (
-                    <span
-                      style={{
-                        backgroundColor: COLORS.darkGreen,
-                        color: COLORS.white,
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        padding: "3px 8px",
-                        borderRadius: "4px",
-                        letterSpacing: "0.02em",
-                      }}
-                    >
-                      FEATURED
-                    </span>
-                  )}
-                  {p.daktopVerified && (
-                    <span
-                      style={{
-                        backgroundColor: COLORS.primaryGreen,
-                        color: COLORS.white,
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        padding: "3px 8px",
-                        borderRadius: "4px",
-                        letterSpacing: "0.02em",
-                      }}
-                    >
-                      DAKTOP VERIFIED
-                    </span>
-                  )}
-                  <span
-                    style={{
-                      backgroundColor: COLORS.lightGreenBg,
-                      color: COLORS.primaryGreen,
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      padding: "3px 8px",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
-                  </span>
+          {/* Right Filter Panel */}
+          <section className="lg:col-span-8 bg-white p-6 sm:p-8 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-[#0B2E1F] flex items-center gap-2">
+                <Search className="w-5 h-5 text-[#1F7A4C]" /> Find a Property
+              </h2>
+            </div>
+
+            <form method="get" className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className={labelStyles}>Location / County</label>
+                  <input
+                    type="text"
+                    name="location"
+                    defaultValue={searchParams.location}
+                    placeholder="e.g. Kitengela"
+                    className={inputStyles}
+                  />
                 </div>
 
-                {/* Title */}
-                <Link href={`/properties/${p.id}`} style={{ textDecoration: "none" }}>
-                  <strong className="dk-title" style={{ color: COLORS.textDark, fontSize: "16px", lineHeight: 1.35 }}>
-                    {p.title}
-                  </strong>
-                </Link>
-
-                {/* Verified / type / listing type */}
-                <div style={{ margin: "6px 0", fontSize: "13px", color: COLORS.textGray, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  <span style={{ color: p.verified ? COLORS.primaryGreen : COLORS.textGray, fontWeight: 600 }}>
-                    {p.verified ? "Verified" : "Not Verified"}
-                  </span>{" "}
-                  — {getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)} —{" "}
-                  {p.listingType === "SALE" ? "For sale" : "For rent"}
+                <div>
+                  <label className={labelStyles}>Property Type</label>
+                  <select name="propertyType" defaultValue={searchParams.propertyType || ""} className={inputStyles}>
+                    <option value="">Any type</option>
+                    {PROPERTY_TYPES.map((t) => (
+                      <option key={t} value={t}>{PROPERTY_TYPE_LABELS[t]}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Price */}
-                <div style={{ color: COLORS.primaryGreen, fontWeight: 700, fontSize: "17px", marginBottom: "6px" }}>
-                  KSh {p.price.toLocaleString()}
+                <div>
+                  <label className={labelStyles}>Listing Type</label>
+                  <select name="listingType" defaultValue={searchParams.listingType || ""} className={inputStyles}>
+                    <option value="">Any</option>
+                    <option value="SALE">For sale</option>
+                    <option value="RENT">For rent</option>
+                  </select>
                 </div>
 
-                {/* Location + specs */}
-                <div
-                  style={{
-                    color: COLORS.textGray,
-                    fontSize: "13px",
-                    marginBottom: "8px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
+                <div>
+                  <label className={labelStyles}>Availability</label>
+                  <select name="availabilityStatus" defaultValue={searchParams.availabilityStatus || ""} className={inputStyles}>
+                    <option value="">Any</option>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="RESERVED">Reserved</option>
+                    <option value="SOLD">Sold</option>
+                    <option value="RENTED">Rented</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelStyles}>Min Price (KSh)</label>
+                  <input type="number" name="minPrice" defaultValue={searchParams.minPrice} min="0" placeholder="Any" className={inputStyles} />
+                </div>
+
+                <div>
+                  <label className={labelStyles}>Max Price (KSh)</label>
+                  <input type="number" name="maxPrice" defaultValue={searchParams.maxPrice} min="0" placeholder="Any" className={inputStyles} />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#1F7A4C] hover:bg-[#176339] text-white font-semibold text-sm transition-all shadow-md shadow-[#1F7A4C]/10 active:scale-[0.98]"
                 >
-                  {p.location}
-                  {p.bedrooms !== null && <> — {p.bedrooms} bed</>}
-                  {p.bathrooms !== null && <> — {p.bathrooms} bath</>}
-                  {p.acreage !== null && <> — {p.acreage} acres</>}
-                </div>
+                  Search Properties
+                </button>
+                <a href="/" className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-red-600 transition-colors">
+                  <XCircle className="w-4 h-4" /> Clear filters
+                </a>
+              </div>
+            </form>
+          </section>
+        </div>
 
-                {/* Seller info */}
-                <small style={{ color: COLORS.textGray, display: "block", overflowWrap: "break-word" }}>
-                  Listed by {p.seller.name || p.seller.email} ({getRoleLabel(p.seller.role)})
-                  {p.seller.verified && (
-                    <span style={{ color: COLORS.primaryGreen }}>
-                      {" "}
-                      — Verified {getRoleLabel(p.seller.role)}
-                    </span>
-                  )}
-                  {p.representingName && <> — representing {p.representingName}</>}
-                </small>
+        {/* --- Listings Grid --- */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+            <h2 className="text-xl font-bold text-[#0B2E1F]">
+              Verified Listings <span className="text-sm font-semibold text-[#1F7A4C] bg-[#E8F5EC] px-2.5 py-0.5 rounded-full ml-2">{properties.length}</span>
+            </h2>
+          </div>
 
-                {/* Contact */}
-                {p.showContact && p.seller.phone && (
-                  <small style={{ color: COLORS.textDark, display: "block", marginTop: "4px" }}>
-                    Contact: {p.seller.phone}
-                  </small>
-                )}
+          {properties.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+              <p className="text-gray-500 font-medium">No properties match your exact search criteria.</p>
+              <a href="/" className="mt-3 inline-block text-sm text-[#1F7A4C] font-semibold hover:underline">Reset filters</a>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {properties.map((p: PropertyWithSeller) => (
+                <article
+                  key={p.id}
+                  className="group bg-white rounded-2xl border border-gray-100 p-4 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#0B2E1F]/5 hover:border-[#1F7A4C]/30"
+                >
+                  <div className="space-y-3">
+                    {/* Property Image Container */}
+                    {p.imageUrl && (
+                      <Link href={`/properties/${p.id}`} className="block relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">
+                        <img
+                          src={p.imageUrl}
+                          alt={p.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                        <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
+                          {p.featured && (
+                            <span className="bg-[#0B2E1F] text-white text-[10px] font-extrabold px-2 py-0.5 rounded tracking-wide uppercase">
+                              Featured
+                            </span>
+                          )}
+                          {p.daktopVerified && (
+                            <span className="bg-[#1F7A4C] text-white text-[10px] font-extrabold px-2 py-0.5 rounded tracking-wide uppercase">
+                              Verified
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    )}
 
-                {/* Save button (buyers only) — pushed to bottom of card */}
-                {session?.user?.role === "BUYER" && (
-                  <div style={{ marginTop: "auto", paddingTop: "10px" }}>
-                    <SaveButton propertyId={p.id} initiallySaved={savedPropertyIds.has(p.id)} />
+                    {/* Status & Type Labels */}
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[#1F7A4C] bg-[#E8F5EC] px-2 py-0.5 rounded-md">
+                        {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
+                      </span>
+                      <span className="text-gray-500 uppercase tracking-wider text-[11px]">
+                        {p.listingType === "SALE" ? "For Sale" : "For Rent"}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <Link href={`/properties/${p.id}`} className="block group-hover:text-[#1F7A4C] transition-colors">
+                      <h3 className="font-bold text-gray-900 line-clamp-2 leading-snug">
+                        {p.title}
+                      </h3>
+                    </Link>
+
+                    {/* Price */}
+                    <div className="text-lg font-extrabold text-[#1F7A4C]">
+                      KSh {p.price.toLocaleString()}
+                    </div>
+
+                    {/* Location & Specs */}
+                    <div className="space-y-1.5 pt-1 text-xs text-gray-600 border-t border-gray-100">
+                      <div className="flex items-center gap-1 font-medium text-gray-700 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="truncate">{p.location}</span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-gray-500 pt-1">
+                        {p.bedrooms !== null && (
+                          <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" /> {p.bedrooms} beds</span>
+                        )}
+                        {p.bathrooms !== null && (
+                          <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" /> {p.bathrooms} baths</span>
+                        )}
+                        {p.acreage !== null && (
+                          <span className="flex items-center gap-1"><Maximize2 className="w-3.5 h-3.5" /> {p.acreage} ac</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
 
-      <BuySellCard session={session} />
+                  {/* Seller Details & Footer */}
+                  <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-2">
+                    <p className="line-clamp-1">
+                      By <span className="font-medium text-gray-800">{p.seller.name || p.seller.email}</span> ({getRoleLabel(p.seller.role)})
+                    </p>
+                    
+                    {p.showContact && p.seller.phone && (
+                      <div className="font-semibold text-gray-900 bg-gray-50 p-2 rounded-lg text-center">
+                        📞 {p.seller.phone}
+                      </div>
+                    )}
 
-      </div>
+                    {session?.user?.role === "BUYER" && (
+                      <div className="pt-2">
+                        <SaveButton propertyId={p.id} initiallySaved={savedPropertyIds.has(p.id)} />
+                      </div>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
 
+        {/* CTA Card */}
+        <BuySellCard session={session} />
+      </main>
     </div>
   );
 }
