@@ -1,5 +1,21 @@
 export const PROPERTY_TYPES = ["HOUSE", "APARTMENT", "LAND", "COMMERCIAL", "OTHER"] as const;
 
+// Display labels for role values. The underlying role strings (BUYER/OWNER/AGENT/ADMIN) stay
+// the same everywhere in the DB and logic (no migration needed) — this is only what's shown
+// to people, kept in one place so it's never out of sync across the admin panel, registration,
+// dashboard, and listing pages.
+export const ROLE_LABELS: Record<string, string> = {
+  BUYER: "Buyer",
+  OWNER: "Seller (As Owner)",
+  AGENT: "Seller (As Agent)",
+  ADMIN: "Admin",
+};
+
+export function getRoleLabel(role: string | null | undefined): string {
+  if (!role) return "";
+  return ROLE_LABELS[role] || role;
+}
+
 export const PROPERTY_TYPE_LABELS: Record<string, string> = {
   HOUSE: "House",
   APARTMENT: "Apartment",
@@ -103,6 +119,17 @@ export function getPropertyTypeFields(propertyType: string) {
 export const PRICE_MIN = 10_000;
 export const PRICE_MAX = 10_000_000_000;
 
+// DAKTOP360 positions itself as a premium marketplace for Nairobi & Kiambu — this floor
+// applies only to properties FOR SALE. Rentals (monthly rent, naturally far below any
+// property-value threshold) are exempt and still only bound by the general PRICE_MIN above.
+export const SALE_PRICE_MIN = 7_000_000;
+
+export const PRIME_PROPERTY_NOTICE =
+  "DAKTOP360 is a premium property listing platform focused on properties in prime areas of " +
+  "Nairobi & Kiambu, worth KSh 10M and above. Properties that don't meet this criteria might " +
+  "not be approved.";
+
+
 export const BEDROOMS_MAX = 50;
 export const BATHROOMS_MAX = 50;
 export const ACREAGE_MAX = 100_000;
@@ -120,6 +147,11 @@ export const DEFAULT_MAP_ZOOM = 7;
 export const PICKED_MAP_ZOOM = 15;
 
 export const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+// Beyond the one required cover photo, how many extra gallery photos a listing can have —
+// generous enough for a real walkthrough of a property, bounded so nobody can dump hundreds of
+// files into a single listing's storage.
+export const MAX_GALLERY_IMAGES = 12;
 
 // The wording shown to a seller/agent when they list a property, and the exact string
 // snapshotted into Property.commissionAgreementText when they accept it. Keeping this as a

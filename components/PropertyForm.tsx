@@ -10,6 +10,8 @@ import {
   PROPERTY_TYPE_SUGGESTIONS,
   PRICE_MIN,
   PRICE_MAX,
+  SALE_PRICE_MIN,
+  PRIME_PROPERTY_NOTICE,
   BEDROOMS_MAX,
   BATHROOMS_MAX,
   ACREAGE_MAX,
@@ -19,6 +21,7 @@ import {
   DESCRIPTION_MAX_LENGTH,
   LOCATION_MIN_LENGTH,
   DEFAULT_COMMISSION_RATE,
+  MAX_GALLERY_IMAGES,
   commissionAgreementText,
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
@@ -26,6 +29,8 @@ import {
 export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [galleryCount, setGalleryCount] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -75,8 +80,18 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
       return;
     }
 
+    if (listingType === "SALE" && Number(price) < SALE_PRICE_MIN) {
+      setError(`Properties for sale must be priced at KSh ${SALE_PRICE_MIN.toLocaleString()} or above.`);
+      return;
+    }
+
     if (!imageInputRef.current?.files?.[0]) {
       setError("A photo is required for the listing.");
+      return;
+    }
+
+    if (galleryCount > MAX_GALLERY_IMAGES) {
+      setError(`You can upload at most ${MAX_GALLERY_IMAGES} additional photos.`);
       return;
     }
 
@@ -116,6 +131,12 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
       if (imageFile) {
         formData.append("image", imageFile);
       }
+      const galleryFiles = galleryInputRef.current?.files;
+      if (galleryFiles) {
+        for (const file of Array.from(galleryFiles)) {
+          formData.append("galleryImages", file);
+        }
+      }
       formData.append("commissionAgreed", "true");
       formData.append("signedName", signedName.trim());
 
@@ -142,6 +163,8 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
 
   return (
     <form onSubmit={handleSubmit}>
+      <p role="note">{PRIME_PROPERTY_NOTICE}</p>
+
       <div>
         <label>
           Title
@@ -241,14 +264,16 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
           <input
             type="number"
             step="0.01"
-            min={PRICE_MIN}
+            min={listingType === "SALE" ? SALE_PRICE_MIN : PRICE_MIN}
             max={PRICE_MAX}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
           />
           <small>
-            Minimum KSh {PRICE_MIN.toLocaleString()} — maximum KSh {PRICE_MAX.toLocaleString()}
+            {listingType === "SALE"
+              ? `Minimum KSh ${SALE_PRICE_MIN.toLocaleString()} for properties for sale — maximum KSh ${PRICE_MAX.toLocaleString()}`
+              : `Minimum KSh ${PRICE_MIN.toLocaleString()} — maximum KSh ${PRICE_MAX.toLocaleString()}`}
           </small>
         </label>
       </div>
@@ -307,7 +332,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
 
       <div>
         <label>
-          Photo
+          Cover photo
           <input
             ref={imageInputRef}
             type="file"
@@ -315,7 +340,25 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
             required
           />
           <small>
-            Required — JPEG, PNG, or WEBP, max 5MB.
+            Required — JPEG, PNG, or WEBP, max 5MB. This is the photo shown on listing cards
+            across the site.
+          </small>
+        </label>
+      </div>
+
+      <div>
+        <label>
+          Additional photos (optional)
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            onChange={(e) => setGalleryCount(e.target.files?.length ?? 0)}
+          />
+          <small>
+            Up to {MAX_GALLERY_IMAGES} more photos — JPEG, PNG, or WEBP, max 5MB each. These only
+            show up when a buyer opens the full listing, not on listing cards.
           </small>
         </label>
       </div>

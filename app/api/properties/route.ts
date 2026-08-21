@@ -11,6 +11,7 @@ import {
   LISTING_TYPES,
   PRICE_MIN,
   PRICE_MAX,
+  SALE_PRICE_MIN,
   BEDROOMS_MAX,
   BATHROOMS_MAX,
   ACREAGE_MAX,
@@ -20,6 +21,7 @@ import {
   DESCRIPTION_MAX_LENGTH,
   LOCATION_MIN_LENGTH,
   IMAGE_MAX_SIZE_BYTES,
+  MAX_GALLERY_IMAGES,
   ALLOWED_IMAGE_MIME_TYPES,
   DEFAULT_COMMISSION_RATE,
   COMMISSION_AGREEMENT_VERSION,
@@ -66,6 +68,7 @@ export async function POST(req: Request) {
     const commissionAgreed = str(formData, "commissionAgreed") === "true";
     const signedName = str(formData, "signedName");
     const imageFile = formData.get("image");
+    const galleryFiles = formData.getAll("galleryImages").filter((f): f is File => f instanceof File && f.size > 0);
 
     if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
       return NextResponse.json(
@@ -139,6 +142,15 @@ export async function POST(req: Request) {
       );
     }
 
+    // DAKTOP360 is a premium marketplace — this floor is enforced server side (not just
+    // hinted in the form) and applies only to sale listings, not rentals.
+    if (listingType === "SALE" && parsedPrice < SALE_PRICE_MIN) {
+      return NextResponse.json(
+        { error: `Properties for sale must be priced at KSh ${SALE_PRICE_MIN.toLocaleString()} or above.` },
+        { status: 400 }
+      );
+    }
+
     // Which of bedrooms/bathrooms/acreage actually apply to this property type — the single
     // source of truth shared with the form. Values submitted for a field that doesn't apply
     // (e.g. "bedrooms" on a LAND listing) are dropped here rather than trusted from the
@@ -197,6 +209,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Image must be a JPEG, PNG, or WEBP file." }, { status: 400 });
     }
 
+    if (galleryFiles.length > MAX_GALLERY_IMAGES) {
+      return NextResponse.json(
+        { error: `You can upload at most ${MAX_GALLERY_IMAGES} additional photos.` },
+        { status: 400 }
+      );
+    }
+    for (const file of galleryFiles) {
+      if (file.size > IMAGE_MAX_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: `Each additional photo must be under ${IMAGE_MAX_SIZE_BYTES / (1024 * 1024)}MB.` },
+          { status: 400 }
+        );
+      }
+      if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
+        return NextResponse.json({ error: "Additional photos must be JPEG, PNG, or WEBP files." }, { status: 400 });
+      }
+    }
+
     // Best-effort — proxies/load balancers set these, but neither is guaranteed present.
     const ipAddress =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null;
@@ -234,6 +264,13 @@ export async function POST(req: Request) {
     const imageUrl = await savePropertyImage(imageFile, property.id);
     await prisma.property.update({ where: { id: property.id }, data: { imageUrl } });
     property.imageUrl = imageUrl;
+
+    if (galleryFiles.length > 0) {
+      const galleryUrls = await Promise.all(galleryFiles.map((file) => savePropertyImage(file, property.id)));
+      await prisma.propertyImage.createMany({
+        data: galleryUrls.map((url) => ({ url, propertyId: property.id })),
+      });
+    }
 
     // Full audit-trail row for this signing — separate from the denormalized
     // commissionRate/commissionAgreedAt/commissionAgreementText cache on Property itself, and

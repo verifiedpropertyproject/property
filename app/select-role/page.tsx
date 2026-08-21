@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { isValidPhone, PHONE_FORMAT_HINT, PHONE_INPUT_PATTERN } from "@/lib/phoneValidation";
+import { ROLE_LABELS } from "@/lib/propertyConstants";
 
 export default function SelectRolePage() {
   const router = useRouter();
@@ -52,9 +53,9 @@ export default function SelectRolePage() {
   }
 
   const roleOptions = [
-    { value: "BUYER", label: "Buyer" },
-    { value: "OWNER", label: "Property Owner" },
-    { value: "AGENT", label: "Real Estate Agent (selling on behalf of someone)" },
+    { value: "BUYER", label: ROLE_LABELS.BUYER },
+    { value: "OWNER", label: ROLE_LABELS.OWNER, hint: "You own the property being listed." },
+    { value: "AGENT", label: ROLE_LABELS.AGENT, hint: "You're selling on behalf of someone else." },
   ];
 
   return (
@@ -80,6 +81,7 @@ export default function SelectRolePage() {
                 />
                 <span>
                   {opt.label}
+                  {"hint" in opt && opt.hint && <> — {opt.hint}</>}
                 </span>
               </label>
             ))}

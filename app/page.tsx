@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
 
-import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
+import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import BuySellCard from "@/components/BuySellCard";
 
 
@@ -219,6 +219,11 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                       FEATURED
                     </span>
                   )}
+                  {p.daktopVerified && (
+                    <span>
+                      DAKTOP VERIFIED
+                    </span>
+                  )}
                   <span>
                     {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
                   </span>
@@ -251,11 +256,11 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 </div>
 
                 <small>
-                  Listed by {p.seller.name || p.seller.email} ({p.seller.role === "AGENT" ? "Agent" : "Owner"})
+                  Listed by {p.seller.name || p.seller.email} ({getRoleLabel(p.seller.role)})
                   {p.seller.verified && (
                     <span>
                       {" "}
-                      — Verified {p.seller.role === "AGENT" ? "Agent" : "Owner"}
+                      — Verified {getRoleLabel(p.seller.role)}
                     </span>
                   )}
                   {p.representingName && <> — representing {p.representingName}</>}

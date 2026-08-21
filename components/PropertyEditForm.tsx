@@ -10,6 +10,8 @@ import {
   PROPERTY_TYPE_SUGGESTIONS,
   PRICE_MIN,
   PRICE_MAX,
+  SALE_PRICE_MIN,
+  PRIME_PROPERTY_NOTICE,
   BEDROOMS_MAX,
   BATHROOMS_MAX,
   ACREAGE_MAX,
@@ -106,6 +108,11 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       return;
     }
 
+    if (listingType === "SALE" && Number(price) < SALE_PRICE_MIN) {
+      setError(`Properties for sale must be priced at KSh ${SALE_PRICE_MIN.toLocaleString()} or above.`);
+      return;
+    }
+
     const hasNewImage = !!imageInputRef.current?.files?.[0];
     if (!property.imageUrl && !hasNewImage) {
       setError("A photo is required for the listing. Please upload one.");
@@ -167,6 +174,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
 
   return (
     <form onSubmit={handleSubmit}>
+      <p role="note">{PRIME_PROPERTY_NOTICE}</p>
       <div>
         <label>
           Title
@@ -288,14 +296,16 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
           <input
             type="number"
             step="0.01"
-            min={PRICE_MIN}
+            min={listingType === "SALE" ? SALE_PRICE_MIN : PRICE_MIN}
             max={PRICE_MAX}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
           />
           <small>
-            Minimum KSh {PRICE_MIN.toLocaleString()} — maximum KSh {PRICE_MAX.toLocaleString()}
+            {listingType === "SALE"
+              ? `Minimum KSh ${SALE_PRICE_MIN.toLocaleString()} for properties for sale — maximum KSh ${PRICE_MAX.toLocaleString()}`
+              : `Minimum KSh ${PRICE_MIN.toLocaleString()} — maximum KSh ${PRICE_MAX.toLocaleString()}`}
           </small>
         </label>
       </div>

@@ -9,6 +9,7 @@ import {
   LISTING_TYPES,
   PRICE_MIN,
   PRICE_MAX,
+  SALE_PRICE_MIN,
   BEDROOMS_MAX,
   BATHROOMS_MAX,
   ACREAGE_MAX,
@@ -128,6 +129,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (Number.isNaN(parsedPrice) || parsedPrice < PRICE_MIN || parsedPrice > PRICE_MAX) {
       return NextResponse.json(
         { error: `Price must be between KSh ${PRICE_MIN.toLocaleString()} and KSh ${PRICE_MAX.toLocaleString()}.` },
+        { status: 400 }
+      );
+    }
+
+    if (listingType === "SALE" && parsedPrice < SALE_PRICE_MIN) {
+      return NextResponse.json(
+        { error: `Properties for sale must be priced at KSh ${SALE_PRICE_MIN.toLocaleString()} or above.` },
         { status: 400 }
       );
     }

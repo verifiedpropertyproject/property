@@ -13,6 +13,7 @@ import AdminUserList from "@/components/AdminUserList";
 import SignOutButton from "@/components/SignOutButton";
 import ResendVerificationButton from "@/components/ResendVerificationButton";
 import PhoneForm from "@/components/PhoneForm";
+import { ROLE_LABELS, getRoleLabel } from "@/lib/propertyConstants";
 
 type NotificationWithSender = Notification & {
   sender: Pick<User, "name" | "email" | "role">;
@@ -229,13 +230,9 @@ export default async function DashboardPage({
             <p>
               Logged in as <strong>{session.user.name || session.user.email}</strong>{" "}
               <Badge label={role} />
-              {(role === "OWNER" || role === "AGENT") && (
+              {(role === "OWNER" || role === "AGENT") && currentUser.verified && (
                 <span>
-                  {currentUser.verified ? (
-                    <Badge label="VERIFIED ACCOUNT" />
-                  ) : (
-                    <Badge label="NOT VERIFIED" />
-                  )}
+                  <Badge label="VERIFIED ACCOUNT" />
                 </span>
               )}
             </p>
@@ -246,15 +243,6 @@ export default async function DashboardPage({
         </header>
 
         <section>
-          <p>
-            {currentUser.phone ? (
-              <>
-                Phone on file: <strong>{currentUser.phone}</strong>
-              </>
-            ) : (
-              "No phone number on file."
-            )}
-          </p>
           <PhoneForm currentPhone={currentUser.phone} />
         </section>
 
@@ -405,10 +393,10 @@ export default async function DashboardPage({
                     defaultValue={searchParams.userRole || ""}
                   >
                     <option value="">All</option>
-                    <option value="BUYER">Buyer</option>
-                    <option value="OWNER">Property Owner</option>
-                    <option value="AGENT">Agent</option>
-                    <option value="ADMIN">Admin</option>
+                    <option value="BUYER">{ROLE_LABELS.BUYER}</option>
+                    <option value="OWNER">{ROLE_LABELS.OWNER}</option>
+                    <option value="AGENT">{ROLE_LABELS.AGENT}</option>
+                    <option value="ADMIN">{ROLE_LABELS.ADMIN}</option>
                   </select>
                 </div>
                 <button type="submit">

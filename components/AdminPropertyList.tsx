@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import CommissionRateForm from "@/components/CommissionRateForm";
+import { getRoleLabel } from "@/lib/propertyConstants";
 
 type ManagedProperty = {
   id: string;
@@ -12,6 +13,7 @@ type ManagedProperty = {
   status: string;
   adminNote: string | null;
   verified: boolean;
+  daktopVerified: boolean;
   featured: boolean;
   showContact: boolean;
   availabilityStatus: string;
@@ -125,6 +127,11 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
               <span>
                 {p.verified ? "Verified" : "Not Verified"}
               </span>
+              {p.daktopVerified && (
+                <span>
+                  DAKTOP VERIFIED
+                </span>
+              )}
               {p.featured && (
                 <span>
                   FEATURED
@@ -161,7 +168,7 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
             )}
 
             <div>
-              Listed by {p.seller.name || p.seller.email} ({p.seller.role === "AGENT" ? "Agent" : "Property Owner"})
+              Listed by {p.seller.name || p.seller.email} ({getRoleLabel(p.seller.role)})
               {p.seller.verified && <span> — Verified account</span>}
               {p.seller.phone && <> — {p.seller.phone}</>}
               {p.representingName && <> — representing {p.representingName}</>}

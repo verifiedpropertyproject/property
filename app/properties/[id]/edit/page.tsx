@@ -4,6 +4,7 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import PropertyEditForm from "@/components/PropertyEditForm";
+import PropertyGalleryManager from "@/components/PropertyGalleryManager";
 
 const EDITABLE_STATUSES = ["PENDING", "CHANGES_REQUESTED", "REJECTED"];
 
@@ -14,7 +15,10 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
     redirect("/login");
   }
 
-  const property = await prisma.property.findUnique({ where: { id: params.id } });
+  const property = await prisma.property.findUnique({
+    where: { id: params.id },
+    include: { images: { orderBy: { createdAt: "asc" } } },
+  });
 
   if (!property) {
     notFound();
@@ -103,6 +107,14 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
               commissionAgreedAt: property.commissionAgreedAt,
               commissionAgreementText: property.commissionAgreementText,
             }}
+          />
+        </section>
+
+        <section>
+          <h2>Additional photos</h2>
+          <PropertyGalleryManager
+            propertyId={property.id}
+            images={property.images.map((img) => ({ id: img.id, url: img.url }))}
           />
         </section>
       </div>

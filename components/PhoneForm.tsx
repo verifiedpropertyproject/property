@@ -61,6 +61,9 @@ export default function PhoneForm({ currentPhone }: { currentPhone: string | nul
         <small>
           {PHONE_FORMAT_HINT}
         </small>
+        {currentPhone && phone === currentPhone && (
+          <small>✓ Current phone number</small>
+        )}
       </label>
 
       <button

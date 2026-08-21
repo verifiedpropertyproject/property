@@ -7,7 +7,10 @@ import EnquireForm from "@/components/EnquireForm";
 import SaveButton from "@/components/SaveButton";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import LocationView from "@/components/LocationView";
-import { getPropertyTypeLabel } from "@/lib/propertyConstants";
+import { getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
+import { toWhatsAppNumber } from "@/lib/phoneValidation";
+import { DOCUMENT_TYPE_LABELS } from "@/lib/documentStorage";
+import { getDaktopDecisionLabel } from "@/lib/verificationStatus";
 
 const AVAILABILITY_LABELS: Record<string, string> = {
   AVAILABLE: "Available",
@@ -28,6 +31,13 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
     include: {
       seller: { select: { name: true, email: true, phone: true, role: true, suspended: true, verified: true } },
       _count: { select: { savedBy: true } },
+      images: { orderBy: { createdAt: "asc" } },
+      // Only the type/status of each document is shown publicly here (trust signal) — the
+      // actual file stays reachable only through the authenticated /documents page.
+      documents: {
+        select: { id: true, documentType: true, verified: true },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
@@ -37,6 +47,13 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
 
   const isOwner = session?.user?.id === property.sellerId;
   const isAdmin = session?.user?.role === "ADMIN";
+  const whatsappNumber =
+    property.showContact && property.seller.phone ? toWhatsAppNumber(property.seller.phone) : null;
+  const whatsappHref = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+        `Hi, I'm enquiring about "${property.title}" on DAKTOP360.`
+      )}`
+    : null;
 
   if (property.status !== "APPROVED" && !isOwner && !isAdmin) {
     notFound();
@@ -80,6 +97,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
               {property.title}
             </h1>
             {property.featured && <Badge label="FEATURED" />}
+            {property.daktopVerified && <Badge label="DAKTOP VERIFIED" />}
           </div>
 
           <div>
@@ -126,6 +144,13 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                 alt={property.title}
                 width={480}
               />
+              {property.images.length > 0 && (
+                <div>
+                  {property.images.map((img) => (
+                    <img key={img.id} src={img.url} alt={property.title} width={160} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -163,15 +188,21 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
 
           <p>
             Listed by <strong>{property.seller.name || property.seller.email}</strong>{" "}
-            ({property.seller.role === "AGENT" ? "Agent" : "Property Owner"})
-            {property.seller.verified && (
-              <> — Verified {property.seller.role === "AGENT" ? "Agent" : "Owner"}</>
-            )}
+            ({getRoleLabel(property.seller.role)})
+            {property.seller.verified && <> — Verified {getRoleLabel(property.seller.role)}</>}
           </p>
 
           {property.showContact && property.seller.phone ? (
             <p>
               Contact: {property.seller.phone}
+              {whatsappHref && (
+                <>
+                  {" — "}
+                  <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
+                    Enquire via WhatsApp
+                  </a>
+                </>
+              )}
             </p>
           ) : (
             (isOwner || isAdmin) && (
@@ -187,6 +218,42 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
               {property.representingContact && <> — {property.representingContact}</>}
             </p>
           )}
+        </section>
+
+        <section>
+          <h2>Daktop Verification</h2>
+
+          {property.daktopVerified && (
+            <p>
+              <Badge label="DAKTOP VERIFIED" /> — every check below has been completed.
+            </p>
+          )}
+
+          {property.documents.length > 0 ? (
+            <ul>
+              {property.documents.map((doc) => (
+                <li key={doc.id}>
+                  {(doc.documentType ? DOCUMENT_TYPE_LABELS[doc.documentType] : "Document")} received:{" "}
+                  {doc.verified ? "\u2713" : "Pending"}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No supporting documents submitted yet.</p>
+          )}
+
+          <p>
+            Location verification: {property.locationVerified ? "\u2713" : "Pending"}
+          </p>
+          <p>
+            Ownership verification: {property.ownershipVerified ? "\u2713" : "Pending"}
+          </p>
+          <p>
+            Survey verification: {property.surveyVerified ? "\u2713" : "Pending"}
+          </p>
+          <p>
+            Daktop Decision: {getDaktopDecisionLabel(property.daktopDecision)}
+          </p>
         </section>
 
         {!session?.user && (

@@ -7,6 +7,8 @@ import type { PropertyDocument } from "@prisma/client";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documentStorage";
 import DocumentUploadForm from "@/components/DocumentUploadForm";
 import DeleteDocumentButton from "@/components/DeleteDocumentButton";
+import DocumentVerifyButton from "@/components/DocumentVerifyButton";
+import VerificationStatusForm from "@/components/VerificationStatusForm";
 
 export default async function PropertyDocumentsPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -67,6 +69,28 @@ export default async function PropertyDocumentsPage({ params }: { params: { id: 
           Upload documents that help us verify this property and your authority to list it.
         </p>
 
+        {isAdmin && (
+          <section>
+            <h2>Verification status</h2>
+            <p>
+              Shown to everyone on the public listing page. Update as document/location/ownership
+              checks are completed.
+            </p>
+            <p>
+              {property.daktopVerified
+                ? "DAKTOP VERIFIED — every check below is complete. This badge is shown on the listing automatically and clears itself if anything changes."
+                : "Not yet DAKTOP VERIFIED — every document must be marked received, all three checks below ticked, and the decision set to Safe to buy."}
+            </p>
+            <VerificationStatusForm
+              propertyId={property.id}
+              currentLocationVerified={property.locationVerified}
+              currentOwnershipVerified={property.ownershipVerified}
+              currentSurveyVerified={property.surveyVerified}
+              currentDaktopDecision={property.daktopDecision}
+            />
+          </section>
+        )}
+
         <section>
           <h2>Documents</h2>
           {documents.length === 0 ? (
@@ -77,6 +101,8 @@ export default async function PropertyDocumentsPage({ params }: { params: { id: 
                 <li key={doc.id}>
                   <div>
                     {doc.documentType ? DOCUMENT_TYPE_LABELS[doc.documentType] : "Unspecified type"}
+                    {" — "}
+                    {doc.verified ? "Received \u2713" : "Pending"}
                   </div>
                   <div>
                     <a href={`/api/documents/${doc.id}`}>
@@ -89,6 +115,11 @@ export default async function PropertyDocumentsPage({ params }: { params: { id: 
                   <small>
                     Uploaded {new Date(doc.createdAt).toLocaleString()}
                   </small>
+                  {isAdmin && (
+                    <div>
+                      <DocumentVerifyButton documentId={doc.id} verified={doc.verified} />
+                    </div>
+                  )}
                   {isOwner && (
                     <div>
                       <DeleteDocumentButton documentId={doc.id} fileName={doc.fileName} />

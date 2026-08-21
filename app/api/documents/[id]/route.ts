@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { readDocument, deleteDocument } from "@/lib/documentStorage";
+import { recomputeDaktopVerified } from "@/lib/verificationStatus";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -65,6 +66,9 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     // Best-effort storage cleanup — the DB row is the source of truth, so don't fail the
     // request just because the underlying file/blob was already missing.
     await deleteDocument(doc.property.id, doc.storedName);
+
+    // Removing a document can flip the badge either way — recompute rather than assume.
+    await recomputeDaktopVerified(doc.property.id);
 
     return NextResponse.json({ deleted: true });
   } catch (err) {

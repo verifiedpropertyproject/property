@@ -117,6 +117,23 @@ model Property {
   status       String   @default("PENDING")
   adminNote    String?
   verified     Boolean  @default(false)
+  // Due-diligence trust signals shown publicly on the listing's detail page, independent of the
+  // review `status` above (a listing can be APPROVED/public while these are still Pending — they
+  // represent Daktop's ongoing verification work, not a gate on going live). Admin-controlled
+  // the same way `verified`/`featured` are, via app/api/properties/[id]/verification-status.
+  locationVerified  Boolean @default(false)
+  ownershipVerified Boolean @default(false)
+  // Confirms the plot has been physically surveyed/beacons checked against the title, distinct
+  // from ownership paperwork verification above.
+  surveyVerified    Boolean @default(false)
+  // "PENDING" | "SAFE_TO_BUY" | "NOT_SAFE" — Daktop's overall due-diligence verdict for this
+  // listing. See lib/verificationStatus.ts for the authoritative list and display labels.
+  daktopDecision    String  @default("PENDING")
+  // Derived/cached: true once nothing above is left pending (see computeDaktopVerified in
+  // lib/verificationStatus.ts). Recomputed server-side after any change to the fields it depends
+  // on — never set directly by an admin — so listing cards can show the "DAKTOP VERIFIED" badge
+  // without joining in documents on every read.
+  daktopVerified    Boolean @default(false)
   featured     Boolean  @default(false)
   views        Int      @default(0)
   // Off by default — an admin must explicitly opt a listing in before the lister's contact
@@ -138,6 +155,10 @@ model Property {
   savedBy       SavedProperty[]
   notifications Notification[]
   documents     PropertyDocument[]
+  // Additional gallery photos beyond the required cover photo (imageUrl) — shown only on the
+  // listing detail page. imageUrl alone is what's used anywhere a single thumbnail is needed
+  // (homepage cards, admin/approval lists), so none of those views need to change.
+  images        PropertyImage[]
   // Full signed history — Property.commissionRate/commissionAgreedAt/commissionAgreementText
   // above are a denormalized "latest at signing" cache for quick reads; this relation is the
   // actual audit trail (signed name, IP, user agent, generated certificate) and is never
@@ -192,6 +213,11 @@ model PropertyDocument {
   storedName   String // randomized filename actually used on disk, to avoid collisions
   mimeType     String?
   fileSize     Int
+  // Admin confirms they've actually reviewed/received this document — separate from it merely
+  // having been uploaded by the lister. Drives the tick/pending shown next to its name on the
+  // public listing page. Toggled via app/api/documents/[id]/verify, same pattern as
+  // Property.verified.
+  verified     Boolean  @default(false)
   createdAt    DateTime @default(now())
 
   propertyId String
@@ -199,6 +225,18 @@ model PropertyDocument {
 
   uploadedById String
   uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+}
+
+// Extra gallery photos for a listing, beyond the required cover photo stored on
+// Property.imageUrl. Ordered by createdAt (oldest first) — no explicit sort field needed since
+// sellers add them one batch at a time and there's no reordering UI.
+model PropertyImage {
+  id        String   @id @default(cuid())
+  url       String
+  createdAt DateTime @default(now())
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 // status: "PENDING" | "APPROVED" | "REJECTED" — an admin must approve an enquiry

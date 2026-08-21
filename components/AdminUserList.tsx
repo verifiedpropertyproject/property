@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ROLE_LABELS } from "@/lib/propertyConstants";
 
 type ManagedUser = {
   id: string;
@@ -122,13 +123,6 @@ export default function AdminUserList({ users, currentUserId }: { users: Managed
     }
   }
 
-  const ROLE_LABELS: Record<string, string> = {
-    BUYER: "Buyer",
-    OWNER: "Property Owner",
-    AGENT: "Agent",
-    ADMIN: "Admin",
-  };
-
   if (users.length === 0) {
     return (
       <p>
@@ -221,9 +215,9 @@ export default function AdminUserList({ users, currentUserId }: { users: Managed
                     value={roleDrafts[u.id] ?? u.role ?? "BUYER"}
                     onChange={(e) => setRoleDrafts((prev) => ({ ...prev, [u.id]: e.target.value }))}
                   >
-                    <option value="BUYER">Buyer</option>
-                    <option value="OWNER">Property Owner</option>
-                    <option value="AGENT">Agent</option>
+                    <option value="BUYER">{ROLE_LABELS.BUYER}</option>
+                    <option value="OWNER">{ROLE_LABELS.OWNER}</option>
+                    <option value="AGENT">{ROLE_LABELS.AGENT}</option>
                   </select>
 
                   <button

@@ -28,7 +28,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     if (!["OWNER", "AGENT"].includes(targetUser.role || "")) {
       return NextResponse.json(
-        { error: "Only Property Owner and Agent accounts can be verified." },
+        { error: "Only seller accounts (as owner or agent) can be verified." },
         { status: 400 }
       );
     }

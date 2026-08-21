@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getPropertyTypeLabel } from "@/lib/propertyConstants";
+import { getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 
 type PendingProperty = {
   id: string;
@@ -100,7 +100,7 @@ export default function PropertyApprovalList({ properties }: { properties: Pendi
             </div>
 
             <div>
-              Listed by {p.seller.name || p.seller.email} ({p.seller.role === "AGENT" ? "Agent" : "Property Owner"})
+              Listed by {p.seller.name || p.seller.email} ({getRoleLabel(p.seller.role)})
               {p.seller.verified && <span> — Verified account</span>}
             </div>
 

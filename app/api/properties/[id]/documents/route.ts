@@ -11,6 +11,7 @@ import {
   randomStoredName,
   saveDocument,
 } from "@/lib/documentStorage";
+import { recomputeDaktopVerified } from "@/lib/verificationStatus";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -84,6 +85,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       });
       created.push(doc);
     }
+
+    // A newly-uploaded document is unverified by definition, so a listing that was previously
+    // fully verified loses the DAKTOP VERIFIED badge until this one is checked too.
+    await recomputeDaktopVerified(property.id);
 
     return NextResponse.json({ documents: created }, { status: 201 });
   } catch (err) {

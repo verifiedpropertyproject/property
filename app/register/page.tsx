@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { isValidPhone, PHONE_FORMAT_HINT, PHONE_INPUT_PATTERN } from "@/lib/phoneValidation";
+import { ROLE_LABELS } from "@/lib/propertyConstants";
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -261,9 +262,9 @@ export default function RegisterPage() {
             value={role}
             onChange={(e) => setRole(e.target.value)}
           >
-            <option value="BUYER">Buyer</option>
-            <option value="OWNER">Property Owner</option>
-            <option value="AGENT">Real Estate Agent (selling on behalf of someone)</option>
+            <option value="BUYER">{ROLE_LABELS.BUYER}</option>
+            <option value="OWNER">{ROLE_LABELS.OWNER}</option>
+            <option value="AGENT">{ROLE_LABELS.AGENT}</option>
           </select>
         </div>
 
