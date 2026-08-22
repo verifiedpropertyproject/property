@@ -4,9 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma, Property, User } from "@prisma/client";
 import SaveButton from "@/components/SaveButton";
-import NotificationBell from "@/components/NotificationBell";
-
-import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
+import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel } from "@/lib/propertyConstants";
 import BuySellCard from "@/components/BuySellCard";
 
 
@@ -26,53 +24,6 @@ const AVAILABILITY_LABELS: Record<string, string> = {
   RESERVED: "Reserved",
   SOLD: "Sold",
   RENTED: "Rented",
-};
-
-// --- Color palette ---
-const COLORS = {
-  darkGreen: "#0B2E1F",
-  primaryGreen: "#1F7A4C",
-  primaryGreenHover: "#176339",
-  lightGreenBg: "#EAF7EF",
-  pageBg: "#FBFCFB",
-  sectionBg: "#FFFFFF",
-  textDark: "#0F172A",
-  textGray: "#64748B",
-  textMuted: "#94A3B8",
-  border: "#E7EBEF",
-  borderSoft: "#F0F2F5",
-  white: "#FFFFFF",
-  amber: "#B45309",
-  amberBg: "#FEF3E2",
-};
-
-const fieldWrapperStyle: React.CSSProperties = {
-  flex: "1 1 160px",
-  minWidth: "140px",
-  display: "flex",
-  flexDirection: "column",
-};
-
-const fieldLabelStyle: React.CSSProperties = {
-  color: COLORS.textGray,
-  fontWeight: 600,
-  fontSize: "12px",
-  marginBottom: "7px",
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
-};
-
-const fieldInputStyle: React.CSSProperties = {
-  padding: "11px 13px",
-  borderRadius: "10px",
-  border: `1.5px solid ${COLORS.border}`,
-  width: "100%",
-  color: COLORS.textDark,
-  backgroundColor: COLORS.white,
-  boxSizing: "border-box",
-  fontSize: "14px",
-  fontFamily: "inherit",
-  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
 };
 
 export default async function Home({ searchParams }: { searchParams: SearchParams }) {
@@ -114,511 +65,219 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   }
 
   return (
-    <div style={{ backgroundColor: COLORS.pageBg, overflowX: "hidden", minHeight: "100vh" }}>
+    <div className="dt-page">
 
-      <div
-        style={{
-          color: COLORS.textDark,
-          fontFamily:
-            "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-          width: "100%",
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "clamp(16px, 4vw, 40px)",
-          boxSizing: "border-box",
-        }}
-      >
-      <style>{`
-        * { box-sizing: border-box; }
+      <div>
+        <header className="dt-hero">
+          <div className="dt-hero__inner">
+            <h1 className="dt-hero__title">
+              East Africa&apos;s Trusted Marketplace for Verified Properties
+            </h1>
+            <p className="dt-hero__subtitle">
+              Buy and sell land, homes and commercial property with verified ownership and professional due diligence.
+            </p>
 
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .dk-hero { animation: fadeIn 0.5s ease both; }
-
-        .dk-card {
-          animation: fadeInUp 0.45s ease both;
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-          box-shadow: 0 1px 3px rgba(15,23,42,0.04), 0 1px 2px rgba(15,23,42,0.03);
-        }
-        .dk-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 20px 30px -10px rgba(11,46,31,0.15), 0 4px 10px rgba(11,46,31,0.06);
-          border-color: ${COLORS.primaryGreen}66;
-        }
-
-        .dk-card-img-wrap { overflow: hidden; border-radius: 10px; position: relative; }
-        .dk-card-img { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        .dk-card:hover .dk-card-img { transform: scale(1.07); }
-
-        .dk-title {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-          transition: color 0.2s ease;
-        }
-        .dk-card:hover .dk-title { color: ${COLORS.primaryGreen}; }
-
-        .dk-btn {
-          transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-          box-shadow: 0 1px 2px rgba(11,46,31,0.15);
-        }
-        .dk-btn:hover {
-          background-color: ${COLORS.primaryGreenHover};
-          box-shadow: 0 8px 16px rgba(31,122,76,0.28);
-          transform: translateY(-1px);
-        }
-        .dk-btn:active { transform: scale(0.97) translateY(0); }
-
-        .dk-link { transition: color 0.2s ease; }
-        .dk-link:hover { color: ${COLORS.primaryGreenHover}; text-decoration: underline; }
-
-        .dk-input:hover { border-color: ${COLORS.primaryGreen}88 !important; }
-        .dk-input:focus, .dk-input:focus-visible {
-          outline: none;
-          border-color: ${COLORS.primaryGreen} !important;
-          box-shadow: 0 0 0 4px ${COLORS.primaryGreen}1A;
-        }
-
-        .dk-clear-link { transition: opacity 0.2s ease, color 0.2s ease; }
-        .dk-clear-link:hover { opacity: 0.75; }
-
-        .dk-icon-btn { transition: background-color 0.2s ease, transform 0.15s ease; }
-        .dk-icon-btn:hover { background-color: ${COLORS.lightGreenBg}; transform: translateY(-1px); }
-
-        ::selection { background-color: ${COLORS.primaryGreen}33; }
-
-        @media (max-width: 640px) {
-          .dk-search-btn-row { flex-direction: column; align-items: stretch !important; }
-          .dk-search-btn-row button { width: 100%; }
-          .dk-search-btn-row a { text-align: center; }
-        }
-      `}</style>
-
-      {/* ---------- Hero ---------- */}
-      <div
-        className="dk-hero"
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "32px",
-          alignItems: "flex-start",
-          marginBottom: "36px",
-        }}
-      >
-        <header style={{ flex: "1 1 280px", minWidth: "0", paddingTop: "4px" }}>
-          <div
-            style={{
-              display: "inline-block",
-              backgroundColor: COLORS.lightGreenBg,
-              color: COLORS.primaryGreen,
-              fontSize: "11px",
-              fontWeight: 700,
-              padding: "4px 10px",
-              borderRadius: "20px",
-              letterSpacing: "0.04em",
-              marginBottom: "14px",
-            }}
-          >
-            TRUSTED · VERIFIED · EAST AFRICA
+            {session?.user ? (
+              <p className="dt-hero__actions">
+                <Link href="/dashboard" className="dt-btn dt-btn--gold">
+                  Go to your dashboard
+                </Link>
+              </p>
+            ) : (
+              <p className="dt-hero__actions">
+                <Link href="/login" className="dt-btn dt-btn--outline">
+                  Log in
+                </Link>
+                <Link href="/register" className="dt-btn dt-btn--gold">
+                  Create an account
+                </Link>
+              </p>
+            )}
           </div>
-          <h1
-            style={{
-              color: COLORS.darkGreen,
-              marginBottom: "12px",
-              marginTop: 0,
-              fontSize: "clamp(24px, 3.2vw, 32px)",
-              lineHeight: 1.2,
-              letterSpacing: "-0.02em",
-              fontWeight: 700,
-              wordBreak: "break-word",
-            }}
-          >
-            East Africa&apos;s Trusted Marketplace for Verified Properties
-          </h1>
-          <p style={{ color: COLORS.textGray, margin: 0, lineHeight: 1.65, fontSize: "15px", maxWidth: "480px" }}>
-            Buy and sell land, homes and commercial property with verified ownership and professional due diligence.
-          </p>
-
-          {session?.user ? (
-            <div style={{ marginTop: "20px", display: "flex", alignItems: "center", gap: "14px" }}>
-              <div className="dk-icon-btn" style={{ borderRadius: "10px", padding: "4px" }}>
-                <NotificationBell />
-              </div>
-              <Link
-                href="/dashboard"
-                className="dk-link"
-                style={{ color: COLORS.primaryGreen, fontWeight: 600, textDecoration: "none", fontSize: "14px" }}
-              >
-                Go to your dashboard →
-              </Link>
-            </div>
-          ) : (
-            <div style={{ marginTop: "22px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-              <Link
-                href="/register"
-                className="dk-btn"
-                style={{
-                  backgroundColor: COLORS.primaryGreen,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: "10px",
-                  padding: "11px 22px",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  textDecoration: "none",
-                  display: "inline-block",
-                }}
-              >
-                Create an account
-              </Link>
-              <Link
-                href="/login"
-                className="dk-link"
-                style={{
-                  color: COLORS.textDark,
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  padding: "11px 18px",
-                  border: `1.5px solid ${COLORS.border}`,
-                  borderRadius: "10px",
-                }}
-              >
-                Log in
-              </Link>
-            </div>
-          )}
         </header>
 
-        <section
-          style={{
-            flex: "3 1 560px",
-            minWidth: "0",
-            width: "100%",
-            backgroundColor: COLORS.sectionBg,
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: "18px",
-            padding: "clamp(18px, 3vw, 26px)",
-            boxShadow: "0 1px 3px rgba(15,23,42,0.04), 0 12px 28px -14px rgba(15,23,42,0.08)",
-          }}
-        >
-          <h2
-            style={{
-              color: COLORS.darkGreen,
-              marginTop: 0,
-              marginBottom: "16px",
-              fontSize: "17px",
-              fontWeight: 700,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Find a Property
-          </h2>
+        <section className="dt-search-wrap">
+          <div className="dt-search">
+            <h2 className="dt-search__title">
+              Find a Property
+            </h2>
 
-          <form method="get">
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "14px", marginBottom: "20px" }}>
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Location / County</label>
-                <input
-                  type="text"
-                  name="location"
-                  defaultValue={searchParams.location}
-                  placeholder="e.g. Kitengela"
-                  className="dk-input"
-                  style={fieldInputStyle}
-                />
+            <form method="get" className="dt-search__form">
+              <div className="dt-search__grid">
+                <div className="dt-field">
+                  <label>Location / County</label>
+                  <input
+                    type="text"
+                    name="location"
+                    defaultValue={searchParams.location}
+                    placeholder="e.g. Kitengela"
+                  />
+                </div>
+
+                <div className="dt-field">
+                  <label>Property Type</label>
+                  <select
+                    name="propertyType"
+                    defaultValue={searchParams.propertyType || ""}
+                  >
+                    <option value="">Any type</option>
+                    {PROPERTY_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {PROPERTY_TYPE_LABELS[t]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="dt-field">
+                  <label>Buy or Rent</label>
+                  <select
+                    name="listingType"
+                    defaultValue={searchParams.listingType || ""}
+                  >
+                    <option value="">Any</option>
+                    <option value="SALE">For sale</option>
+                    <option value="RENT">For rent</option>
+                  </select>
+                </div>
+
+                <div className="dt-field">
+                  <label>Availability</label>
+                  <select
+                    name="availabilityStatus"
+                    defaultValue={searchParams.availabilityStatus || ""}
+                  >
+                    <option value="">Any</option>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="RESERVED">Reserved</option>
+                    <option value="SOLD">Sold</option>
+                    <option value="RENTED">Rented</option>
+                  </select>
+                </div>
+
+                <div className="dt-field">
+                  <label>Min Price (KSh)</label>
+                  <input
+                    type="number"
+                    name="minPrice"
+                    defaultValue={searchParams.minPrice}
+                    min="0"
+                    placeholder="Any"
+                  />
+                </div>
+
+                <div className="dt-field">
+                  <label>Max Price (KSh)</label>
+                  <input
+                    type="number"
+                    name="maxPrice"
+                    defaultValue={searchParams.maxPrice}
+                    min="0"
+                    placeholder="Any"
+                  />
+                </div>
               </div>
 
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Property Type</label>
-                <select
-                  name="propertyType"
-                  defaultValue={searchParams.propertyType || ""}
-                  className="dk-input"
-                  style={fieldInputStyle}
-                >
-                  <option value="">Any type</option>
-                  {PROPERTY_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {PROPERTY_TYPE_LABELS[t]}
-                    </option>
-                  ))}
-                </select>
+              <div className="dt-search__buttons">
+                <button type="submit" className="dt-btn dt-btn--gold dt-btn--wide">
+                  Search Properties
+                </button>
+                <a href="/" className="dt-link-muted">
+                  Clear filters
+                </a>
               </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Buy or Rent</label>
-                <select
-                  name="listingType"
-                  defaultValue={searchParams.listingType || ""}
-                  className="dk-input"
-                  style={fieldInputStyle}
-                >
-                  <option value="">Any</option>
-                  <option value="SALE">For sale</option>
-                  <option value="RENT">For rent</option>
-                </select>
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Availability</label>
-                <select
-                  name="availabilityStatus"
-                  defaultValue={searchParams.availabilityStatus || ""}
-                  className="dk-input"
-                  style={fieldInputStyle}
-                >
-                  <option value="">Any</option>
-                  <option value="AVAILABLE">Available</option>
-                  <option value="RESERVED">Reserved</option>
-                  <option value="SOLD">Sold</option>
-                  <option value="RENTED">Rented</option>
-                </select>
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Min Price (KSh)</label>
-                <input
-                  type="number"
-                  name="minPrice"
-                  defaultValue={searchParams.minPrice}
-                  min="0"
-                  placeholder="Any"
-                  className="dk-input"
-                  style={fieldInputStyle}
-                />
-              </div>
-
-              <div style={fieldWrapperStyle}>
-                <label style={fieldLabelStyle}>Max Price (KSh)</label>
-                <input
-                  type="number"
-                  name="maxPrice"
-                  defaultValue={searchParams.maxPrice}
-                  min="0"
-                  placeholder="Any"
-                  className="dk-input"
-                  style={fieldInputStyle}
-                />
-              </div>
-            </div>
-
-            <div className="dk-search-btn-row" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "18px" }}>
-              <button
-                type="submit"
-                className="dk-btn"
-                style={{
-                  backgroundColor: COLORS.primaryGreen,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: "10px",
-                  padding: "12px 28px",
-                  fontWeight: 600,
-                  fontSize: "14px",
-                  cursor: "pointer",
-                }}
-              >
-                Search Properties
-              </button>
-              
-                href="/"
-                className="dk-clear-link"
-                style={{ color: COLORS.textGray, fontWeight: 500, textDecoration: "none", fontSize: "13.5px" }}
-              >
-                Clear filters
-              </a>
-            </div>
-          </form>
+            </form>
+          </div>
         </section>
       </div>
-      {/* end hero */}
 
-      <div style={{ height: "1px", background: `linear-gradient(90deg, transparent, ${COLORS.border}, transparent)`, margin: "32px 0" }} />
-
-      {/* ---------- Listings ---------- */}
-      <section>
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
-          <h2 style={{ color: COLORS.darkGreen, margin: 0, fontSize: "20px", fontWeight: 700, letterSpacing: "-0.01em" }}>
-            Verified Listings
+      <section className="dt-listings">
+        <div className="dt-listings__header">
+          <h2>
+            Verified Listings <span className="dt-listings__count">({properties.length})</span>
           </h2>
-          <span style={{ color: COLORS.textMuted, fontSize: "13.5px", fontWeight: 500 }}>
-            {properties.length} {properties.length === 1 ? "result" : "results"}
-          </span>
         </div>
 
         {properties.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "48px 20px",
-              backgroundColor: COLORS.sectionBg,
-              border: `1px dashed ${COLORS.border}`,
-              borderRadius: "16px",
-              color: COLORS.textGray,
-            }}
-          >
-            No properties match your search. Try adjusting your filters.
-          </div>
+          <p className="dt-empty">No properties match your search. Try adjusting your filters.</p>
         ) : (
-          <ul
-            style={{
-              listStyle: "none",
-              padding: 0,
-              margin: 0,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 270px), 1fr))",
-              gap: "22px",
-            }}
-          >
-            {properties.map((p: PropertyWithSeller, index: number) => (
-              <li
-                key={p.id}
-                className="dk-card"
-                style={{
-                  backgroundColor: COLORS.white,
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: "16px",
-                  padding: "14px",
-                  display: "flex",
-                  flexDirection: "column",
-                  minWidth: 0,
-                  animationDelay: `${Math.min(index, 10) * 0.05}s`,
-                }}
-              >
-                {p.imageUrl && (
-                  <Link href={`/properties/${p.id}`} className="dk-card-img-wrap" style={{ marginBottom: "12px", display: "block" }}>
-                    <img
-                      src={p.imageUrl}
-                      alt={p.title}
-                      className="dk-card-img"
-                      style={{ width: "100%", height: "170px", objectFit: "cover", display: "block" }}
-                    />
-                  </Link>
-                )}
-
-                <div style={{ marginBottom: "10px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                  {p.featured && (
-                    <span
-                      style={{
-                        backgroundColor: COLORS.darkGreen,
-                        color: COLORS.white,
-                        fontSize: "10.5px",
-                        fontWeight: 700,
-                        padding: "4px 9px",
-                        borderRadius: "6px",
-                        letterSpacing: "0.03em",
-                      }}
-                    >
-                      FEATURED
-                    </span>
+          <ul className="dt-grid">
+            {properties.map((p: PropertyWithSeller, i: number) => (
+              <li key={p.id} className="dt-card" style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}>
+                <div className="dt-card__media">
+                  {p.imageUrl && (
+                    <Link href={`/properties/${p.id}`} className="dt-card__imglink">
+                      <img
+                        src={p.imageUrl}
+                        alt={p.title}
+                      />
+                    </Link>
                   )}
-                  {p.daktopVerified && (
-                    <span
-                      style={{
-                        backgroundColor: COLORS.primaryGreen,
-                        color: COLORS.white,
-                        fontSize: "10.5px",
-                        fontWeight: 700,
-                        padding: "4px 9px",
-                        borderRadius: "6px",
-                        letterSpacing: "0.03em",
-                      }}
-                    >
-                      DAKTOP VERIFIED
+
+                  <div className="dt-card__badges">
+                    {p.featured && (
+                      <span className="dt-badge dt-badge--featured">
+                        FEATURED
+                      </span>
+                    )}
+                    <span className={`dt-badge dt-badge--status dt-badge--${(p.availabilityStatus || "").toLowerCase()}`}>
+                      {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
                     </span>
-                  )}
-                  <span
-                    style={{
-                      backgroundColor: COLORS.lightGreenBg,
-                      color: COLORS.primaryGreen,
-                      fontSize: "10.5px",
-                      fontWeight: 700,
-                      padding: "4px 9px",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
-                  </span>
-                </div>
-
-                <Link href={`/properties/${p.id}`} style={{ textDecoration: "none" }}>
-                  <strong
-                    className="dk-title"
-                    style={{ color: COLORS.textDark, fontSize: "15.5px", lineHeight: 1.35, fontWeight: 650 }}
-                  >
-                    {p.title}
-                  </strong>
-                </Link>
-
-                <div
-                  style={{
-                    margin: "7px 0",
-                    fontSize: "12.5px",
-                    color: COLORS.textGray,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <span style={{ color: p.verified ? COLORS.primaryGreen : COLORS.textMuted, fontWeight: 600 }}>
-                    {p.verified ? "Verified" : "Not Verified"}
-                  </span>{" "}
-                  · {getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)} ·{" "}
-                  {p.listingType === "SALE" ? "For sale" : "For rent"}
-                </div>
-
-                <div style={{ color: COLORS.primaryGreen, fontWeight: 700, fontSize: "18px", letterSpacing: "-0.01em", marginBottom: "8px" }}>
-                  KSh {p.price.toLocaleString()}
-                </div>
-
-                <div
-                  style={{
-                    color: COLORS.textGray,
-                    fontSize: "13px",
-                    marginBottom: "10px",
-                    paddingBottom: "10px",
-                    borderBottom: `1px solid ${COLORS.borderSoft}`,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {p.location}
-                  {p.bedrooms !== null && <> · {p.bedrooms} bed</>}
-                  {p.bathrooms !== null && <> · {p.bathrooms} bath</>}
-                  {p.acreage !== null && <> · {p.acreage} acres</>}
-                </div>
-
-                <small style={{ color: COLORS.textGray, display: "block", overflowWrap: "break-word", fontSize: "12.5px", lineHeight: 1.5 }}>
-                  Listed by {p.seller.name || p.seller.email} ({getRoleLabel(p.seller.role)})
-                  {p.seller.verified && (
-                    <span style={{ color: COLORS.primaryGreen, fontWeight: 600 }}>
-                      {" "}
-                      · Verified {getRoleLabel(p.seller.role)}
-                    </span>
-                  )}
-                  {p.representingName && <> · representing {p.representingName}</>}
-                </small>
-
-                {p.showContact && p.seller.phone && (
-                  <small style={{ color: COLORS.textDark, display: "block", marginTop: "6px", fontSize: "12.5px", fontWeight: 500 }}>
-                    Contact: {p.seller.phone}
-                  </small>
-                )}
-
-                {session?.user?.role === "BUYER" && (
-                  <div style={{ marginTop: "auto", paddingTop: "12px" }}>
-                    <SaveButton propertyId={p.id} initiallySaved={savedPropertyIds.has(p.id)} />
                   </div>
-                )}
+
+                  {session?.user?.role === "BUYER" && (
+                    <div className="dt-card__save">
+                      <SaveButton propertyId={p.id} initiallySaved={savedPropertyIds.has(p.id)} />
+                    </div>
+                  )}
+                </div>
+
+                <div className="dt-card__body">
+                  <Link href={`/properties/${p.id}`} className="dt-card__title">
+                    <strong>
+                      {p.title}
+                    </strong>
+                  </Link>
+
+                  <div className="dt-card__meta-row">
+                    <span className={p.verified ? "dt-tag dt-tag--verified" : "dt-tag dt-tag--unverified"}>
+                      {p.verified ? "Verified" : "Not Verified"}
+                    </span>
+                    <span className="dt-card__type">
+                      {getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)} · {p.listingType === "SALE" ? "For sale" : "For rent"}
+                    </span>
+                  </div>
+
+                  <div className="dt-card__price">
+                    KSh {p.price.toLocaleString()}
+                  </div>
+
+                  <div className="dt-card__facts">
+                    <span className="dt-card__location">{p.location}</span>
+                    {p.bedrooms !== null && <span>{p.bedrooms} bed</span>}
+                    {p.bathrooms !== null && <span>{p.bathrooms} bath</span>}
+                    {p.acreage !== null && <span>{p.acreage} acres</span>}
+                  </div>
+
+                  <div className="dt-card__divider" />
+
+                  <small className="dt-card__seller">
+                    Listed by {p.seller.name || p.seller.email} ({p.seller.role === "AGENT" ? "Agent" : "Owner"})
+                    {p.seller.verified && (
+                      <span className="dt-card__seller-verified">
+                        {" "}
+                        — Verified {p.seller.role === "AGENT" ? "Agent" : "Owner"}
+                      </span>
+                    )}
+                    {p.representingName && <> — representing {p.representingName}</>}
+                  </small>
+
+                  {p.showContact && p.seller.phone && (
+                    <small className="dt-card__contact">
+                      Contact: {p.seller.phone}
+                    </small>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -627,8 +286,385 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
       <BuySellCard session={session} />
 
-      </div>
+      <style>{`
+        .dt-page {
+          --forest: #0f3d2e;
+          --forest-deep: #0a2b21;
+          --forest-light: #1b5e42;
+          --gold: #c9972f;
+          --gold-light: #e7c065;
+          --cream: #faf8f3;
+          --ink: #16241c;
+          --muted: #5b6b62;
+          --border: #e6e2d6;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+          background: var(--cream);
+          color: var(--ink);
+        }
 
+        /* ---------- Hero ---------- */
+        .dt-hero {
+          position: relative;
+          background:
+            radial-gradient(1200px 500px at 15% 0%, rgba(201,151,47,0.18), transparent 60%),
+            linear-gradient(120deg, var(--forest-deep) 0%, var(--forest) 55%, var(--forest-light) 100%);
+          padding: 88px 24px 130px;
+          overflow: hidden;
+        }
+        .dt-hero::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+          background-size: 42px 42px;
+          mask-image: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 75%);
+          pointer-events: none;
+        }
+        .dt-hero__inner {
+          position: relative;
+          max-width: 780px;
+          margin: 0 auto;
+          text-align: center;
+          animation: dtFadeUp 700ms cubic-bezier(.22,1,.36,1) both;
+        }
+        .dt-hero__title {
+          font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+          font-size: clamp(2rem, 4.2vw, 3.1rem);
+          line-height: 1.15;
+          font-weight: 600;
+          color: #ffffff;
+          letter-spacing: -0.01em;
+          margin: 0 0 18px;
+        }
+        .dt-hero__subtitle {
+          font-size: 1.05rem;
+          line-height: 1.6;
+          color: rgba(255,255,255,0.82);
+          max-width: 560px;
+          margin: 0 auto 30px;
+        }
+        .dt-hero__actions {
+          display: flex;
+          gap: 14px;
+          justify-content: center;
+          margin: 0;
+        }
+
+        /* ---------- Buttons ---------- */
+        .dt-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 26px;
+          border-radius: 999px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          text-decoration: none;
+          border: 1px solid transparent;
+          cursor: pointer;
+          transition: transform 220ms cubic-bezier(.22,1,.36,1), box-shadow 220ms ease, background 220ms ease, border-color 220ms ease;
+          white-space: nowrap;
+        }
+        .dt-btn:hover { transform: translateY(-2px); }
+        .dt-btn:active { transform: translateY(0); }
+        .dt-btn--gold {
+          background: linear-gradient(135deg, var(--gold-light), var(--gold));
+          color: #241a06;
+          box-shadow: 0 8px 20px -8px rgba(201,151,47,0.65);
+        }
+        .dt-btn--gold:hover { box-shadow: 0 12px 28px -8px rgba(201,151,47,0.8); }
+        .dt-btn--outline {
+          background: rgba(255,255,255,0.06);
+          color: #fff;
+          border-color: rgba(255,255,255,0.35);
+        }
+        .dt-btn--outline:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.55); }
+        .dt-btn--wide { padding: 13px 36px; }
+
+        .dt-link-muted {
+          color: var(--muted);
+          font-size: 0.9rem;
+          text-decoration: none;
+          border-bottom: 1px solid transparent;
+          transition: color 180ms ease, border-color 180ms ease;
+        }
+        .dt-link-muted:hover { color: var(--forest); border-color: var(--forest); }
+
+        /* ---------- Floating search card ---------- */
+        .dt-search-wrap {
+          position: relative;
+          max-width: 1100px;
+          margin: -80px auto 0;
+          padding: 0 20px;
+          z-index: 5;
+        }
+        .dt-search {
+          background: #ffffff;
+          border-radius: 20px;
+          box-shadow: 0 24px 60px -20px rgba(15,61,46,0.35), 0 2px 8px rgba(0,0,0,0.04);
+          padding: 32px 34px 26px;
+          animation: dtFadeUp 700ms 120ms cubic-bezier(.22,1,.36,1) both;
+          border: 1px solid var(--border);
+        }
+        .dt-search__title {
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: var(--forest);
+          margin: 0 0 20px;
+        }
+        .dt-search__grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          gap: 16px;
+          margin-bottom: 20px;
+        }
+        .dt-field {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .dt-field label {
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--muted);
+        }
+        .dt-field input,
+        .dt-field select {
+          border: 1px solid var(--border);
+          background: #fbfaf7;
+          border-radius: 10px;
+          padding: 10px 12px;
+          font-size: 0.92rem;
+          color: var(--ink);
+          outline: none;
+          transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+        }
+        .dt-field input:hover,
+        .dt-field select:hover { border-color: #cfcabb; }
+        .dt-field input:focus,
+        .dt-field select:focus {
+          border-color: var(--gold);
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(201,151,47,0.18);
+        }
+        .dt-search__buttons {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+
+        /* ---------- Listings ---------- */
+        .dt-listings {
+          max-width: 1180px;
+          margin: 66px auto 90px;
+          padding: 0 20px;
+        }
+        .dt-listings__header {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          margin-bottom: 26px;
+        }
+        .dt-listings__header h2 {
+          font-family: Georgia, "Iowan Old Style", serif;
+          font-size: 1.6rem;
+          color: var(--forest);
+          margin: 0;
+        }
+        .dt-listings__count {
+          color: var(--muted);
+          font-weight: 400;
+          font-size: 1.1rem;
+        }
+        .dt-empty {
+          text-align: center;
+          padding: 60px 20px;
+          color: var(--muted);
+          background: #fff;
+          border: 1px dashed var(--border);
+          border-radius: 16px;
+        }
+
+        .dt-grid {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+          gap: 26px;
+        }
+
+        .dt-card {
+          background: #fff;
+          border-radius: 16px;
+          overflow: hidden;
+          border: 1px solid var(--border);
+          box-shadow: 0 1px 3px rgba(15,61,46,0.06);
+          transition: transform 260ms cubic-bezier(.22,1,.36,1), box-shadow 260ms cubic-bezier(.22,1,.36,1), border-color 260ms ease;
+          animation: dtFadeUp 620ms cubic-bezier(.22,1,.36,1) both;
+        }
+        .dt-card:hover {
+          transform: translateY(-6px);
+          box-shadow: 0 26px 40px -18px rgba(15,61,46,0.28);
+          border-color: rgba(201,151,47,0.4);
+        }
+
+        .dt-card__media {
+          position: relative;
+          aspect-ratio: 4 / 3;
+          background: linear-gradient(135deg, #eef0ea, #dfe3d9);
+          overflow: hidden;
+        }
+        .dt-card__imglink { display: block; width: 100%; height: 100%; }
+        .dt-card__media img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 500ms cubic-bezier(.22,1,.36,1);
+        }
+        .dt-card:hover .dt-card__media img { transform: scale(1.08); }
+
+        .dt-card__badges {
+          position: absolute;
+          top: 12px;
+          left: 12px;
+          display: flex;
+          gap: 8px;
+        }
+        .dt-badge {
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          padding: 5px 10px;
+          border-radius: 999px;
+          text-transform: uppercase;
+          backdrop-filter: blur(4px);
+        }
+        .dt-badge--featured {
+          background: rgba(15,61,46,0.9);
+          color: #fff;
+        }
+        .dt-badge--status { background: rgba(255,255,255,0.92); color: var(--ink); }
+        .dt-badge--available { color: #1a7a44; }
+        .dt-badge--reserved { color: #a56a00; }
+        .dt-badge--sold, .dt-badge--rented { color: #a13232; }
+
+        .dt-card__save {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: rgba(255,255,255,0.92);
+          border-radius: 999px;
+          width: 34px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+          transition: transform 200ms ease;
+        }
+        .dt-card__save:hover { transform: scale(1.08); }
+
+        .dt-card__body {
+          padding: 18px 18px 16px;
+        }
+        .dt-card__title {
+          display: block;
+          color: var(--ink);
+          text-decoration: none;
+          font-size: 1.05rem;
+          margin-bottom: 8px;
+          transition: color 180ms ease;
+        }
+        .dt-card__title:hover { color: var(--forest); }
+
+        .dt-card__meta-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 10px;
+          flex-wrap: wrap;
+        }
+        .dt-tag {
+          font-size: 0.7rem;
+          font-weight: 700;
+          padding: 3px 9px;
+          border-radius: 999px;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+        }
+        .dt-tag--verified { background: rgba(27,94,66,0.12); color: var(--forest-light); }
+        .dt-tag--unverified { background: rgba(91,107,98,0.12); color: var(--muted); }
+        .dt-card__type { font-size: 0.82rem; color: var(--muted); }
+
+        .dt-card__price {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: var(--forest);
+          margin-bottom: 8px;
+        }
+
+        .dt-card__facts {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px 12px;
+          font-size: 0.85rem;
+          color: var(--muted);
+          margin-bottom: 12px;
+        }
+        .dt-card__facts span:not(:last-child)::after {
+          content: "·";
+          margin-left: 12px;
+          color: var(--border);
+        }
+        .dt-card__location { color: var(--ink); font-weight: 500; }
+
+        .dt-card__divider {
+          height: 1px;
+          background: var(--border);
+          margin: 10px 0;
+        }
+
+        .dt-card__seller {
+          display: block;
+          color: var(--muted);
+          font-size: 0.78rem;
+          line-height: 1.5;
+        }
+        .dt-card__seller-verified { color: var(--forest-light); font-weight: 600; }
+        .dt-card__contact {
+          display: block;
+          margin-top: 4px;
+          font-size: 0.78rem;
+          color: var(--forest);
+          font-weight: 600;
+        }
+
+        @keyframes dtFadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .dt-hero__inner, .dt-search, .dt-card, .dt-btn, .dt-card__media img {
+            animation: none !important;
+            transition: none !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .dt-hero { padding: 64px 18px 110px; }
+          .dt-search-wrap { margin-top: -70px; }
+          .dt-search { padding: 24px 20px 20px; }
+          .dt-hero__actions { flex-direction: column; }
+        }
+      `}</style>
     </div>
   );
 }
