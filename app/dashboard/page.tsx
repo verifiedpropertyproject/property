@@ -48,10 +48,9 @@ const STATUS_OPTIONS = ["PENDING", "APPROVED", "CHANGES_REQUESTED", "REJECTED"];
 const ROLE_OPTIONS = ["BUYER", "OWNER", "AGENT", "ADMIN"];
 
 // ---------------------------------------------------------------------------
-// Design: a surveyor's-plaque palette — deep pine header, warm parchment
-// page, brass accent for anything verified/approved. All styling below is
-// plain CSS injected once via <DashboardStyles/>, so it renders correctly
-// whether or not this project has Tailwind configured.
+// Design: DAKTOP360's own brand — deep forest green, white cards, pastel
+// icon chips, pill badges. Plain CSS injected once via <DashboardStyles/>,
+// so it renders the same regardless of what CSS tooling this project uses.
 // ---------------------------------------------------------------------------
 type Tone = "role" | "success" | "warning" | "danger" | "accent" | "neutral";
 
@@ -81,19 +80,26 @@ function enquiryStatusLabelAndTone(status: string): { label: string; tone: Tone 
 }
 
 function Section({
+  id,
   eyebrow,
   title,
+  action,
   children,
 }: {
+  id?: string;
   eyebrow: string;
   title: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <section className="dtb-section">
+    <section id={id} className="dtb-section">
       <div className="dtb-section-head">
-        <p className="dtb-eyebrow">{eyebrow}</p>
-        <h2 className="dtb-title">{title}</h2>
+        <div>
+          <p className="dtb-eyebrow">{eyebrow}</p>
+          <h2 className="dtb-title">{title}</h2>
+        </div>
+        {action}
       </div>
       {children}
     </section>
@@ -105,6 +111,76 @@ function FilterForm({ children }: { children: React.ReactNode }) {
     <form method="get" className="dtb-form">
       {children}
     </form>
+  );
+}
+
+// --- tiny inline icons (no external icon package required) -----------------
+function IconHouse() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11.5 12 4l9 7.5" />
+      <path d="M5.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h3.5a1 1 0 0 0 1-1v-9" />
+    </svg>
+  );
+}
+function IconPeople() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
+      <circle cx="17" cy="9.5" r="2.3" />
+      <path d="M15.8 14.2c2.3.2 4.2 2 4.2 4.8" />
+    </svg>
+  );
+}
+function IconEye() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.6" />
+    </svg>
+  );
+}
+function IconHeart() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20s-7.5-4.6-9.6-9.1C1.1 7.9 2.6 5 5.7 4.6c1.9-.3 3.6.7 4.9 2.2 1.3-1.5 3-2.5 4.9-2.2 3.1.4 4.6 3.3 3.3 6.3C19.5 15.4 12 20 12 20Z" />
+    </svg>
+  );
+}
+function IconMail() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5.5" width="18" height="13" rx="2" />
+      <path d="m4 7 8 6 8-6" />
+    </svg>
+  );
+}
+
+function StatCard({
+  href,
+  chip,
+  icon,
+  label,
+  value,
+}: {
+  href: string;
+  chip: "green" | "blue" | "amber" | "purple";
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="dtb-stat">
+      <div className="dtb-stat-top">
+        <span className={`dtb-stat-icon dtb-stat-icon--${chip}`}>{icon}</span>
+        <span className="dtb-stat-label">{label}</span>
+      </div>
+      <div className="dtb-stat-value">{value}</div>
+      <Link href={href} className="dtb-stat-link">
+        View all &rarr;
+      </Link>
+    </div>
   );
 }
 
@@ -288,19 +364,24 @@ export default async function DashboardPage({
         })
       : [];
 
+  // Derived stat totals for the stat-card row
+  const totalEnquiriesOnMyListings = myProperties.reduce((sum, p) => sum + p.enquiries.length, 0);
+  const totalViewsOnMyListings = myProperties.reduce((sum, p) => sum + p.views, 0);
+  const totalSavedOnMyListings = myProperties.reduce((sum, p) => sum + p._count.savedBy, 0);
+
   return (
     <div className="dtb-page">
       <DashboardStyles />
       <div className="dtb-container">
-        {/* Header — styled like a brass nameplate */}
+        {/* Header */}
         <header className="dtb-header">
           <div>
-            <p className="dtb-eyebrow dtb-eyebrow--onDark">Dashboard</p>
-            <h1 className="dtb-name">{session.user.name || session.user.email}</h1>
+            <p className="dtb-eyebrow">Dashboard</p>
+            <h1 className="dtb-name">Welcome back, {session.user.name || session.user.email} 👋</h1>
             <div className="dtb-badge-row">
               <Badge label={getRoleLabel(role) || role} tone="role" />
               {(role === "OWNER" || role === "AGENT") && currentUser.verified && (
-                <Badge label="Verified account" tone="accent" />
+                <Badge label="Verified account" tone="success" />
               )}
             </div>
           </div>
@@ -309,6 +390,31 @@ export default async function DashboardPage({
             <SignOutButton />
           </div>
         </header>
+
+        {/* Stat row */}
+        {(role === "OWNER" || role === "AGENT") && (
+          <div className="dtb-stats">
+            <StatCard href="#my-listings" chip="green" icon={<IconHouse />} label="My Properties" value={myProperties.length} />
+            <StatCard href="#my-listings" chip="blue" icon={<IconPeople />} label="Enquiries" value={totalEnquiriesOnMyListings} />
+            <StatCard href="#my-listings" chip="amber" icon={<IconEye />} label="Profile Views" value={totalViewsOnMyListings} />
+            <StatCard href="#my-listings" chip="purple" icon={<IconHeart />} label="Saved by buyers" value={totalSavedOnMyListings} />
+          </div>
+        )}
+        {role === "ADMIN" && (
+          <div className="dtb-stats">
+            <StatCard href="#pending-listings" chip="amber" icon={<IconHouse />} label="Pending Listings" value={pendingProperties.length} />
+            <StatCard href="#pending-enquiries" chip="blue" icon={<IconMail />} label="Pending Enquiries" value={pendingEnquiries.length} />
+            <StatCard href="#all-listings" chip="green" icon={<IconEye />} label="Total Listings" value={allProperties.length} />
+            <StatCard href="#manage-users" chip="purple" icon={<IconPeople />} label="Total Users" value={allUsers.length} />
+          </div>
+        )}
+        {role === "BUYER" && (
+          <div className="dtb-stats">
+            <StatCard href="#saved-properties" chip="purple" icon={<IconHeart />} label="Saved Properties" value={savedProperties.length} />
+            <StatCard href="#my-enquiries" chip="blue" icon={<IconMail />} label="Enquiries Sent" value={myEnquiries.length} />
+            <StatCard href="#notifications" chip="amber" icon={<IconEye />} label="Notifications" value={receivedNotifications.length} />
+          </div>
+        )}
 
         {/* Phone number */}
         <Section eyebrow="Contact" title="Phone number">
@@ -321,7 +427,7 @@ export default async function DashboardPage({
               <PropertyForm isAgent={role === "AGENT"} />
             </Section>
 
-            <Section eyebrow={`${myProperties.length} total`} title="Your listings">
+            <Section id="my-listings" eyebrow={`${myProperties.length} total`} title="Your listings">
               {myProperties.length === 0 ? (
                 <p className="dtb-empty">You haven&apos;t listed any properties yet.</p>
               ) : (
@@ -364,12 +470,12 @@ export default async function DashboardPage({
 
                         <div className="dtb-actions">
                           {["PENDING", "CHANGES_REQUESTED", "REJECTED"].includes(p.status) && (
-                            <Link href={`/properties/${p.id}/edit`} className="dtb-link">
+                            <Link href={`/properties/${p.id}/edit`} className="dtb-button dtb-button--outline">
                               {p.status === "PENDING" ? "Edit listing" : "Edit and resubmit"}
                             </Link>
                           )}
-                          <Link href={`/properties/${p.id}/documents`} className="dtb-link">
-                            Manage supporting documents
+                          <Link href={`/properties/${p.id}/documents`} className="dtb-button dtb-button--outline">
+                            Manage documents
                           </Link>
                         </div>
 
@@ -396,15 +502,15 @@ export default async function DashboardPage({
 
         {role === "ADMIN" && (
           <>
-            <Section eyebrow={`${pendingProperties.length} pending`} title="Listings awaiting review">
+            <Section id="pending-listings" eyebrow={`${pendingProperties.length} pending`} title="Listings awaiting review">
               <PropertyApprovalList properties={pendingProperties} />
             </Section>
 
-            <Section eyebrow={`${pendingEnquiries.length} pending`} title="Enquiries awaiting review">
+            <Section id="pending-enquiries" eyebrow={`${pendingEnquiries.length} pending`} title="Enquiries awaiting review">
               <EnquiryApprovalList enquiries={pendingEnquiries} />
             </Section>
 
-            <Section eyebrow={`${allProperties.length} total`} title="All listings">
+            <Section id="all-listings" eyebrow={`${allProperties.length} total`} title="All listings">
               <div className="dtb-filters">
                 <FilterForm>
                   <div className="dtb-field">
@@ -448,7 +554,7 @@ export default async function DashboardPage({
               </div>
             </Section>
 
-            <Section eyebrow={`${allUsers.length} total`} title="Manage users">
+            <Section id="manage-users" eyebrow={`${allUsers.length} total`} title="Manage users">
               <div className="dtb-filters">
                 <FilterForm>
                   <div className="dtb-field">
@@ -506,7 +612,7 @@ export default async function DashboardPage({
               </p>
             </Section>
 
-            <Section eyebrow={`${savedProperties.length} saved`} title="Your saved properties">
+            <Section id="saved-properties" eyebrow={`${savedProperties.length} saved`} title="Your saved properties">
               {savedProperties.length === 0 ? (
                 <p className="dtb-empty">You haven&apos;t saved any properties yet.</p>
               ) : (
@@ -523,7 +629,7 @@ export default async function DashboardPage({
               )}
             </Section>
 
-            <Section eyebrow={`${myEnquiries.length} sent`} title="Your enquiries">
+            <Section id="my-enquiries" eyebrow={`${myEnquiries.length} sent`} title="Your enquiries">
               {myEnquiries.length === 0 ? (
                 <p className="dtb-empty">You haven&apos;t sent any enquiries yet.</p>
               ) : (
@@ -549,7 +655,7 @@ export default async function DashboardPage({
         )}
 
         {/* Notifications */}
-        <Section eyebrow={`${receivedNotifications.length} total`} title="Notifications">
+        <Section id="notifications" eyebrow={`${receivedNotifications.length} total`} title="Notifications">
           {receivedNotifications.length === 0 ? (
             <p className="dtb-empty">No notifications yet.</p>
           ) : (
@@ -584,13 +690,15 @@ export default async function DashboardPage({
 function DashboardStyles() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+      * { box-sizing: border-box; }
 
       .dtb-page {
         min-height: 100vh;
-        background: #EEF0EB;
+        background: #F4F6F5;
         font-family: 'Inter', -apple-system, sans-serif;
-        color: #14231F;
+        color: #17251E;
       }
       .dtb-page--centered {
         display: flex;
@@ -599,22 +707,23 @@ function DashboardStyles() {
         padding: 24px;
       }
       .dtb-container {
-        max-width: 1080px;
+        max-width: 1120px;
         margin: 0 auto;
-        padding: 40px 20px 64px;
+        padding: 32px 20px 64px;
         display: flex;
         flex-direction: column;
-        gap: 28px;
+        gap: 24px;
       }
 
       .dtb-center-card {
         width: 100%;
         max-width: 440px;
-        background: #FBFAF5;
-        border: 1px solid #DCD8CC;
-        border-radius: 24px;
+        background: #FFFFFF;
+        border: 1px solid #E7EBE8;
+        border-radius: 16px;
         padding: 32px;
         text-align: center;
+        box-shadow: 0 1px 3px rgba(15,61,43,0.06);
       }
       .dtb-center-actions {
         margin-top: 20px;
@@ -626,13 +735,14 @@ function DashboardStyles() {
       }
 
       .dtb-header {
-        background: #14231F;
-        color: #F5F2E8;
-        border-radius: 24px;
-        padding: 28px 32px;
+        background: #FFFFFF;
+        border: 1px solid #E7EBE8;
+        border-radius: 16px;
+        padding: 24px 28px;
         display: flex;
         flex-direction: column;
         gap: 16px;
+        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
       }
       .dtb-header-actions {
         display: flex;
@@ -640,11 +750,11 @@ function DashboardStyles() {
         gap: 12px;
       }
       .dtb-name {
-        font-family: 'Fraunces', serif;
-        font-size: 1.9rem;
-        font-weight: 600;
+        font-size: 1.5rem;
+        font-weight: 700;
         margin: 4px 0 0;
-        line-height: 1.15;
+        line-height: 1.25;
+        color: #14231F;
       }
       .dtb-badge-row {
         margin-top: 12px;
@@ -654,44 +764,100 @@ function DashboardStyles() {
       }
 
       .dtb-eyebrow {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.65rem;
+        font-size: 0.72rem;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.22em;
-        color: #8A6A2E;
+        letter-spacing: 0.08em;
+        color: #6B7A72;
         margin: 0;
       }
-      .dtb-eyebrow--onDark { color: #C9A65E; }
-      .dtb-eyebrow--danger { color: #B4482D; }
+      .dtb-eyebrow--danger { color: #C0392B; }
 
       .dtb-title {
-        font-family: 'Fraunces', serif;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin: 4px 0 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 2px 0 0;
         color: #14231F;
       }
-      .dtb-title--lg { font-size: 1.9rem; }
+      .dtb-title--lg { font-size: 1.6rem; }
 
       .dtb-copy {
-        font-size: 0.95rem;
+        font-size: 0.92rem;
         line-height: 1.6;
-        color: #5B5647;
+        color: #566B60;
         margin: 12px 0 0;
       }
       .dtb-copy:first-of-type { margin-top: 12px; }
 
-      .dtb-section {
-        background: #FBFAF5;
-        border: 1px solid #DCD8CC;
-        border-radius: 24px;
-        padding: 28px;
+      /* Stat cards */
+      .dtb-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
       }
-      .dtb-section-head { margin-bottom: 20px; }
+      .dtb-stat {
+        background: #FFFFFF;
+        border: 1px solid #E7EBE8;
+        border-radius: 16px;
+        padding: 18px 20px;
+        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
+      }
+      .dtb-stat-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .dtb-stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .dtb-stat-icon svg { width: 18px; height: 18px; }
+      .dtb-stat-icon--green { background: #E4F5E9; color: #17843C; }
+      .dtb-stat-icon--blue { background: #E5EEFB; color: #2563AE; }
+      .dtb-stat-icon--amber { background: #FCF0DC; color: #B4770E; }
+      .dtb-stat-icon--purple { background: #EFE7FA; color: #7C4EC4; }
+      .dtb-stat-label { font-size: 0.85rem; font-weight: 500; color: #566B60; }
+      .dtb-stat-value {
+        margin-top: 10px;
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #14231F;
+        line-height: 1;
+      }
+      .dtb-stat-link {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #17843C;
+        text-decoration: none;
+      }
+      .dtb-stat-link:hover { color: #0F5D2A; }
+
+      .dtb-section {
+        background: #FFFFFF;
+        border: 1px solid #E7EBE8;
+        border-radius: 16px;
+        padding: 24px 28px;
+        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
+      }
+      .dtb-section-head {
+        margin-bottom: 18px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
 
       .dtb-empty {
         font-size: 0.9rem;
-        color: #5B5647;
+        color: #566B60;
         margin: 0;
       }
 
@@ -701,20 +867,17 @@ function DashboardStyles() {
         gap: 6px;
         border-radius: 999px;
         border: 1px solid transparent;
-        padding: 3px 11px;
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.65rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
+        padding: 3px 12px;
+        font-size: 0.72rem;
+        font-weight: 600;
         line-height: 1.7;
       }
-      .dtb-badge--role { background: #14231F; color: #F5F2E8; border-color: #14231F; }
-      .dtb-badge--success { background: #EAF3EE; color: #1F6F5C; border-color: #BFDBCE; }
-      .dtb-badge--warning { background: #FBF2E1; color: #8A6A2E; border-color: #E9D4A4; }
-      .dtb-badge--danger { background: #FBEAE6; color: #B4482D; border-color: #F0C4B8; }
-      .dtb-badge--accent { background: #F6E9CF; color: #8A6A2E; border-color: #E4C88F; }
-      .dtb-badge--neutral { background: #EEECE3; color: #5B5647; border-color: #DCD8CC; }
+      .dtb-badge--role { background: #123B2B; color: #FFFFFF; }
+      .dtb-badge--success { background: #E4F5E9; color: #17843C; }
+      .dtb-badge--warning { background: #FCF0DC; color: #B4770E; }
+      .dtb-badge--danger { background: #FBE7E5; color: #C0392B; }
+      .dtb-badge--accent { background: #E4F5E9; color: #17843C; }
+      .dtb-badge--neutral { background: #EEF1EF; color: #5B6660; }
 
       .dtb-list {
         list-style: none;
@@ -727,13 +890,13 @@ function DashboardStyles() {
 
       .dtb-card {
         background: #FFFFFF;
-        border: 1px solid #DCD8CC;
-        border-radius: 18px;
-        padding: 20px;
-        transition: border-color 0.15s ease;
+        border: 1px solid #E7EBE8;
+        border-radius: 14px;
+        padding: 18px 20px;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
       }
-      .dtb-card:hover { border-color: #C9A65E; }
-      .dtb-card--tight { padding: 16px 20px; }
+      .dtb-card:hover { border-color: #C7DECF; box-shadow: 0 2px 8px rgba(15,61,43,0.06); }
+      .dtb-card--tight { padding: 14px 20px; }
 
       .dtb-card-tags {
         display: flex;
@@ -742,46 +905,40 @@ function DashboardStyles() {
         gap: 8px;
       }
       .dtb-card-title {
-        font-family: 'Fraunces', serif;
-        font-size: 1.1rem;
-        font-weight: 600;
+        font-size: 1.05rem;
+        font-weight: 700;
         color: #14231F;
       }
       .dtb-card-title--link { text-decoration: none; display: block; }
-      .dtb-card-title--link:hover { color: #8A6A2E; }
+      .dtb-card-title--link:hover { color: #17843C; }
 
       .dtb-price {
         margin-top: 8px;
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 1.1rem;
-        font-weight: 500;
-        font-variant-numeric: tabular-nums;
-        color: #14231F;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #123B2B;
       }
 
-      .dtb-muted { font-size: 0.88rem; color: #5B5647; margin-top: 6px; }
+      .dtb-muted { font-size: 0.87rem; color: #566B60; margin-top: 6px; }
       .dtb-strong { color: #14231F; }
 
       .dtb-availability { margin-top: 12px; }
 
       .dtb-meta {
         margin-top: 12px;
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #8A8371;
+        font-size: 0.78rem;
+        color: #7C8A82;
       }
-      .dtb-meta--block { margin-top: 6px; text-transform: none; letter-spacing: 0; }
+      .dtb-meta--block { margin-top: 6px; }
 
       .dtb-note {
         margin-top: 12px;
-        background: #FBF2E1;
-        border: 1px solid #E9D4A4;
+        background: #FCF0DC;
+        border: 1px solid #F2DDAE;
         color: #8A6A2E;
-        border-radius: 12px;
+        border-radius: 10px;
         padding: 8px 14px;
-        font-size: 0.88rem;
+        font-size: 0.87rem;
         font-style: italic;
       }
 
@@ -789,31 +946,28 @@ function DashboardStyles() {
         margin-top: 16px;
         display: flex;
         flex-wrap: wrap;
-        gap: 18px;
+        gap: 10px;
       }
 
       .dtb-link {
-        font-size: 0.88rem;
-        font-weight: 500;
-        color: #8A6A2E;
-        text-decoration: underline;
-        text-decoration-color: #E4C88F;
-        text-decoration-thickness: 2px;
-        text-underline-offset: 3px;
+        font-size: 0.87rem;
+        font-weight: 600;
+        color: #17843C;
+        text-decoration: none;
       }
-      .dtb-link:hover { color: #6B5220; }
+      .dtb-link:hover { color: #0F5D2A; text-decoration: underline; }
 
       .dtb-subblock {
         margin-top: 16px;
         padding-top: 16px;
-        border-top: 1px solid #EEECE3;
+        border-top: 1px solid #EEF1EF;
       }
       .dtb-subhead {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.65rem;
+        font-size: 0.72rem;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.2em;
-        color: #8A6A2E;
+        letter-spacing: 0.06em;
+        color: #6B7A72;
         margin: 0 0 8px;
       }
       .dtb-sublist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -822,46 +976,56 @@ function DashboardStyles() {
         display: flex;
         flex-direction: column;
         gap: 16px;
-        padding-bottom: 24px;
-        border-bottom: 1px solid #EEECE3;
-        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #EEF1EF;
+        margin-bottom: 20px;
       }
-      .dtb-form { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+      .dtb-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
       .dtb-field { display: flex; flex-direction: column; gap: 5px; }
       .dtb-label {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.65rem;
+        font-size: 0.72rem;
+        font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #8A8371;
+        letter-spacing: 0.04em;
+        color: #7C8A82;
       }
       .dtb-input, .dtb-select {
         font-family: 'Inter', sans-serif;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
         color: #14231F;
         background: #FFFFFF;
-        border: 1px solid #DCD8CC;
-        border-radius: 999px;
-        padding: 8px 16px;
+        border: 1px solid #DAE1DD;
+        border-radius: 10px;
+        padding: 8px 14px;
         outline: none;
       }
       .dtb-input--wide { width: 220px; }
       .dtb-input:focus-visible, .dtb-select:focus-visible, .dtb-button:focus-visible, a.dtb-link:focus-visible {
-        box-shadow: 0 0 0 2px #FBFAF5, 0 0 0 4px #8A6A2E;
+        box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #17843C;
       }
       .dtb-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-family: 'Inter', sans-serif;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: #F5F2E8;
-        background: #14231F;
-        border: none;
-        border-radius: 999px;
-        padding: 9px 22px;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: #FFFFFF;
+        background: #123B2B;
+        border: 1px solid #123B2B;
+        border-radius: 10px;
+        padding: 8px 18px;
         cursor: pointer;
+        text-decoration: none;
         transition: background 0.15s ease;
       }
-      .dtb-button:hover { background: #22362F; }
+      .dtb-button:hover { background: #0D2B1F; }
+      .dtb-button--outline {
+        background: #FFFFFF;
+        color: #123B2B;
+        border: 1px solid #DAE1DD;
+      }
+      .dtb-button--outline:hover { background: #F4F6F5; border-color: #C7DECF; }
 
       .dtb-embed { margin-top: 4px; }
 
@@ -872,30 +1036,29 @@ function DashboardStyles() {
         justify-content: space-between;
         gap: 12px;
         background: #FFFFFF;
-        border: 1px solid #DCD8CC;
-        border-radius: 16px;
-        padding: 14px 18px;
+        border: 1px solid #E7EBE8;
+        border-radius: 12px;
+        padding: 12px 16px;
       }
-      .dtb-row-title { font-weight: 500; color: #14231F; text-decoration: none; }
-      .dtb-row-title:hover { color: #8A6A2E; }
+      .dtb-row-title { font-weight: 600; color: #14231F; text-decoration: none; }
+      .dtb-row-title:hover { color: #17843C; }
       .dtb-row-price {
-        font-family: 'IBM Plex Mono', monospace;
-        font-size: 0.88rem;
-        font-variant-numeric: tabular-nums;
-        color: #5B5647;
+        font-size: 0.87rem;
+        font-weight: 600;
+        color: #566B60;
         white-space: nowrap;
       }
 
       .dtb-notification-message {
         font-size: 0.92rem;
-        font-weight: 500;
+        font-weight: 600;
         color: #14231F;
         text-decoration: none;
       }
-      a.dtb-notification-message:hover { color: #8A6A2E; }
+      a.dtb-notification-message:hover { color: #17843C; }
 
       @media (min-width: 640px) {
-        .dtb-header { flex-direction: row; align-items: center; justify-content: space-between; padding: 32px 40px; }
+        .dtb-header { flex-direction: row; align-items: center; justify-content: space-between; padding: 28px 32px; }
         .dtb-filters { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
       }
 
