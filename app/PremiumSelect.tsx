@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
 
 type Option = { value: string; label: string };
 
 interface PremiumSelectProps {
   name: string;
-  label?: string;
+  label: string;
   options: Option[];
   defaultValue?: string;
   placeholder?: string;
-  icon?: React.ReactNode;
 }
 
 export default function PremiumSelect({
@@ -20,7 +18,6 @@ export default function PremiumSelect({
   options,
   defaultValue = "",
   placeholder = "Any",
-  icon,
 }: PremiumSelectProps) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(defaultValue);
@@ -45,7 +42,7 @@ export default function PremiumSelect({
 
   return (
     <div className="dk-field" ref={rootRef}>
-      {label && <label className="dk-field-label">{label}</label>}
+      <label className="dk-field-label">{label}</label>
       <div className={`dk-select${open ? " dk-select-open" : ""}`}>
         <button
           type="button"
@@ -54,11 +51,16 @@ export default function PremiumSelect({
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
         >
-          <span className="dk-select-trigger-inner">
-            {icon && <span className="dk-select-icon">{icon}</span>}
-            <span className={selected ? "" : "dk-select-placeholder"}>{selected ? selected.label : placeholder}</span>
-          </span>
-          <ChevronDown className="dk-select-chevron" size={15} strokeWidth={2} />
+          <span className={selected ? "" : "dk-select-placeholder"}>{selected ? selected.label : placeholder}</span>
+          <svg className="dk-select-chevron" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M1 1.5L6 6.5L11 1.5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
 
         <ul className="dk-select-panel" role="listbox">
