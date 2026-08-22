@@ -47,15 +47,23 @@ type PendingEnquiry = Enquiry & {
 const STATUS_OPTIONS = ["PENDING", "APPROVED", "CHANGES_REQUESTED", "REJECTED"];
 const ROLE_OPTIONS = ["BUYER", "OWNER", "AGENT", "ADMIN"];
 
-// ---------------------------------------------------------------------------
-// Design: DAKTOP360's own brand — deep forest green, white cards, pastel
-// icon chips, pill badges. Plain CSS injected once via <DashboardStyles/>,
-// so it renders the same regardless of what CSS tooling this project uses.
-// ---------------------------------------------------------------------------
 type Tone = "role" | "success" | "warning" | "danger" | "accent" | "neutral";
 
 function Badge({ label, tone = "neutral" }: { label: string; tone?: Tone }) {
-  return <span className={`dtb-badge dtb-badge--${tone}`}>{label}</span>;
+  const toneClasses = {
+    role: "bg-[#123B2B] text-white",
+    success: "bg-[#E4F5E9] text-[#17843C]",
+    warning: "bg-[#FCF0DC] text-[#B4770E]",
+    danger: "bg-[#FBE7E5] text-[#C0392B]",
+    accent: "bg-[#E4F5E9] text-[#17843C]",
+    neutral: "bg-[#EEF1EF] text-[#5B6660]",
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-0.5 text-xs font-semibold leading-6 ${toneClasses[tone]}`}>
+      {label}
+    </span>
+  );
 }
 
 function statusTone(status: string): Tone {
@@ -93,11 +101,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="dtb-section">
-      <div className="dtb-section-head">
+    <section id={id} className="bg-white border border-[#E7EBE8] rounded-2xl p-6 md:p-7 shadow-[0_1px_3px_rgba(15,61,43,0.05)]">
+      <div className="mb-4.5 flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <p className="dtb-eyebrow">{eyebrow}</p>
-          <h2 className="dtb-title">{title}</h2>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7A72] m-0">{eyebrow}</p>
+          <h2 className="text-lg font-bold mt-0.5 text-[#14231F]">{title}</h2>
         </div>
         {action}
       </div>
@@ -108,13 +116,12 @@ function Section({
 
 function FilterForm({ children }: { children: React.ReactNode }) {
   return (
-    <form method="get" className="dtb-form">
+    <form method="get" className="flex items-end gap-2.5 flex-wrap">
       {children}
     </form>
   );
 }
 
-// --- tiny inline icons (no external icon package required) -----------------
 function IconHouse() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -123,6 +130,7 @@ function IconHouse() {
     </svg>
   );
 }
+
 function IconPeople() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -133,6 +141,7 @@ function IconPeople() {
     </svg>
   );
 }
+
 function IconEye() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -141,6 +150,7 @@ function IconEye() {
     </svg>
   );
 }
+
 function IconHeart() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -148,6 +158,7 @@ function IconHeart() {
     </svg>
   );
 }
+
 function IconMail() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -170,14 +181,23 @@ function StatCard({
   label: string;
   value: number;
 }) {
+  const chipClasses = {
+    green: "bg-[#E4F5E9] text-[#17843C]",
+    blue: "bg-[#E5EEFB] text-[#2563AE]",
+    amber: "bg-[#FCF0DC] text-[#B4770E]",
+    purple: "bg-[#EFE7FA] text-[#7C4EC4]",
+  };
+
   return (
-    <div className="dtb-stat">
-      <div className="dtb-stat-top">
-        <span className={`dtb-stat-icon dtb-stat-icon--${chip}`}>{icon}</span>
-        <span className="dtb-stat-label">{label}</span>
+    <div className="bg-white border border-[#E7EBE8] rounded-2xl p-4.5 shadow-[0_1px_3px_rgba(15,61,43,0.05)]">
+      <div className="flex items-center gap-2.5">
+        <span className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${chipClasses[chip]}`}>
+          <span className="w-4.5 h-4.5">{icon}</span>
+        </span>
+        <span className="text-sm font-medium text-[#566B60]">{label}</span>
       </div>
-      <div className="dtb-stat-value">{value}</div>
-      <Link href={href} className="dtb-stat-link">
+      <div className="mt-2.5 text-[1.9rem] font-bold text-[#14231F] leading-none">{value}</div>
+      <Link href={href} className="inline-block mt-2 text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] no-underline">
         View all &rarr;
       </Link>
     </div>
@@ -210,15 +230,14 @@ export default async function DashboardPage({
 
   if (currentUser.suspended) {
     return (
-      <div className="dtb-page dtb-page--centered">
-        <DashboardStyles />
-        <div className="dtb-center-card">
-          <p className="dtb-eyebrow dtb-eyebrow--danger">Account status</p>
-          <h1 className="dtb-title dtb-title--lg">Account suspended</h1>
-          <p className="dtb-copy">
+      <div className="min-h-screen bg-[#F4F6F5] font-sans text-[#17251E] flex items-center justify-center p-6">
+        <div className="w-full max-w-[440px] bg-white border border-[#E7EBE8] rounded-2xl p-8 text-center shadow-[0_1px_3px_rgba(15,61,43,0.06)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#C0392B] m-0">Account status</p>
+          <h1 className="text-[1.6rem] font-bold mt-0.5 text-[#14231F]">Account suspended</h1>
+          <p className="text-sm leading-6 text-[#566B60] mt-3">
             Your account has been suspended. Contact support if you believe this is a mistake.
           </p>
-          <div className="dtb-center-actions">
+          <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
             <SignOutButton />
           </div>
         </div>
@@ -228,21 +247,20 @@ export default async function DashboardPage({
 
   if (!currentUser.emailVerified) {
     return (
-      <div className="dtb-page dtb-page--centered">
-        <DashboardStyles />
-        <div className="dtb-center-card">
-          <p className="dtb-eyebrow">One step left</p>
-          <h1 className="dtb-title dtb-title--lg">Verify your email</h1>
-          <p className="dtb-copy">
+      <div className="min-h-screen bg-[#F4F6F5] font-sans text-[#17251E] flex items-center justify-center p-6">
+        <div className="w-full max-w-[440px] bg-white border border-[#E7EBE8] rounded-2xl p-8 text-center shadow-[0_1px_3px_rgba(15,61,43,0.06)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7A72] m-0">One step left</p>
+          <h1 className="text-[1.6rem] font-bold mt-0.5 text-[#14231F]">Verify your email</h1>
+          <p className="text-sm leading-6 text-[#566B60] mt-3">
             Please verify your email address (<strong>{currentUser.email}</strong>) before using
             your dashboard.
           </p>
-          <p className="dtb-copy">
+          <p className="text-sm leading-6 text-[#566B60] mt-3">
             If you registered with email/password, you should have seen a verification link right
             after signing up. If you didn&apos;t click it (or it expired), generate a new one
             below.
           </p>
-          <div className="dtb-center-actions">
+          <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
             <ResendVerificationButton />
             <SignOutButton />
           </div>
@@ -364,28 +382,26 @@ export default async function DashboardPage({
         })
       : [];
 
-  // Derived stat totals for the stat-card row
   const totalEnquiriesOnMyListings = myProperties.reduce((sum, p) => sum + p.enquiries.length, 0);
   const totalViewsOnMyListings = myProperties.reduce((sum, p) => sum + p.views, 0);
   const totalSavedOnMyListings = myProperties.reduce((sum, p) => sum + p._count.savedBy, 0);
 
   return (
-    <div className="dtb-page">
-      <DashboardStyles />
-      <div className="dtb-container">
+    <div className="min-h-screen bg-[#F4F6F5] font-sans text-[#17251E]">
+      <div className="max-w-[1120px] mx-auto px-5 py-8 pb-16 flex flex-col gap-6">
         {/* Header */}
-        <header className="dtb-header">
+        <header className="bg-white border border-[#E7EBE8] rounded-2xl p-6 md:p-7 md:flex-row flex flex-col gap-4 shadow-[0_1px_3px_rgba(15,61,43,0.05)] md:items-center md:justify-between">
           <div>
-            <p className="dtb-eyebrow">Dashboard</p>
-            <h1 className="dtb-name">Welcome back, {session.user.name || session.user.email} 👋</h1>
-            <div className="dtb-badge-row">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7A72] m-0">Dashboard</p>
+            <h1 className="text-2xl font-bold mt-1 leading-tight text-[#14231F]">Welcome back, {session.user.name || session.user.email} 👋</h1>
+            <div className="mt-3 flex flex-wrap gap-2">
               <Badge label={getRoleLabel(role) || role} tone="role" />
               {(role === "OWNER" || role === "AGENT") && currentUser.verified && (
                 <Badge label="Verified account" tone="success" />
               )}
             </div>
           </div>
-          <div className="dtb-header-actions">
+          <div className="flex items-center gap-3">
             <NotificationBell />
             <SignOutButton />
           </div>
@@ -393,7 +409,7 @@ export default async function DashboardPage({
 
         {/* Stat row */}
         {(role === "OWNER" || role === "AGENT") && (
-          <div className="dtb-stats">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard href="#my-listings" chip="green" icon={<IconHouse />} label="My Properties" value={myProperties.length} />
             <StatCard href="#my-listings" chip="blue" icon={<IconPeople />} label="Enquiries" value={totalEnquiriesOnMyListings} />
             <StatCard href="#my-listings" chip="amber" icon={<IconEye />} label="Profile Views" value={totalViewsOnMyListings} />
@@ -401,7 +417,7 @@ export default async function DashboardPage({
           </div>
         )}
         {role === "ADMIN" && (
-          <div className="dtb-stats">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard href="#pending-listings" chip="amber" icon={<IconHouse />} label="Pending Listings" value={pendingProperties.length} />
             <StatCard href="#pending-enquiries" chip="blue" icon={<IconMail />} label="Pending Enquiries" value={pendingEnquiries.length} />
             <StatCard href="#all-listings" chip="green" icon={<IconEye />} label="Total Listings" value={allProperties.length} />
@@ -409,7 +425,7 @@ export default async function DashboardPage({
           </div>
         )}
         {role === "BUYER" && (
-          <div className="dtb-stats">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard href="#saved-properties" chip="purple" icon={<IconHeart />} label="Saved Properties" value={savedProperties.length} />
             <StatCard href="#my-enquiries" chip="blue" icon={<IconMail />} label="Enquiries Sent" value={myEnquiries.length} />
             <StatCard href="#notifications" chip="amber" icon={<IconEye />} label="Notifications" value={receivedNotifications.length} />
@@ -429,14 +445,14 @@ export default async function DashboardPage({
 
             <Section id="my-listings" eyebrow={`${myProperties.length} total`} title="Your listings">
               {myProperties.length === 0 ? (
-                <p className="dtb-empty">You haven&apos;t listed any properties yet.</p>
+                <p className="text-sm text-[#566B60] m-0">You haven&apos;t listed any properties yet.</p>
               ) : (
-                <ul className="dtb-list">
+                <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
                   {myProperties.map((p) => {
                     return (
-                      <li key={p.id} className="dtb-card">
-                        <div className="dtb-card-tags">
-                          <strong className="dtb-card-title">{p.title}</strong>
+                      <li key={p.id} className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <strong className="text-lg font-bold text-[#14231F]">{p.title}</strong>
                           <Badge label={p.status.replace("_", " ")} tone={statusTone(p.status)} />
                           {p.verified ? (
                             <Badge label="Verified" tone="success" />
@@ -446,46 +462,48 @@ export default async function DashboardPage({
                           {p.featured && <Badge label="Featured" tone="accent" />}
                         </div>
 
-                        <div className="dtb-price">KSh {p.price.toLocaleString()}</div>
+                        <div className="mt-2 text-lg font-bold text-[#123B2B]">KSh {p.price.toLocaleString()}</div>
 
                         {p.representingName && (
-                          <div className="dtb-muted">
+                          <div className="mt-1.5 text-sm text-[#566B60]">
                             Representing: {p.representingName}
                             {p.representingContact && <> ({p.representingContact})</>}
                           </div>
                         )}
 
-                        <div className="dtb-availability">
+                        <div className="mt-3">
                           <AvailabilityForm propertyId={p.id} currentStatus={p.availabilityStatus} />
                         </div>
 
-                        <div className="dtb-meta">
+                        <div className="mt-3 text-xs text-[#7C8A82]">
                           {p.views} views · {p._count.savedBy} saved · {p.enquiries.length} enquir
                           {p.enquiries.length === 1 ? "y" : "ies"}
                         </div>
 
                         {p.adminNote && (p.status === "CHANGES_REQUESTED" || p.status === "REJECTED") && (
-                          <div className="dtb-note">Admin note: {p.adminNote}</div>
+                          <div className="mt-3 bg-[#FCF0DC] border border-[#F2DDAE] text-[#8A6A2E] rounded-xl px-3.5 py-2 text-sm italic">
+                            Admin note: {p.adminNote}
+                          </div>
                         )}
 
-                        <div className="dtb-actions">
+                        <div className="mt-4 flex flex-wrap gap-2.5">
                           {["PENDING", "CHANGES_REQUESTED", "REJECTED"].includes(p.status) && (
-                            <Link href={`/properties/${p.id}/edit`} className="dtb-button dtb-button--outline">
+                            <Link href={`/properties/${p.id}/edit`} className="inline-flex items-center justify-center font-sans text-sm font-semibold text-[#123B2B] bg-white border border-[#DAE1DD] rounded-xl px-4.5 py-2 hover:bg-[#F4F6F5] hover:border-[#C7DECF] no-underline transition-colors duration-150">
                               {p.status === "PENDING" ? "Edit listing" : "Edit and resubmit"}
                             </Link>
                           )}
-                          <Link href={`/properties/${p.id}/documents`} className="dtb-button dtb-button--outline">
+                          <Link href={`/properties/${p.id}/documents`} className="inline-flex items-center justify-center font-sans text-sm font-semibold text-[#123B2B] bg-white border border-[#DAE1DD] rounded-xl px-4.5 py-2 hover:bg-[#F4F6F5] hover:border-[#C7DECF] no-underline transition-colors duration-150">
                             Manage documents
                           </Link>
                         </div>
 
                         {p.enquiries.length > 0 && (
-                          <div className="dtb-subblock">
-                            <p className="dtb-subhead">Enquiries</p>
-                            <ul className="dtb-sublist">
+                          <div className="mt-4 pt-4 border-t border-[#EEF1EF]">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7A72] m-0 mb-2">Enquiries</p>
+                            <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
                               {p.enquiries.map((e: Enquiry & { buyer: Pick<User, "name" | "email"> }) => (
-                                <li key={e.id} className="dtb-muted">
-                                  <strong className="dtb-strong">{e.buyer.name || e.buyer.email}</strong>: {e.message}
+                                <li key={e.id} className="text-sm text-[#566B60]">
+                                  <strong className="text-[#14231F]">{e.buyer.name || e.buyer.email}</strong>: {e.message}
                                 </li>
                               ))}
                             </ul>
@@ -511,11 +529,11 @@ export default async function DashboardPage({
             </Section>
 
             <Section id="all-listings" eyebrow={`${allProperties.length} total`} title="All listings">
-              <div className="dtb-filters">
+              <div className="flex flex-col gap-4 pb-5 border-b border-[#EEF1EF] mb-5 md:flex-row md:flex-wrap md:items-end md:justify-between">
                 <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Filter by status</label>
-                    <select name="status" defaultValue={searchParams.status || ""} className="dtb-select">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Filter by status</label>
+                    <select name="status" defaultValue={searchParams.status || ""} className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]">
                       <option value="">All</option>
                       <option value="PENDING">Pending</option>
                       <option value="APPROVED">Approved</option>
@@ -523,43 +541,43 @@ export default async function DashboardPage({
                       <option value="REJECTED">Rejected</option>
                     </select>
                   </div>
-                  <button type="submit" className="dtb-button">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
                     Filter
                   </button>
                 </FilterForm>
 
                 <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Search by seller name or phone</label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Search by seller name or phone</label>
                     <input
                       type="text"
                       name="q"
                       defaultValue={searchParams.q}
                       placeholder="e.g. Jane or 0712..."
-                      className="dtb-input dtb-input--wide"
+                      className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 w-auto md:w-55 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]"
                     />
                   </div>
-                  <button type="submit" className="dtb-button">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
                     Search
                   </button>
                 </FilterForm>
 
-                <a href="/dashboard" className="dtb-link">
+                <a href="/dashboard" className="text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
                   Clear filters
                 </a>
               </div>
 
-              <div className="dtb-embed">
+              <div className="mt-1">
                 <AdminPropertyList properties={allProperties} />
               </div>
             </Section>
 
             <Section id="manage-users" eyebrow={`${allUsers.length} total`} title="Manage users">
-              <div className="dtb-filters">
+              <div className="flex flex-col gap-4 pb-5 border-b border-[#EEF1EF] mb-5 md:flex-row md:flex-wrap md:items-end md:justify-between">
                 <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Filter by role</label>
-                    <select name="userRole" defaultValue={searchParams.userRole || ""} className="dtb-select">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Filter by role</label>
+                    <select name="userRole" defaultValue={searchParams.userRole || ""} className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]">
                       <option value="">All</option>
                       <option value="BUYER">{ROLE_LABELS.BUYER}</option>
                       <option value="OWNER">{ROLE_LABELS.OWNER}</option>
@@ -567,33 +585,33 @@ export default async function DashboardPage({
                       <option value="ADMIN">{ROLE_LABELS.ADMIN}</option>
                     </select>
                   </div>
-                  <button type="submit" className="dtb-button">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
                     Filter
                   </button>
                 </FilterForm>
 
                 <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Search by name, email, or phone</label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Search by name, email, or phone</label>
                     <input
                       type="text"
                       name="userQ"
                       defaultValue={searchParams.userQ}
                       placeholder="e.g. Jane, jane@example.com, or 0712..."
-                      className="dtb-input dtb-input--wide"
+                      className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 w-auto md:w-55 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]"
                     />
                   </div>
-                  <button type="submit" className="dtb-button">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
                     Search
                   </button>
                 </FilterForm>
 
-                <a href="/dashboard" className="dtb-link">
+                <a href="/dashboard" className="text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
                   Clear filters
                 </a>
               </div>
 
-              <div className="dtb-embed">
+              <div className="mt-1">
                 <AdminUserList users={allUsers} currentUserId={currentUserId} />
               </div>
             </Section>
@@ -603,9 +621,9 @@ export default async function DashboardPage({
         {role === "BUYER" && (
           <>
             <Section eyebrow="Explore" title="Browse properties">
-              <p className="dtb-copy">
+              <p className="text-sm leading-6 text-[#566B60] mt-3">
                 Browse properties on the{" "}
-                <Link href="/" className="dtb-link">
+                <Link href="/" className="text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
                   homepage
                 </Link>
                 .
@@ -614,15 +632,15 @@ export default async function DashboardPage({
 
             <Section id="saved-properties" eyebrow={`${savedProperties.length} saved`} title="Your saved properties">
               {savedProperties.length === 0 ? (
-                <p className="dtb-empty">You haven&apos;t saved any properties yet.</p>
+                <p className="text-sm text-[#566B60] m-0">You haven&apos;t saved any properties yet.</p>
               ) : (
-                <ul className="dtb-list">
+                <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
                   {savedProperties.map((s) => (
-                    <li key={s.id} className="dtb-row">
-                      <Link href={`/properties/${s.property.id}`} className="dtb-row-title">
+                    <li key={s.id} className="list-none flex items-center justify-between gap-3 bg-white border border-[#E7EBE8] rounded-xl px-4 py-3">
+                      <Link href={`/properties/${s.property.id}`} className="font-semibold text-[#14231F] hover:text-[#17843C] no-underline">
                         {s.property.title}
                       </Link>
-                      <span className="dtb-row-price">KSh {s.property.price.toLocaleString()}</span>
+                      <span className="text-sm font-semibold text-[#566B60] whitespace-nowrap">KSh {s.property.price.toLocaleString()}</span>
                     </li>
                   ))}
                 </ul>
@@ -631,18 +649,18 @@ export default async function DashboardPage({
 
             <Section id="my-enquiries" eyebrow={`${myEnquiries.length} sent`} title="Your enquiries">
               {myEnquiries.length === 0 ? (
-                <p className="dtb-empty">You haven&apos;t sent any enquiries yet.</p>
+                <p className="text-sm text-[#566B60] m-0">You haven&apos;t sent any enquiries yet.</p>
               ) : (
-                <ul className="dtb-list">
+                <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
                   {myEnquiries.map((e: EnquiryWithProperty) => {
                     const { label, tone } = enquiryStatusLabelAndTone(e.status);
                     return (
-                      <li key={e.id} className="dtb-card">
-                        <Link href={`/properties/${e.property.id}`} className="dtb-card-title dtb-card-title--link">
+                      <li key={e.id} className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]">
+                        <Link href={`/properties/${e.property.id}`} className="text-lg font-bold text-[#14231F] hover:text-[#17843C] no-underline block">
                           {e.property.title}
                         </Link>
-                        <div className="dtb-muted">{e.message}</div>
-                        <div className="dtb-badge-row">
+                        <div className="text-sm text-[#566B60] mt-1">{e.message}</div>
+                        <div className="mt-2 flex flex-wrap gap-2">
                           <Badge label={label} tone={tone} />
                         </div>
                       </li>
@@ -657,19 +675,19 @@ export default async function DashboardPage({
         {/* Notifications */}
         <Section id="notifications" eyebrow={`${receivedNotifications.length} total`} title="Notifications">
           {receivedNotifications.length === 0 ? (
-            <p className="dtb-empty">No notifications yet.</p>
+            <p className="text-sm text-[#566B60] m-0">No notifications yet.</p>
           ) : (
-            <ul className="dtb-list">
+            <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
               {receivedNotifications.map((n) => (
-                <li key={n.id} className="dtb-card dtb-card--tight">
+                <li key={n.id} className="bg-white border border-[#E7EBE8] rounded-xl p-3.5 md:p-4 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]">
                   {n.propertyId ? (
-                    <Link href={`/properties/${n.propertyId}`} className="dtb-notification-message">
+                    <Link href={`/properties/${n.propertyId}`} className="text-sm font-semibold text-[#14231F] hover:text-[#17843C] no-underline">
                       {n.message}
                     </Link>
                   ) : (
-                    <span className="dtb-notification-message">{n.message}</span>
+                    <span className="text-sm font-semibold text-[#14231F]">{n.message}</span>
                   )}
-                  <div className="dtb-meta dtb-meta--block">
+                  <div className="text-xs text-[#7C8A82] mt-1.5 block">
                     From {n.sender.name || n.sender.email} — {new Date(n.createdAt).toLocaleString()}
                   </div>
                 </li>
@@ -679,392 +697,5 @@ export default async function DashboardPage({
         </Section>
       </div>
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// All styling lives here as plain CSS, injected once. This makes the page
-// render consistently no matter what CSS tooling (or lack of it) the host
-// project uses.
-// ---------------------------------------------------------------------------
-function DashboardStyles() {
-  return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-      * { box-sizing: border-box; }
-
-      .dtb-page {
-        min-height: 100vh;
-        background: #F4F6F5;
-        font-family: 'Inter', -apple-system, sans-serif;
-        color: #17251E;
-      }
-      .dtb-page--centered {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-      }
-      .dtb-container {
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 32px 20px 64px;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-      }
-
-      .dtb-center-card {
-        width: 100%;
-        max-width: 440px;
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 32px;
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.06);
-      }
-      .dtb-center-actions {
-        margin-top: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      .dtb-header {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 24px 28px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
-      }
-      .dtb-header-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .dtb-name {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 4px 0 0;
-        line-height: 1.25;
-        color: #14231F;
-      }
-      .dtb-badge-row {
-        margin-top: 12px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .dtb-eyebrow {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #6B7A72;
-        margin: 0;
-      }
-      .dtb-eyebrow--danger { color: #C0392B; }
-
-      .dtb-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-        margin: 2px 0 0;
-        color: #14231F;
-      }
-      .dtb-title--lg { font-size: 1.6rem; }
-
-      .dtb-copy {
-        font-size: 0.92rem;
-        line-height: 1.6;
-        color: #566B60;
-        margin: 12px 0 0;
-      }
-      .dtb-copy:first-of-type { margin-top: 12px; }
-
-      /* Stat cards */
-      .dtb-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-      }
-      .dtb-stat {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 18px 20px;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
-      }
-      .dtb-stat-top {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .dtb-stat-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .dtb-stat-icon svg { width: 18px; height: 18px; }
-      .dtb-stat-icon--green { background: #E4F5E9; color: #17843C; }
-      .dtb-stat-icon--blue { background: #E5EEFB; color: #2563AE; }
-      .dtb-stat-icon--amber { background: #FCF0DC; color: #B4770E; }
-      .dtb-stat-icon--purple { background: #EFE7FA; color: #7C4EC4; }
-      .dtb-stat-label { font-size: 0.85rem; font-weight: 500; color: #566B60; }
-      .dtb-stat-value {
-        margin-top: 10px;
-        font-size: 1.9rem;
-        font-weight: 700;
-        color: #14231F;
-        line-height: 1;
-      }
-      .dtb-stat-link {
-        display: inline-block;
-        margin-top: 8px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #17843C;
-        text-decoration: none;
-      }
-      .dtb-stat-link:hover { color: #0F5D2A; }
-
-      .dtb-section {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 24px 28px;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
-      }
-      .dtb-section-head {
-        margin-bottom: 18px;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      .dtb-empty {
-        font-size: 0.9rem;
-        color: #566B60;
-        margin: 0;
-      }
-
-      .dtb-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border-radius: 999px;
-        border: 1px solid transparent;
-        padding: 3px 12px;
-        font-size: 0.72rem;
-        font-weight: 600;
-        line-height: 1.7;
-      }
-      .dtb-badge--role { background: #123B2B; color: #FFFFFF; }
-      .dtb-badge--success { background: #E4F5E9; color: #17843C; }
-      .dtb-badge--warning { background: #FCF0DC; color: #B4770E; }
-      .dtb-badge--danger { background: #FBE7E5; color: #C0392B; }
-      .dtb-badge--accent { background: #E4F5E9; color: #17843C; }
-      .dtb-badge--neutral { background: #EEF1EF; color: #5B6660; }
-
-      .dtb-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .dtb-card {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 14px;
-        padding: 18px 20px;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease;
-      }
-      .dtb-card:hover { border-color: #C7DECF; box-shadow: 0 2px 8px rgba(15,61,43,0.06); }
-      .dtb-card--tight { padding: 14px 20px; }
-
-      .dtb-card-tags {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-      }
-      .dtb-card-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #14231F;
-      }
-      .dtb-card-title--link { text-decoration: none; display: block; }
-      .dtb-card-title--link:hover { color: #17843C; }
-
-      .dtb-price {
-        margin-top: 8px;
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #123B2B;
-      }
-
-      .dtb-muted { font-size: 0.87rem; color: #566B60; margin-top: 6px; }
-      .dtb-strong { color: #14231F; }
-
-      .dtb-availability { margin-top: 12px; }
-
-      .dtb-meta {
-        margin-top: 12px;
-        font-size: 0.78rem;
-        color: #7C8A82;
-      }
-      .dtb-meta--block { margin-top: 6px; }
-
-      .dtb-note {
-        margin-top: 12px;
-        background: #FCF0DC;
-        border: 1px solid #F2DDAE;
-        color: #8A6A2E;
-        border-radius: 10px;
-        padding: 8px 14px;
-        font-size: 0.87rem;
-        font-style: italic;
-      }
-
-      .dtb-actions {
-        margin-top: 16px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .dtb-link {
-        font-size: 0.87rem;
-        font-weight: 600;
-        color: #17843C;
-        text-decoration: none;
-      }
-      .dtb-link:hover { color: #0F5D2A; text-decoration: underline; }
-
-      .dtb-subblock {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #EEF1EF;
-      }
-      .dtb-subhead {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #6B7A72;
-        margin: 0 0 8px;
-      }
-      .dtb-sublist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-
-      .dtb-filters {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #EEF1EF;
-        margin-bottom: 20px;
-      }
-      .dtb-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
-      .dtb-field { display: flex; flex-direction: column; gap: 5px; }
-      .dtb-label {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #7C8A82;
-      }
-      .dtb-input, .dtb-select {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.88rem;
-        color: #14231F;
-        background: #FFFFFF;
-        border: 1px solid #DAE1DD;
-        border-radius: 10px;
-        padding: 8px 14px;
-        outline: none;
-      }
-      .dtb-input--wide { width: 220px; }
-      .dtb-input:focus-visible, .dtb-select:focus-visible, .dtb-button:focus-visible, a.dtb-link:focus-visible {
-        box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #17843C;
-      }
-      .dtb-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.86rem;
-        font-weight: 600;
-        color: #FFFFFF;
-        background: #123B2B;
-        border: 1px solid #123B2B;
-        border-radius: 10px;
-        padding: 8px 18px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background 0.15s ease;
-      }
-      .dtb-button:hover { background: #0D2B1F; }
-      .dtb-button--outline {
-        background: #FFFFFF;
-        color: #123B2B;
-        border: 1px solid #DAE1DD;
-      }
-      .dtb-button--outline:hover { background: #F4F6F5; border-color: #C7DECF; }
-
-      .dtb-embed { margin-top: 4px; }
-
-      .dtb-row {
-        list-style: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 12px;
-        padding: 12px 16px;
-      }
-      .dtb-row-title { font-weight: 600; color: #14231F; text-decoration: none; }
-      .dtb-row-title:hover { color: #17843C; }
-      .dtb-row-price {
-        font-size: 0.87rem;
-        font-weight: 600;
-        color: #566B60;
-        white-space: nowrap;
-      }
-
-      .dtb-notification-message {
-        font-size: 0.92rem;
-        font-weight: 600;
-        color: #14231F;
-        text-decoration: none;
-      }
-      a.dtb-notification-message:hover { color: #17843C; }
-
-      @media (min-width: 640px) {
-        .dtb-header { flex-direction: row; align-items: center; justify-content: space-between; padding: 28px 32px; }
-        .dtb-filters { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        * { transition-duration: 0.01ms !important; }
-      }
-    `}</style>
   );
 }
