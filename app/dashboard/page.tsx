@@ -48,29 +48,15 @@ const STATUS_OPTIONS = ["PENDING", "APPROVED", "CHANGES_REQUESTED", "REJECTED"];
 const ROLE_OPTIONS = ["BUYER", "OWNER", "AGENT", "ADMIN"];
 
 // ---------------------------------------------------------------------------
-// Design tokens — a surveyor's-plaque palette: deep pine ink, warm parchment,
-// and a brass accent for anything "verified" or "approved". Status reads as
-// stamped signage rather than generic pill colors.
+// Design: a surveyor's-plaque palette — deep pine header, warm parchment
+// page, brass accent for anything verified/approved. All styling below is
+// plain CSS injected once via <DashboardStyles/>, so it renders correctly
+// whether or not this project has Tailwind configured.
 // ---------------------------------------------------------------------------
 type Tone = "role" | "success" | "warning" | "danger" | "accent" | "neutral";
 
-const TONE_STYLES: Record<Tone, string> = {
-  role: "bg-[#14231F] text-[#F5F2E8] border-[#14231F]",
-  success: "bg-[#EAF3EE] text-[#1F6F5C] border-[#BFDBCE]",
-  warning: "bg-[#FBF2E1] text-[#8A6A2E] border-[#E9D4A4]",
-  danger: "bg-[#FBEAE6] text-[#B4482D] border-[#F0C4B8]",
-  accent: "bg-[#F6E9CF] text-[#8A6A2E] border-[#E4C88F]",
-  neutral: "bg-[#EEECE3] text-[#5B5647] border-[#DCD8CC]",
-};
-
 function Badge({ label, tone = "neutral" }: { label: string; tone?: Tone }) {
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[0.65rem] font-medium uppercase tracking-wider ${TONE_STYLES[tone]}`}
-    >
-      {label}
-    </span>
-  );
+  return <span className={`dtb-badge dtb-badge--${tone}`}>{label}</span>;
 }
 
 function statusTone(status: string): Tone {
@@ -94,9 +80,6 @@ function enquiryStatusLabelAndTone(status: string): { label: string; tone: Tone 
   return { label: "Not approved", tone: "danger" };
 }
 
-// ---------------------------------------------------------------------------
-// Shared layout primitives
-// ---------------------------------------------------------------------------
 function Section({
   eyebrow,
   title,
@@ -107,39 +90,23 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-[#DCD8CC] bg-[#FBFAF5] p-6 shadow-[0_1px_0_rgba(20,35,31,0.04)] sm:p-8">
-      <div className="mb-6">
-        <p className="font-mono text-[0.65rem] uppercase tracking-[0.25em] text-[#8A6A2E]">
-          {eyebrow}
-        </p>
-        <h2 className="mt-1 font-serif text-2xl text-[#14231F]">{title}</h2>
+    <section className="dtb-section">
+      <div className="dtb-section-head">
+        <p className="dtb-eyebrow">{eyebrow}</p>
+        <h2 className="dtb-title">{title}</h2>
       </div>
       {children}
     </section>
   );
 }
 
-function FilterForm({
-  action,
-  children,
-}: {
-  action?: string;
-  children: React.ReactNode;
-}) {
+function FilterForm({ children }: { children: React.ReactNode }) {
   return (
-    <form method="get" className="flex flex-wrap items-end gap-3">
+    <form method="get" className="dtb-form">
       {children}
     </form>
   );
 }
-
-const fieldClasses =
-  "rounded-full border border-[#DCD8CC] bg-white px-4 py-2 text-sm text-[#14231F] outline-none transition focus-visible:ring-2 focus-visible:ring-[#8A6A2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FBFAF5]";
-
-const buttonClasses =
-  "rounded-full bg-[#14231F] px-5 py-2 text-sm font-medium text-[#F5F2E8] transition hover:bg-[#22362F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8A6A2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FBFAF5]";
-
-const linkClasses = "text-sm font-medium text-[#8A6A2E] underline decoration-[#E4C88F] decoration-2 underline-offset-4 hover:text-[#6B5220]";
 
 export default async function DashboardPage({
   searchParams,
@@ -167,20 +134,15 @@ export default async function DashboardPage({
 
   if (currentUser.suspended) {
     return (
-      <div
-        className="flex min-h-screen items-center justify-center bg-[#EEF0EB] px-6"
-        style={{ fontFamily: "'Inter', sans-serif" }}
-      >
-        <FontImport />
-        <div className="w-full max-w-md rounded-3xl border border-[#DCD8CC] bg-[#FBFAF5] p-8 text-center shadow-sm">
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.25em] text-[#B4482D]">
-            Account status
-          </p>
-          <h1 className="mt-2 font-serif text-2xl text-[#14231F]">Account suspended</h1>
-          <p className="mt-3 text-sm leading-relaxed text-[#5B5647]">
+      <div className="dtb-page dtb-page--centered">
+        <DashboardStyles />
+        <div className="dtb-center-card">
+          <p className="dtb-eyebrow dtb-eyebrow--danger">Account status</p>
+          <h1 className="dtb-title dtb-title--lg">Account suspended</h1>
+          <p className="dtb-copy">
             Your account has been suspended. Contact support if you believe this is a mistake.
           </p>
-          <div className="mt-6">
+          <div className="dtb-center-actions">
             <SignOutButton />
           </div>
         </div>
@@ -190,25 +152,21 @@ export default async function DashboardPage({
 
   if (!currentUser.emailVerified) {
     return (
-      <div
-        className="flex min-h-screen items-center justify-center bg-[#EEF0EB] px-6"
-        style={{ fontFamily: "'Inter', sans-serif" }}
-      >
-        <FontImport />
-        <div className="w-full max-w-md rounded-3xl border border-[#DCD8CC] bg-[#FBFAF5] p-8 text-center shadow-sm">
-          <p className="font-mono text-[0.65rem] uppercase tracking-[0.25em] text-[#8A6A2E]">
-            One step left
+      <div className="dtb-page dtb-page--centered">
+        <DashboardStyles />
+        <div className="dtb-center-card">
+          <p className="dtb-eyebrow">One step left</p>
+          <h1 className="dtb-title dtb-title--lg">Verify your email</h1>
+          <p className="dtb-copy">
+            Please verify your email address (<strong>{currentUser.email}</strong>) before using
+            your dashboard.
           </p>
-          <h1 className="mt-2 font-serif text-2xl text-[#14231F]">Verify your email</h1>
-          <p className="mt-3 text-sm leading-relaxed text-[#5B5647]">
-            Please verify your email address (<strong className="text-[#14231F]">{currentUser.email}</strong>)
-            before using your dashboard.
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-[#5B5647]">
+          <p className="dtb-copy">
             If you registered with email/password, you should have seen a verification link right
-            after signing up. If you didn&apos;t click it (or it expired), generate a new one below.
+            after signing up. If you didn&apos;t click it (or it expired), generate a new one
+            below.
           </p>
-          <div className="mt-6 flex items-center justify-center gap-3">
+          <div className="dtb-center-actions">
             <ResendVerificationButton />
             <SignOutButton />
           </div>
@@ -331,26 +289,22 @@ export default async function DashboardPage({
       : [];
 
   return (
-    <div className="min-h-screen bg-[#EEF0EB]" style={{ fontFamily: "'Inter', sans-serif" }}>
-      <FontImport />
-      <div className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6 sm:py-14">
+    <div className="dtb-page">
+      <DashboardStyles />
+      <div className="dtb-container">
         {/* Header — styled like a brass nameplate */}
-        <header className="flex flex-col gap-4 rounded-3xl bg-[#14231F] p-6 text-[#F5F2E8] sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <header className="dtb-header">
           <div>
-            <p className="font-mono text-[0.65rem] uppercase tracking-[0.25em] text-[#C9A65E]">
-              Dashboard
-            </p>
-            <h1 className="mt-1 font-serif text-3xl">
-              {session.user.name || session.user.email}
-            </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <p className="dtb-eyebrow dtb-eyebrow--onDark">Dashboard</p>
+            <h1 className="dtb-name">{session.user.name || session.user.email}</h1>
+            <div className="dtb-badge-row">
               <Badge label={getRoleLabel(role) || role} tone="role" />
               {(role === "OWNER" || role === "AGENT") && currentUser.verified && (
                 <Badge label="Verified account" tone="accent" />
               )}
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="dtb-header-actions">
             <NotificationBell />
             <SignOutButton />
           </div>
@@ -369,17 +323,14 @@ export default async function DashboardPage({
 
             <Section eyebrow={`${myProperties.length} total`} title="Your listings">
               {myProperties.length === 0 ? (
-                <p className="text-sm text-[#5B5647]">You haven&apos;t listed any properties yet.</p>
+                <p className="dtb-empty">You haven&apos;t listed any properties yet.</p>
               ) : (
-                <ul className="space-y-4">
+                <ul className="dtb-list">
                   {myProperties.map((p) => {
                     return (
-                      <li
-                        key={p.id}
-                        className="rounded-2xl border border-[#DCD8CC] bg-white p-5 transition hover:border-[#C9A65E]/60"
-                      >
-                        <div className="flex flex-wrap items-center gap-2">
-                          <strong className="font-serif text-lg text-[#14231F]">{p.title}</strong>
+                      <li key={p.id} className="dtb-card">
+                        <div className="dtb-card-tags">
+                          <strong className="dtb-card-title">{p.title}</strong>
                           <Badge label={p.status.replace("_", " ")} tone={statusTone(p.status)} />
                           {p.verified ? (
                             <Badge label="Verified" tone="success" />
@@ -389,53 +340,46 @@ export default async function DashboardPage({
                           {p.featured && <Badge label="Featured" tone="accent" />}
                         </div>
 
-                        <div className="mt-2 font-mono text-lg font-medium tabular-nums text-[#14231F]">
-                          KSh {p.price.toLocaleString()}
-                        </div>
+                        <div className="dtb-price">KSh {p.price.toLocaleString()}</div>
 
                         {p.representingName && (
-                          <div className="mt-1 text-sm text-[#5B5647]">
+                          <div className="dtb-muted">
                             Representing: {p.representingName}
                             {p.representingContact && <> ({p.representingContact})</>}
                           </div>
                         )}
 
-                        <div className="mt-3">
+                        <div className="dtb-availability">
                           <AvailabilityForm propertyId={p.id} currentStatus={p.availabilityStatus} />
                         </div>
 
-                        <div className="mt-3 font-mono text-xs uppercase tracking-wide text-[#8A8371]">
+                        <div className="dtb-meta">
                           {p.views} views · {p._count.savedBy} saved · {p.enquiries.length} enquir
                           {p.enquiries.length === 1 ? "y" : "ies"}
                         </div>
 
                         {p.adminNote && (p.status === "CHANGES_REQUESTED" || p.status === "REJECTED") && (
-                          <div className="mt-3 rounded-xl border border-[#E9D4A4] bg-[#FBF2E1] px-3 py-2 text-sm italic text-[#8A6A2E]">
-                            Admin note: {p.adminNote}
-                          </div>
+                          <div className="dtb-note">Admin note: {p.adminNote}</div>
                         )}
 
-                        <div className="mt-4 flex flex-wrap gap-4">
+                        <div className="dtb-actions">
                           {["PENDING", "CHANGES_REQUESTED", "REJECTED"].includes(p.status) && (
-                            <Link href={`/properties/${p.id}/edit`} className={linkClasses}>
+                            <Link href={`/properties/${p.id}/edit`} className="dtb-link">
                               {p.status === "PENDING" ? "Edit listing" : "Edit and resubmit"}
                             </Link>
                           )}
-                          <Link href={`/properties/${p.id}/documents`} className={linkClasses}>
+                          <Link href={`/properties/${p.id}/documents`} className="dtb-link">
                             Manage supporting documents
                           </Link>
                         </div>
 
                         {p.enquiries.length > 0 && (
-                          <div className="mt-4 border-t border-[#EEECE3] pt-4">
-                            <p className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-[#8A6A2E]">
-                              Enquiries
-                            </p>
-                            <ul className="mt-2 space-y-2">
+                          <div className="dtb-subblock">
+                            <p className="dtb-subhead">Enquiries</p>
+                            <ul className="dtb-sublist">
                               {p.enquiries.map((e: Enquiry & { buyer: Pick<User, "name" | "email"> }) => (
-                                <li key={e.id} className="text-sm text-[#5B5647]">
-                                  <strong className="text-[#14231F]">{e.buyer.name || e.buyer.email}</strong>:{" "}
-                                  {e.message}
+                                <li key={e.id} className="dtb-muted">
+                                  <strong className="dtb-strong">{e.buyer.name || e.buyer.email}</strong>: {e.message}
                                 </li>
                               ))}
                             </ul>
@@ -461,13 +405,11 @@ export default async function DashboardPage({
             </Section>
 
             <Section eyebrow={`${allProperties.length} total`} title="All listings">
-              <div className="flex flex-col gap-3 border-b border-[#EEECE3] pb-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+              <div className="dtb-filters">
                 <FilterForm>
-                  <div className="flex flex-col gap-1">
-                    <label className="font-mono text-[0.65rem] uppercase tracking-wide text-[#8A8371]">
-                      Filter by status
-                    </label>
-                    <select name="status" defaultValue={searchParams.status || ""} className={fieldClasses}>
+                  <div className="dtb-field">
+                    <label className="dtb-label">Filter by status</label>
+                    <select name="status" defaultValue={searchParams.status || ""} className="dtb-select">
                       <option value="">All</option>
                       <option value="PENDING">Pending</option>
                       <option value="APPROVED">Approved</option>
@@ -475,47 +417,43 @@ export default async function DashboardPage({
                       <option value="REJECTED">Rejected</option>
                     </select>
                   </div>
-                  <button type="submit" className={buttonClasses}>
+                  <button type="submit" className="dtb-button">
                     Filter
                   </button>
                 </FilterForm>
 
                 <FilterForm>
-                  <div className="flex flex-col gap-1">
-                    <label className="font-mono text-[0.65rem] uppercase tracking-wide text-[#8A8371]">
-                      Search by seller name or phone
-                    </label>
+                  <div className="dtb-field">
+                    <label className="dtb-label">Search by seller name or phone</label>
                     <input
                       type="text"
                       name="q"
                       defaultValue={searchParams.q}
                       placeholder="e.g. Jane or 0712..."
-                      className={`${fieldClasses} w-56`}
+                      className="dtb-input dtb-input--wide"
                     />
                   </div>
-                  <button type="submit" className={buttonClasses}>
+                  <button type="submit" className="dtb-button">
                     Search
                   </button>
                 </FilterForm>
 
-                <a href="/dashboard" className={linkClasses}>
+                <a href="/dashboard" className="dtb-link">
                   Clear filters
                 </a>
               </div>
 
-              <div className="mt-6">
+              <div className="dtb-embed">
                 <AdminPropertyList properties={allProperties} />
               </div>
             </Section>
 
             <Section eyebrow={`${allUsers.length} total`} title="Manage users">
-              <div className="flex flex-col gap-3 border-b border-[#EEECE3] pb-6 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+              <div className="dtb-filters">
                 <FilterForm>
-                  <div className="flex flex-col gap-1">
-                    <label className="font-mono text-[0.65rem] uppercase tracking-wide text-[#8A8371]">
-                      Filter by role
-                    </label>
-                    <select name="userRole" defaultValue={searchParams.userRole || ""} className={fieldClasses}>
+                  <div className="dtb-field">
+                    <label className="dtb-label">Filter by role</label>
+                    <select name="userRole" defaultValue={searchParams.userRole || ""} className="dtb-select">
                       <option value="">All</option>
                       <option value="BUYER">{ROLE_LABELS.BUYER}</option>
                       <option value="OWNER">{ROLE_LABELS.OWNER}</option>
@@ -523,35 +461,33 @@ export default async function DashboardPage({
                       <option value="ADMIN">{ROLE_LABELS.ADMIN}</option>
                     </select>
                   </div>
-                  <button type="submit" className={buttonClasses}>
+                  <button type="submit" className="dtb-button">
                     Filter
                   </button>
                 </FilterForm>
 
                 <FilterForm>
-                  <div className="flex flex-col gap-1">
-                    <label className="font-mono text-[0.65rem] uppercase tracking-wide text-[#8A8371]">
-                      Search by name, email, or phone
-                    </label>
+                  <div className="dtb-field">
+                    <label className="dtb-label">Search by name, email, or phone</label>
                     <input
                       type="text"
                       name="userQ"
                       defaultValue={searchParams.userQ}
                       placeholder="e.g. Jane, jane@example.com, or 0712..."
-                      className={`${fieldClasses} w-64`}
+                      className="dtb-input dtb-input--wide"
                     />
                   </div>
-                  <button type="submit" className={buttonClasses}>
+                  <button type="submit" className="dtb-button">
                     Search
                   </button>
                 </FilterForm>
 
-                <a href="/dashboard" className={linkClasses}>
+                <a href="/dashboard" className="dtb-link">
                   Clear filters
                 </a>
               </div>
 
-              <div className="mt-6">
+              <div className="dtb-embed">
                 <AdminUserList users={allUsers} currentUserId={currentUserId} />
               </div>
             </Section>
@@ -561,9 +497,9 @@ export default async function DashboardPage({
         {role === "BUYER" && (
           <>
             <Section eyebrow="Explore" title="Browse properties">
-              <p className="text-sm text-[#5B5647]">
+              <p className="dtb-copy">
                 Browse properties on the{" "}
-                <Link href="/" className={linkClasses}>
+                <Link href="/" className="dtb-link">
                   homepage
                 </Link>
                 .
@@ -572,20 +508,15 @@ export default async function DashboardPage({
 
             <Section eyebrow={`${savedProperties.length} saved`} title="Your saved properties">
               {savedProperties.length === 0 ? (
-                <p className="text-sm text-[#5B5647]">You haven&apos;t saved any properties yet.</p>
+                <p className="dtb-empty">You haven&apos;t saved any properties yet.</p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="dtb-list">
                   {savedProperties.map((s) => (
-                    <li
-                      key={s.id}
-                      className="flex items-center justify-between rounded-2xl border border-[#DCD8CC] bg-white px-4 py-3"
-                    >
-                      <Link href={`/properties/${s.property.id}`} className="font-medium text-[#14231F] hover:text-[#8A6A2E]">
+                    <li key={s.id} className="dtb-row">
+                      <Link href={`/properties/${s.property.id}`} className="dtb-row-title">
                         {s.property.title}
                       </Link>
-                      <span className="font-mono text-sm tabular-nums text-[#5B5647]">
-                        KSh {s.property.price.toLocaleString()}
-                      </span>
+                      <span className="dtb-row-price">KSh {s.property.price.toLocaleString()}</span>
                     </li>
                   ))}
                 </ul>
@@ -594,21 +525,18 @@ export default async function DashboardPage({
 
             <Section eyebrow={`${myEnquiries.length} sent`} title="Your enquiries">
               {myEnquiries.length === 0 ? (
-                <p className="text-sm text-[#5B5647]">You haven&apos;t sent any enquiries yet.</p>
+                <p className="dtb-empty">You haven&apos;t sent any enquiries yet.</p>
               ) : (
-                <ul className="space-y-3">
+                <ul className="dtb-list">
                   {myEnquiries.map((e: EnquiryWithProperty) => {
                     const { label, tone } = enquiryStatusLabelAndTone(e.status);
                     return (
-                      <li key={e.id} className="rounded-2xl border border-[#DCD8CC] bg-white p-4">
-                        <Link
-                          href={`/properties/${e.property.id}`}
-                          className="font-serif text-base text-[#14231F] hover:text-[#8A6A2E]"
-                        >
+                      <li key={e.id} className="dtb-card">
+                        <Link href={`/properties/${e.property.id}`} className="dtb-card-title dtb-card-title--link">
                           {e.property.title}
                         </Link>
-                        <div className="mt-1 text-sm text-[#5B5647]">{e.message}</div>
-                        <div className="mt-2">
+                        <div className="dtb-muted">{e.message}</div>
+                        <div className="dtb-badge-row">
                           <Badge label={label} tone={tone} />
                         </div>
                       </li>
@@ -623,22 +551,20 @@ export default async function DashboardPage({
         {/* Notifications */}
         <Section eyebrow={`${receivedNotifications.length} total`} title="Notifications">
           {receivedNotifications.length === 0 ? (
-            <p className="text-sm text-[#5B5647]">No notifications yet.</p>
+            <p className="dtb-empty">No notifications yet.</p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="dtb-list">
               {receivedNotifications.map((n) => (
-                <li key={n.id} className="rounded-2xl border border-[#DCD8CC] bg-white p-4">
+                <li key={n.id} className="dtb-card dtb-card--tight">
                   {n.propertyId ? (
-                    <Link href={`/properties/${n.propertyId}`} className="text-sm font-medium text-[#14231F] hover:text-[#8A6A2E]">
+                    <Link href={`/properties/${n.propertyId}`} className="dtb-notification-message">
                       {n.message}
                     </Link>
                   ) : (
-                    <span className="text-sm font-medium text-[#14231F]">{n.message}</span>
+                    <span className="dtb-notification-message">{n.message}</span>
                   )}
-                  <div className="mt-1">
-                    <small className="font-mono text-xs text-[#8A8371]">
-                      From {n.sender.name || n.sender.email} — {new Date(n.createdAt).toLocaleString()}
-                    </small>
+                  <div className="dtb-meta dtb-meta--block">
+                    From {n.sender.name || n.sender.email} — {new Date(n.createdAt).toLocaleString()}
                   </div>
                 </li>
               ))}
@@ -651,15 +577,328 @@ export default async function DashboardPage({
 }
 
 // ---------------------------------------------------------------------------
-// One-time font import (display serif for headings, mono for data/eyebrows).
-// Inline so the whole page stays a single file.
+// All styling lives here as plain CSS, injected once. This makes the page
+// render consistently no matter what CSS tooling (or lack of it) the host
+// project uses.
 // ---------------------------------------------------------------------------
-function FontImport() {
+function DashboardStyles() {
   return (
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
-      .font-serif { font-family: 'Fraunces', serif; }
-      .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+      .dtb-page {
+        min-height: 100vh;
+        background: #EEF0EB;
+        font-family: 'Inter', -apple-system, sans-serif;
+        color: #14231F;
+      }
+      .dtb-page--centered {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .dtb-container {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 40px 20px 64px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+
+      .dtb-center-card {
+        width: 100%;
+        max-width: 440px;
+        background: #FBFAF5;
+        border: 1px solid #DCD8CC;
+        border-radius: 24px;
+        padding: 32px;
+        text-align: center;
+      }
+      .dtb-center-actions {
+        margin-top: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .dtb-header {
+        background: #14231F;
+        color: #F5F2E8;
+        border-radius: 24px;
+        padding: 28px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .dtb-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .dtb-name {
+        font-family: 'Fraunces', serif;
+        font-size: 1.9rem;
+        font-weight: 600;
+        margin: 4px 0 0;
+        line-height: 1.15;
+      }
+      .dtb-badge-row {
+        margin-top: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .dtb-eyebrow {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: #8A6A2E;
+        margin: 0;
+      }
+      .dtb-eyebrow--onDark { color: #C9A65E; }
+      .dtb-eyebrow--danger { color: #B4482D; }
+
+      .dtb-title {
+        font-family: 'Fraunces', serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 4px 0 0;
+        color: #14231F;
+      }
+      .dtb-title--lg { font-size: 1.9rem; }
+
+      .dtb-copy {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #5B5647;
+        margin: 12px 0 0;
+      }
+      .dtb-copy:first-of-type { margin-top: 12px; }
+
+      .dtb-section {
+        background: #FBFAF5;
+        border: 1px solid #DCD8CC;
+        border-radius: 24px;
+        padding: 28px;
+      }
+      .dtb-section-head { margin-bottom: 20px; }
+
+      .dtb-empty {
+        font-size: 0.9rem;
+        color: #5B5647;
+        margin: 0;
+      }
+
+      .dtb-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        padding: 3px 11px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.65rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        line-height: 1.7;
+      }
+      .dtb-badge--role { background: #14231F; color: #F5F2E8; border-color: #14231F; }
+      .dtb-badge--success { background: #EAF3EE; color: #1F6F5C; border-color: #BFDBCE; }
+      .dtb-badge--warning { background: #FBF2E1; color: #8A6A2E; border-color: #E9D4A4; }
+      .dtb-badge--danger { background: #FBEAE6; color: #B4482D; border-color: #F0C4B8; }
+      .dtb-badge--accent { background: #F6E9CF; color: #8A6A2E; border-color: #E4C88F; }
+      .dtb-badge--neutral { background: #EEECE3; color: #5B5647; border-color: #DCD8CC; }
+
+      .dtb-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .dtb-card {
+        background: #FFFFFF;
+        border: 1px solid #DCD8CC;
+        border-radius: 18px;
+        padding: 20px;
+        transition: border-color 0.15s ease;
+      }
+      .dtb-card:hover { border-color: #C9A65E; }
+      .dtb-card--tight { padding: 16px 20px; }
+
+      .dtb-card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .dtb-card-title {
+        font-family: 'Fraunces', serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #14231F;
+      }
+      .dtb-card-title--link { text-decoration: none; display: block; }
+      .dtb-card-title--link:hover { color: #8A6A2E; }
+
+      .dtb-price {
+        margin-top: 8px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 1.1rem;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        color: #14231F;
+      }
+
+      .dtb-muted { font-size: 0.88rem; color: #5B5647; margin-top: 6px; }
+      .dtb-strong { color: #14231F; }
+
+      .dtb-availability { margin-top: 12px; }
+
+      .dtb-meta {
+        margin-top: 12px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #8A8371;
+      }
+      .dtb-meta--block { margin-top: 6px; text-transform: none; letter-spacing: 0; }
+
+      .dtb-note {
+        margin-top: 12px;
+        background: #FBF2E1;
+        border: 1px solid #E9D4A4;
+        color: #8A6A2E;
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-size: 0.88rem;
+        font-style: italic;
+      }
+
+      .dtb-actions {
+        margin-top: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+      }
+
+      .dtb-link {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: #8A6A2E;
+        text-decoration: underline;
+        text-decoration-color: #E4C88F;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 3px;
+      }
+      .dtb-link:hover { color: #6B5220; }
+
+      .dtb-subblock {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #EEECE3;
+      }
+      .dtb-subhead {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: #8A6A2E;
+        margin: 0 0 8px;
+      }
+      .dtb-sublist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+
+      .dtb-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid #EEECE3;
+        margin-bottom: 24px;
+      }
+      .dtb-form { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+      .dtb-field { display: flex; flex-direction: column; gap: 5px; }
+      .dtb-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #8A8371;
+      }
+      .dtb-input, .dtb-select {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        color: #14231F;
+        background: #FFFFFF;
+        border: 1px solid #DCD8CC;
+        border-radius: 999px;
+        padding: 8px 16px;
+        outline: none;
+      }
+      .dtb-input--wide { width: 220px; }
+      .dtb-input:focus-visible, .dtb-select:focus-visible, .dtb-button:focus-visible, a.dtb-link:focus-visible {
+        box-shadow: 0 0 0 2px #FBFAF5, 0 0 0 4px #8A6A2E;
+      }
+      .dtb-button {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #F5F2E8;
+        background: #14231F;
+        border: none;
+        border-radius: 999px;
+        padding: 9px 22px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .dtb-button:hover { background: #22362F; }
+
+      .dtb-embed { margin-top: 4px; }
+
+      .dtb-row {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: #FFFFFF;
+        border: 1px solid #DCD8CC;
+        border-radius: 16px;
+        padding: 14px 18px;
+      }
+      .dtb-row-title { font-weight: 500; color: #14231F; text-decoration: none; }
+      .dtb-row-title:hover { color: #8A6A2E; }
+      .dtb-row-price {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.88rem;
+        font-variant-numeric: tabular-nums;
+        color: #5B5647;
+        white-space: nowrap;
+      }
+
+      .dtb-notification-message {
+        font-size: 0.92rem;
+        font-weight: 500;
+        color: #14231F;
+        text-decoration: none;
+      }
+      a.dtb-notification-message:hover { color: #8A6A2E; }
+
+      @media (min-width: 640px) {
+        .dtb-header { flex-direction: row; align-items: center; justify-content: space-between; padding: 32px 40px; }
+        .dtb-filters { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         * { transition-duration: 0.01ms !important; }
       }
