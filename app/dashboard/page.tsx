@@ -1,1070 +1,588 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import type { Notification, Property, Enquiry, SavedProperty, User, Prisma } from "@prisma/client";
-import PropertyForm from "@/components/PropertyForm";
-import AvailabilityForm from "@/components/AvailabilityForm";
-import PropertyApprovalList from "@/components/PropertyApprovalList";
-import AdminPropertyList from "@/components/AdminPropertyList";
-import EnquiryApprovalList from "@/components/EnquiryApprovalList";
-import AdminUserList from "@/components/AdminUserList";
-import SignOutButton from "@/components/SignOutButton";
-import NotificationBell from "@/components/NotificationBell";
-import ResendVerificationButton from "@/components/ResendVerificationButton";
-import PhoneForm from "@/components/PhoneForm";
-import { ROLE_LABELS, getRoleLabel } from "@/lib/propertyConstants";
-
-type NotificationWithSender = Notification & {
-  sender: Pick<User, "name" | "email" | "role">;
-};
-
-type PendingProperty = Property & {
-  seller: Pick<User, "name" | "email" | "role" | "verified">;
-};
-
-type MyPropertyWithEnquiries = Property & {
-  enquiries: (Enquiry & { buyer: Pick<User, "name" | "email"> })[];
-  _count: { savedBy: number };
-};
-
-type ManagedProperty = Property & {
-  seller: Pick<User, "name" | "email" | "phone" | "role" | "verified">;
-  _count: { savedBy: number };
-  documents: { id: string; documentType: string | null; verified: boolean }[];
-};
-
-type SavedWithProperty = SavedProperty & { property: Property };
-
-type EnquiryWithProperty = Enquiry & { property: Pick<Property, "id" | "title"> };
-
-type PendingEnquiry = Enquiry & {
-  property: Pick<Property, "id" | "title">;
-  buyer: Pick<User, "name" | "email">;
-};
-
-const STATUS_OPTIONS = ["PENDING", "APPROVED", "CHANGES_REQUESTED", "REJECTED"];
-const ROLE_OPTIONS = ["BUYER", "OWNER", "AGENT", "ADMIN"];
-
-// ---------------------------------------------------------------------------
-// Design: DAKTOP360's own brand — deep forest green, white cards, pastel
-// icon chips, pill badges. Plain CSS injected once via <DashboardStyles/>,
-// so it renders the same regardless of what CSS tooling this project uses.
-// ---------------------------------------------------------------------------
-type Tone = "role" | "success" | "warning" | "danger" | "accent" | "neutral";
-
-function Badge({ label, tone = "neutral" }: { label: string; tone?: Tone }) {
-  return <span className={`dtb-badge dtb-badge--${tone}`}>{label}</span>;
-}
-
-function statusTone(status: string): Tone {
-  switch (status) {
-    case "APPROVED":
-      return "success";
-    case "PENDING":
-      return "warning";
-    case "CHANGES_REQUESTED":
-      return "warning";
-    case "REJECTED":
-      return "danger";
-    default:
-      return "neutral";
-  }
-}
-
-function enquiryStatusLabelAndTone(status: string): { label: string; tone: Tone } {
-  if (status === "PENDING") return { label: "Awaiting admin review", tone: "warning" };
-  if (status === "APPROVED") return { label: "Sent to seller", tone: "success" };
-  return { label: "Not approved", tone: "danger" };
-}
-
-function Section({
-  id,
-  eyebrow,
-  title,
-  action,
-  children,
-}: {
-  id?: string;
-  eyebrow: string;
-  title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="dtb-section">
-      <div className="dtb-section-head">
-        <div>
-          <p className="dtb-eyebrow">{eyebrow}</p>
-          <h2 className="dtb-title">{title}</h2>
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function FilterForm({ children }: { children: React.ReactNode }) {
-  return (
-    <form method="get" className="dtb-form">
-      {children}
-    </form>
-  );
-}
-
-// --- tiny inline icons (no external icon package required) -----------------
-function IconHouse() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 11.5 12 4l9 7.5" />
-      <path d="M5.5 10v9a1 1 0 0 0 1 1H10v-5.5h4V20h3.5a1 1 0 0 0 1-1v-9" />
-    </svg>
-  );
-}
-function IconPeople() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="8" r="3" />
-      <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
-      <circle cx="17" cy="9.5" r="2.3" />
-      <path d="M15.8 14.2c2.3.2 4.2 2 4.2 4.8" />
-    </svg>
-  );
-}
-function IconEye() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
-      <circle cx="12" cy="12" r="2.6" />
-    </svg>
-  );
-}
-function IconHeart() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20s-7.5-4.6-9.6-9.1C1.1 7.9 2.6 5 5.7 4.6c1.9-.3 3.6.7 4.9 2.2 1.3-1.5 3-2.5 4.9-2.2 3.1.4 4.6 3.3 3.3 6.3C19.5 15.4 12 20 12 20Z" />
-    </svg>
-  );
-}
-function IconMail() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="5.5" width="18" height="13" rx="2" />
-      <path d="m4 7 8 6 8-6" />
-    </svg>
-  );
-}
-
-function StatCard({
-  href,
-  chip,
-  icon,
-  label,
-  value,
-}: {
-  href: string;
-  chip: "green" | "blue" | "amber" | "purple";
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="dtb-stat">
-      <div className="dtb-stat-top">
-        <span className={`dtb-stat-icon dtb-stat-icon--${chip}`}>{icon}</span>
-        <span className="dtb-stat-label">{label}</span>
-      </div>
-      <div className="dtb-stat-value">{value}</div>
-      <Link href={href} className="dtb-stat-link">
-        View all &rarr;
-      </Link>
-    </div>
-  );
-}
-
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: { status?: string; q?: string; userQ?: string; userRole?: string };
-}) {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  if (!session.user.role) {
-    redirect("/select-role");
-  }
-
-  const currentUserId = session.user.id;
-  const role = session.user.role;
-
-  const currentUser = await prisma.user.findUnique({ where: { id: currentUserId } });
-
-  if (!currentUser) {
-    redirect("/login");
-  }
-
-  if (currentUser.suspended) {
-    return (
-      <div className="dtb-page dtb-page--centered">
-        <DashboardStyles />
-        <div className="dtb-center-card">
-          <p className="dtb-eyebrow dtb-eyebrow--danger">Account status</p>
-          <h1 className="dtb-title dtb-title--lg">Account suspended</h1>
-          <p className="dtb-copy">
-            Your account has been suspended. Contact support if you believe this is a mistake.
-          </p>
-          <div className="dtb-center-actions">
-            <SignOutButton />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentUser.emailVerified) {
-    return (
-      <div className="dtb-page dtb-page--centered">
-        <DashboardStyles />
-        <div className="dtb-center-card">
-          <p className="dtb-eyebrow">One step left</p>
-          <h1 className="dtb-title dtb-title--lg">Verify your email</h1>
-          <p className="dtb-copy">
-            Please verify your email address (<strong>{currentUser.email}</strong>) before using
-            your dashboard.
-          </p>
-          <p className="dtb-copy">
-            If you registered with email/password, you should have seen a verification link right
-            after signing up. If you didn&apos;t click it (or it expired), generate a new one
-            below.
-          </p>
-          <div className="dtb-center-actions">
-            <ResendVerificationButton />
-            <SignOutButton />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const receivedNotifications: NotificationWithSender[] = await prisma.notification.findMany({
-    where: { receiverId: currentUserId },
-    include: { sender: { select: { name: true, email: true, role: true } } },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const myProperties: MyPropertyWithEnquiries[] =
-    role === "OWNER" || role === "AGENT"
-      ? await prisma.property.findMany({
-          where: { sellerId: currentUserId },
-          include: {
-            enquiries: {
-              where: { status: "APPROVED" },
-              include: { buyer: { select: { name: true, email: true } } },
-            },
-            _count: { select: { savedBy: true } },
-          },
-          orderBy: { createdAt: "desc" },
-        })
-      : [];
-
-  const pendingProperties: PendingProperty[] =
-    role === "ADMIN"
-      ? await prisma.property.findMany({
-          where: { status: "PENDING" },
-          include: { seller: { select: { name: true, email: true, role: true, verified: true } } },
-          orderBy: { createdAt: "asc" },
-        })
-      : [];
-
-  const pendingEnquiries: PendingEnquiry[] =
-    role === "ADMIN"
-      ? await prisma.enquiry.findMany({
-          where: { status: "PENDING" },
-          include: {
-            property: { select: { id: true, title: true } },
-            buyer: { select: { name: true, email: true } },
-          },
-          orderBy: { createdAt: "asc" },
-        })
-      : [];
-
-  const statusFilter = searchParams.status && STATUS_OPTIONS.includes(searchParams.status) ? searchParams.status : undefined;
-  const searchQuery = searchParams.q?.trim();
-
-  const allPropertiesWhere: Prisma.PropertyWhereInput = searchQuery
-    ? {
-        seller: {
-          OR: [{ name: { contains: searchQuery } }, { phone: { contains: searchQuery } }],
-        },
-      }
-    : statusFilter
-      ? { status: statusFilter }
-      : {};
-
-  const allProperties: ManagedProperty[] =
-    role === "ADMIN"
-      ? await prisma.property.findMany({
-          where: allPropertiesWhere,
-          include: {
-            seller: { select: { name: true, email: true, phone: true, role: true, verified: true } },
-            _count: { select: { savedBy: true } },
-            documents: {
-              select: { id: true, documentType: true, verified: true },
-              orderBy: { createdAt: "asc" },
-            },
-          },
-          orderBy: { createdAt: "desc" },
-        })
-      : [];
-
-  const userSearchQuery = searchParams.userQ?.trim();
-  const userRoleFilter = searchParams.userRole && ROLE_OPTIONS.includes(searchParams.userRole) ? searchParams.userRole : undefined;
-
-  const allUsersWhere: Prisma.UserWhereInput = userSearchQuery
-    ? {
-        OR: [
-          { name: { contains: userSearchQuery } },
-          { email: { contains: userSearchQuery } },
-          { phone: { contains: userSearchQuery } },
-        ],
-      }
-    : userRoleFilter
-      ? { role: userRoleFilter }
-      : {};
-
-  const allUsers =
-    role === "ADMIN"
-      ? await prisma.user.findMany({
-          where: allUsersWhere,
-          select: { id: true, name: true, email: true, phone: true, role: true, suspended: true, verified: true },
-          orderBy: { createdAt: "desc" },
-        })
-      : [];
-
-  const savedProperties: SavedWithProperty[] =
-    role === "BUYER"
-      ? await prisma.savedProperty.findMany({
-          where: { buyerId: currentUserId },
-          include: { property: true },
-          orderBy: { createdAt: "desc" },
-        })
-      : [];
-
-  const myEnquiries: EnquiryWithProperty[] =
-    role === "BUYER"
-      ? await prisma.enquiry.findMany({
-          where: { buyerId: currentUserId },
-          include: { property: { select: { id: true, title: true } } },
-          orderBy: { createdAt: "desc" },
-        })
-      : [];
-
-  // Derived stat totals for the stat-card row
-  const totalEnquiriesOnMyListings = myProperties.reduce((sum, p) => sum + p.enquiries.length, 0);
-  const totalViewsOnMyListings = myProperties.reduce((sum, p) => sum + p.views, 0);
-  const totalSavedOnMyListings = myProperties.reduce((sum, p) => sum + p._count.savedBy, 0);
-
-  return (
-    <div className="dtb-page">
-      <DashboardStyles />
-      <div className="dtb-container">
-        {/* Header */}
-        <header className="dtb-header">
-          <div>
-            <p className="dtb-eyebrow">Dashboard</p>
-            <h1 className="dtb-name">Welcome back, {session.user.name || session.user.email} 👋</h1>
-            <div className="dtb-badge-row">
-              <Badge label={getRoleLabel(role) || role} tone="role" />
-              {(role === "OWNER" || role === "AGENT") && currentUser.verified && (
-                <Badge label="Verified account" tone="success" />
-              )}
-            </div>
-          </div>
-          <div className="dtb-header-actions">
-            <NotificationBell />
-            <SignOutButton />
-          </div>
-        </header>
-
-        {/* Stat row */}
-        {(role === "OWNER" || role === "AGENT") && (
-          <div className="dtb-stats">
-            <StatCard href="#my-listings" chip="green" icon={<IconHouse />} label="My Properties" value={myProperties.length} />
-            <StatCard href="#my-listings" chip="blue" icon={<IconPeople />} label="Enquiries" value={totalEnquiriesOnMyListings} />
-            <StatCard href="#my-listings" chip="amber" icon={<IconEye />} label="Profile Views" value={totalViewsOnMyListings} />
-            <StatCard href="#my-listings" chip="purple" icon={<IconHeart />} label="Saved by buyers" value={totalSavedOnMyListings} />
-          </div>
-        )}
-        {role === "ADMIN" && (
-          <div className="dtb-stats">
-            <StatCard href="#pending-listings" chip="amber" icon={<IconHouse />} label="Pending Listings" value={pendingProperties.length} />
-            <StatCard href="#pending-enquiries" chip="blue" icon={<IconMail />} label="Pending Enquiries" value={pendingEnquiries.length} />
-            <StatCard href="#all-listings" chip="green" icon={<IconEye />} label="Total Listings" value={allProperties.length} />
-            <StatCard href="#manage-users" chip="purple" icon={<IconPeople />} label="Total Users" value={allUsers.length} />
-          </div>
-        )}
-        {role === "BUYER" && (
-          <div className="dtb-stats">
-            <StatCard href="#saved-properties" chip="purple" icon={<IconHeart />} label="Saved Properties" value={savedProperties.length} />
-            <StatCard href="#my-enquiries" chip="blue" icon={<IconMail />} label="Enquiries Sent" value={myEnquiries.length} />
-            <StatCard href="#notifications" chip="amber" icon={<IconEye />} label="Notifications" value={receivedNotifications.length} />
-          </div>
-        )}
-
-        {/* Phone number */}
-        <Section eyebrow="Contact" title="Phone number">
-          <PhoneForm currentPhone={currentUser.phone} />
-        </Section>
-
-        {(role === "OWNER" || role === "AGENT") && (
-          <>
-            <Section eyebrow="New listing" title="List a property">
-              <PropertyForm isAgent={role === "AGENT"} />
-            </Section>
-
-            <Section id="my-listings" eyebrow={`${myProperties.length} total`} title="Your listings">
-              {myProperties.length === 0 ? (
-                <p className="dtb-empty">You haven&apos;t listed any properties yet.</p>
-              ) : (
-                <ul className="dtb-list">
-                  {myProperties.map((p) => {
-                    return (
-                      <li key={p.id} className="dtb-card">
-                        <div className="dtb-card-tags">
-                          <strong className="dtb-card-title">{p.title}</strong>
-                          <Badge label={p.status.replace("_", " ")} tone={statusTone(p.status)} />
-                          {p.verified ? (
-                            <Badge label="Verified" tone="success" />
-                          ) : (
-                            <Badge label="Not verified" tone="neutral" />
-                          )}
-                          {p.featured && <Badge label="Featured" tone="accent" />}
-                        </div>
-
-                        <div className="dtb-price">KSh {p.price.toLocaleString()}</div>
-
-                        {p.representingName && (
-                          <div className="dtb-muted">
-                            Representing: {p.representingName}
-                            {p.representingContact && <> ({p.representingContact})</>}
-                          </div>
-                        )}
-
-                        <div className="dtb-availability">
-                          <AvailabilityForm propertyId={p.id} currentStatus={p.availabilityStatus} />
-                        </div>
-
-                        <div className="dtb-meta">
-                          {p.views} views · {p._count.savedBy} saved · {p.enquiries.length} enquir
-                          {p.enquiries.length === 1 ? "y" : "ies"}
-                        </div>
-
-                        {p.adminNote && (p.status === "CHANGES_REQUESTED" || p.status === "REJECTED") && (
-                          <div className="dtb-note">Admin note: {p.adminNote}</div>
-                        )}
-
-                        <div className="dtb-actions">
-                          {["PENDING", "CHANGES_REQUESTED", "REJECTED"].includes(p.status) && (
-                            <Link href={`/properties/${p.id}/edit`} className="dtb-button dtb-button--outline">
-                              {p.status === "PENDING" ? "Edit listing" : "Edit and resubmit"}
-                            </Link>
-                          )}
-                          <Link href={`/properties/${p.id}/documents`} className="dtb-button dtb-button--outline">
-                            Manage documents
-                          </Link>
-                        </div>
-
-                        {p.enquiries.length > 0 && (
-                          <div className="dtb-subblock">
-                            <p className="dtb-subhead">Enquiries</p>
-                            <ul className="dtb-sublist">
-                              {p.enquiries.map((e: Enquiry & { buyer: Pick<User, "name" | "email"> }) => (
-                                <li key={e.id} className="dtb-muted">
-                                  <strong className="dtb-strong">{e.buyer.name || e.buyer.email}</strong>: {e.message}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </Section>
-          </>
-        )}
-
-        {role === "ADMIN" && (
-          <>
-            <Section id="pending-listings" eyebrow={`${pendingProperties.length} pending`} title="Listings awaiting review">
-              <PropertyApprovalList properties={pendingProperties} />
-            </Section>
-
-            <Section id="pending-enquiries" eyebrow={`${pendingEnquiries.length} pending`} title="Enquiries awaiting review">
-              <EnquiryApprovalList enquiries={pendingEnquiries} />
-            </Section>
-
-            <Section id="all-listings" eyebrow={`${allProperties.length} total`} title="All listings">
-              <div className="dtb-filters">
-                <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Filter by status</label>
-                    <select name="status" defaultValue={searchParams.status || ""} className="dtb-select">
-                      <option value="">All</option>
-                      <option value="PENDING">Pending</option>
-                      <option value="APPROVED">Approved</option>
-                      <option value="CHANGES_REQUESTED">Changes requested</option>
-                      <option value="REJECTED">Rejected</option>
-                    </select>
-                  </div>
-                  <button type="submit" className="dtb-button">
-                    Filter
-                  </button>
-                </FilterForm>
-
-                <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Search by seller name or phone</label>
-                    <input
-                      type="text"
-                      name="q"
-                      defaultValue={searchParams.q}
-                      placeholder="e.g. Jane or 0712..."
-                      className="dtb-input dtb-input--wide"
-                    />
-                  </div>
-                  <button type="submit" className="dtb-button">
-                    Search
-                  </button>
-                </FilterForm>
-
-                <a href="/dashboard" className="dtb-link">
-                  Clear filters
-                </a>
-              </div>
-
-              <div className="dtb-embed">
-                <AdminPropertyList properties={allProperties} />
-              </div>
-            </Section>
-
-            <Section id="manage-users" eyebrow={`${allUsers.length} total`} title="Manage users">
-              <div className="dtb-filters">
-                <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Filter by role</label>
-                    <select name="userRole" defaultValue={searchParams.userRole || ""} className="dtb-select">
-                      <option value="">All</option>
-                      <option value="BUYER">{ROLE_LABELS.BUYER}</option>
-                      <option value="OWNER">{ROLE_LABELS.OWNER}</option>
-                      <option value="AGENT">{ROLE_LABELS.AGENT}</option>
-                      <option value="ADMIN">{ROLE_LABELS.ADMIN}</option>
-                    </select>
-                  </div>
-                  <button type="submit" className="dtb-button">
-                    Filter
-                  </button>
-                </FilterForm>
-
-                <FilterForm>
-                  <div className="dtb-field">
-                    <label className="dtb-label">Search by name, email, or phone</label>
-                    <input
-                      type="text"
-                      name="userQ"
-                      defaultValue={searchParams.userQ}
-                      placeholder="e.g. Jane, jane@example.com, or 0712..."
-                      className="dtb-input dtb-input--wide"
-                    />
-                  </div>
-                  <button type="submit" className="dtb-button">
-                    Search
-                  </button>
-                </FilterForm>
-
-                <a href="/dashboard" className="dtb-link">
-                  Clear filters
-                </a>
-              </div>
-
-              <div className="dtb-embed">
-                <AdminUserList users={allUsers} currentUserId={currentUserId} />
-              </div>
-            </Section>
-          </>
-        )}
-
-        {role === "BUYER" && (
-          <>
-            <Section eyebrow="Explore" title="Browse properties">
-              <p className="dtb-copy">
-                Browse properties on the{" "}
-                <Link href="/" className="dtb-link">
-                  homepage
-                </Link>
-                .
-              </p>
-            </Section>
-
-            <Section id="saved-properties" eyebrow={`${savedProperties.length} saved`} title="Your saved properties">
-              {savedProperties.length === 0 ? (
-                <p className="dtb-empty">You haven&apos;t saved any properties yet.</p>
-              ) : (
-                <ul className="dtb-list">
-                  {savedProperties.map((s) => (
-                    <li key={s.id} className="dtb-row">
-                      <Link href={`/properties/${s.property.id}`} className="dtb-row-title">
-                        {s.property.title}
-                      </Link>
-                      <span className="dtb-row-price">KSh {s.property.price.toLocaleString()}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-
-            <Section id="my-enquiries" eyebrow={`${myEnquiries.length} sent`} title="Your enquiries">
-              {myEnquiries.length === 0 ? (
-                <p className="dtb-empty">You haven&apos;t sent any enquiries yet.</p>
-              ) : (
-                <ul className="dtb-list">
-                  {myEnquiries.map((e: EnquiryWithProperty) => {
-                    const { label, tone } = enquiryStatusLabelAndTone(e.status);
-                    return (
-                      <li key={e.id} className="dtb-card">
-                        <Link href={`/properties/${e.property.id}`} className="dtb-card-title dtb-card-title--link">
-                          {e.property.title}
-                        </Link>
-                        <div className="dtb-muted">{e.message}</div>
-                        <div className="dtb-badge-row">
-                          <Badge label={label} tone={tone} />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </Section>
-          </>
-        )}
-
-        {/* Notifications */}
-        <Section id="notifications" eyebrow={`${receivedNotifications.length} total`} title="Notifications">
-          {receivedNotifications.length === 0 ? (
-            <p className="dtb-empty">No notifications yet.</p>
-          ) : (
-            <ul className="dtb-list">
-              {receivedNotifications.map((n) => (
-                <li key={n.id} className="dtb-card dtb-card--tight">
-                  {n.propertyId ? (
-                    <Link href={`/properties/${n.propertyId}`} className="dtb-notification-message">
-                      {n.message}
-                    </Link>
-                  ) : (
-                    <span className="dtb-notification-message">{n.message}</span>
-                  )}
-                  <div className="dtb-meta dtb-meta--block">
-                    From {n.sender.name || n.sender.email} — {new Date(n.createdAt).toLocaleString()}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// All styling lives here as plain CSS, injected once. This makes the page
-// render consistently no matter what CSS tooling (or lack of it) the host
-// project uses.
-// ---------------------------------------------------------------------------
-function DashboardStyles() {
-  return (
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-      * { box-sizing: border-box; }
-
-      .dtb-page {
-        min-height: 100vh;
-        background: #F4F6F5;
-        font-family: 'Inter', -apple-system, sans-serif;
-        color: #17251E;
-      }
-      .dtb-page--centered {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-      }
-      .dtb-container {
-        max-width: 1120px;
-        margin: 0 auto;
-        padding: 32px 20px 64px;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-      }
-
-      .dtb-center-card {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAKTOP360 REALTORS · sleek dashboard</title>
+  <!-- Font & icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: #f5f7fc;
+      display: flex;
+      min-height: 100vh;
+      color: #0b1a33;
+    }
+
+    /* ----- SIDEBAR (sleek, dark) ----- */
+    .sidebar {
+      width: 280px;
+      background: #0d1b2a;
+      color: #d6e2f0;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: white;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 2rem;
+    }
+
+    .sidebar-brand i {
+      font-size: 1.8rem;
+      color: #7b9cf5;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      padding: 0.7rem 1rem;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: #b3c9e6;
+      text-decoration: none;
+      transition: 0.15s;
+    }
+
+    .sidebar-nav a i {
+      width: 1.4rem;
+      font-size: 1.1rem;
+      color: #6a86b0;
+      transition: 0.15s;
+    }
+
+    .sidebar-nav a:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+    }
+
+    .sidebar-nav a:hover i {
+      color: #a3c0ff;
+    }
+
+    .sidebar-nav a.active {
+      background: rgba(94, 133, 255, 0.15);
+      color: white;
+      box-shadow: inset 3px 0 0 #5e85ff;
+    }
+
+    .sidebar-nav a.active i {
+      color: #7b9cf5;
+    }
+
+    .sidebar-footer {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.85rem;
+      color: #7a94b9;
+    }
+
+    .sidebar-footer .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(255,255,255,0.04);
+      padding: 0.6rem 1rem;
+      border-radius: 40px;
+      margin-bottom: 0.8rem;
+    }
+
+    .sidebar-footer .user-badge i {
+      font-size: 1.2rem;
+      color: #7b9cf5;
+    }
+
+    /* ----- MAIN CONTENT (clean, airy) ----- */
+    .main {
+      flex: 1;
+      padding: 2rem 2.5rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* header row */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .top-header h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #0b1a33;
+    }
+
+    .top-header h1 span {
+      background: #eef3fe;
+      padding: 0.2rem 1rem;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1c4f8f;
+      margin-left: 0.8rem;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .header-actions .notif-icon {
+      background: white;
+      padding: 0.6rem 0.9rem;
+      border-radius: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      color: #1f3a5f;
+      border: 1px solid #e9eef6;
+      font-size: 1.1rem;
+      position: relative;
+    }
+
+    .header-actions .notif-icon .dot {
+      width: 10px;
+      height: 10px;
+      background: #e85c5c;
+      border-radius: 50%;
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      border: 2px solid white;
+    }
+
+    .header-actions .avatar {
+      background: #1f3a5f;
+      color: white;
+      width: 42px;
+      height: 42px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    /* welcome card */
+    .welcome-card {
+      background: white;
+      border-radius: 28px;
+      padding: 1.8rem 2.2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 28px rgba(0, 20, 40, 0.03);
+      border: 1px solid #f0f4fe;
+    }
+
+    .welcome-card h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #0b1a33;
+    }
+
+    .welcome-card p {
+      color: #4c6889;
+      margin-top: 0.3rem;
+    }
+
+    /* stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 24px;
+      padding: 1.5rem 1.2rem;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.01);
+      border: 1px solid #edf2fa;
+      transition: 0.1s ease;
+    }
+
+    .stat-card .stat-num {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #0b1a33;
+    }
+
+    .stat-card .stat-label {
+      color: #657e9f;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-top: 0.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stat-card .stat-label a {
+      color: #2a5f9e;
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+
+    .stat-card .stat-icon {
+      color: #5e85ff;
+      opacity: 0.4;
+      font-size: 1.8rem;
+      margin-bottom: 0.3rem;
+    }
+
+    /* property & enquiry cards */
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #0b1a33;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .property-card {
+      background: white;
+      border-radius: 24px;
+      padding: 1.5rem 1.8rem;
+      margin-bottom: 1.2rem;
+      border: 1px solid #eaf0f8;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+      transition: 0.1s;
+    }
+
+    .property-card .top-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .property-card .tag {
+      background: #e3edfc;
+      color: #1d4a7c;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.9rem;
+      border-radius: 30px;
+      letter-spacing: 0.3px;
+    }
+
+    .property-card .tag.verified {
+      background: #d2f0d9;
+      color: #156b38;
+    }
+
+    .property-card h3 {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin: 0.3rem 0 0.1rem;
+    }
+
+    .property-card .location {
+      color: #52708f;
+      font-size: 0.9rem;
+    }
+
+    .property-card .price {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #0b1a33;
+    }
+
+    .property-card .details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      margin-top: 0.6rem;
+      font-size: 0.9rem;
+      color: #3f5b7a;
+    }
+
+    .property-card .details i {
+      margin-right: 0.2rem;
+      color: #7f9bc2;
+    }
+
+    .enquiry-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 0.9rem 1.5rem;
+      border-radius: 18px;
+      margin-bottom: 0.7rem;
+      border: 1px solid #edf2fa;
+    }
+
+    .enquiry-item .badge-new {
+      background: #e85c5c;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.15rem 0.8rem;
+      border-radius: 30px;
+      margin-left: 0.8rem;
+    }
+
+    .summary-box {
+      background: #f0f6ff;
+      border-radius: 24px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      margin: 1.5rem 0 1rem;
+      border: 1px solid #e1ebfa;
+    }
+
+    .summary-box .item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .summary-box .item .label {
+      font-size: 0.8rem;
+      color: #4a6b8f;
+    }
+
+    .summary-box .item .value {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #0b1a33;
+    }
+
+    .quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 1.8rem 0 1rem;
+    }
+
+    .quick-actions .btn {
+      background: white;
+      border: 1px solid #dde6f2;
+      padding: 0.7rem 1.5rem;
+      border-radius: 40px;
+      font-weight: 500;
+      color: #1f3a5f;
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: 0.1s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+    }
+
+    .quick-actions .btn i {
+      color: #5e85ff;
+    }
+
+    .quick-actions .btn:hover {
+      background: #f0f6ff;
+      border-color: #b7cef0;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e3eaf3;
+      margin: 2rem 0 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
         width: 100%;
-        max-width: 440px;
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 32px;
-        text-align: center;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.06);
+        height: auto;
+        position: relative;
+        padding: 1.2rem;
       }
-      .dtb-center-actions {
-        margin-top: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      .dtb-header {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 24px 28px;
-        display: flex;
+      body {
         flex-direction: column;
-        gap: 16px;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
       }
-      .dtb-header-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+      .main {
+        padding: 1.5rem;
       }
-      .dtb-name {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin: 4px 0 0;
-        line-height: 1.25;
-        color: #14231F;
-      }
-      .dtb-badge-row {
-        margin-top: 12px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
+    }
+  </style>
+</head>
+<body>
+  <!-- sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <i class="fas fa-building"></i> 
+      <span>DAKTOP360</span>
+      <span style="font-weight: 300; font-size: 0.8rem; color: #8aa4c9;">REALTORS</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="active"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a href="#"><i class="fas fa-user-circle"></i> My Profile</a>
+      <a href="#"><i class="fas fa-home"></i> My Properties</a>
+      <a href="#"><i class="fas fa-question-circle"></i> Enquiries</a>
+      <a href="#"><i class="fas fa-bookmark"></i> Saved Properties</a>
+      <a href="#"><i class="fas fa-shopping-cart"></i> My Purchases</a>
+      <a href="#"><i class="fas fa-check-circle"></i> Title Verification</a>
+      <a href="#"><i class="fas fa-credit-card"></i> Payments</a>
+      <a href="#"><i class="fas fa-envelope"></i> Messages</a>
+      <a href="#"><i class="fas fa-file-alt"></i> Documents</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-badge">
+        <i class="fas fa-user-shield"></i>
+        <span>David Kitili · <span style="color:#8bb0f0;">Admin</span></span>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <span style="background: #1d3557; padding: 0.2rem 0.8rem; border-radius: 40px; font-size: 0.7rem;">Verified</span>
+        <span><i class="fas fa-sign-out-alt" style="color:#6a86b0;"></i> Sign out</span>
+      </div>
+    </div>
+  </aside>
 
-      .dtb-eyebrow {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #6B7A72;
-        margin: 0;
-      }
-      .dtb-eyebrow--danger { color: #C0392B; }
+  <!-- main content -->
+  <main class="main">
+    <!-- header -->
+    <div class="top-header">
+      <h1>Dashboard <span>Owner</span></h1>
+      <div class="header-actions">
+        <div class="notif-icon">
+          <i class="fas fa-bell"></i>
+          <span class="dot"></span>
+        </div>
+        <div class="avatar">DK</div>
+      </div>
+    </div>
 
-      .dtb-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-        margin: 2px 0 0;
-        color: #14231F;
-      }
-      .dtb-title--lg { font-size: 1.6rem; }
+    <!-- welcome -->
+    <div class="welcome-card">
+      <h2>Welcome back, David Kitili 🎉</h2>
+      <p>Here's what's happening with your account today.</p>
+    </div>
 
-      .dtb-copy {
-        font-size: 0.92rem;
-        line-height: 1.6;
-        color: #566B60;
-        margin: 12px 0 0;
-      }
-      .dtb-copy:first-of-type { margin-top: 12px; }
+    <!-- stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-home"></i></div>
+        <div class="stat-num">3</div>
+        <div class="stat-label">My Properties <a href="#">View all →</a></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-comment-dots"></i></div>
+        <div class="stat-num">5</div>
+        <div class="stat-label">Enquiries <a href="#">View all →</a></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-eye"></i></div>
+        <div class="stat-num">152</div>
+        <div class="stat-label">Profile Views <a href="#">View all →</a></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-envelope"></i></div>
+        <div class="stat-num">2</div>
+        <div class="stat-label">Messages <a href="#">View all →</a></div>
+      </div>
+    </div>
 
-      /* Stat cards */
-      .dtb-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 16px;
-      }
-      .dtb-stat {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 18px 20px;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
-      }
-      .dtb-stat-top {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .dtb-stat-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-      .dtb-stat-icon svg { width: 18px; height: 18px; }
-      .dtb-stat-icon--green { background: #E4F5E9; color: #17843C; }
-      .dtb-stat-icon--blue { background: #E5EEFB; color: #2563AE; }
-      .dtb-stat-icon--amber { background: #FCF0DC; color: #B4770E; }
-      .dtb-stat-icon--purple { background: #EFE7FA; color: #7C4EC4; }
-      .dtb-stat-label { font-size: 0.85rem; font-weight: 500; color: #566B60; }
-      .dtb-stat-value {
-        margin-top: 10px;
-        font-size: 1.9rem;
-        font-weight: 700;
-        color: #14231F;
-        line-height: 1;
-      }
-      .dtb-stat-link {
-        display: inline-block;
-        margin-top: 8px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: #17843C;
-        text-decoration: none;
-      }
-      .dtb-stat-link:hover { color: #0F5D2A; }
+    <!-- My Properties card -->
+    <div class="section-title">
+      <span>My Properties</span>
+      <a href="#" style="font-weight: 500; font-size: 0.9rem; color:#2a5f9e;">View all →</a>
+    </div>
+    <div class="property-card">
+      <div class="top-row">
+        <div>
+          <span class="tag verified"><i class="fas fa-check-circle" style="margin-right: 4px;"></i> VERIFIED</span>
+          <h3>6 Bedroom Mansion – Kitengela</h3>
+          <div class="location"><i class="fas fa-map-pin"></i> Kitengela, Kajiado County</div>
+        </div>
+        <div class="price">KSh 29,000,000</div>
+      </div>
+      <div style="display: flex; gap: 0.7rem; flex-wrap: wrap; margin: 0.5rem 0 0.2rem;">
+        <span class="tag" style="background:#d9e3f5;">For Sale</span>
+        <span style="color:#3f5b7a; font-size:0.9rem;">6 Beds · 6 Baths · 0.25 Acre</span>
+        <span style="color:#3f5b7a; font-size:0.85rem; margin-left: auto;">Listed: 2nd August 2025</span>
+      </div>
+      <div style="margin-top: 0.6rem; display: flex; justify-content: space-between; align-items: center;">
+        <span class="tag" style="background:#e5edf9; color:#1f4a7a;">Status: Approved</span>
+        <span style="color:#4c6889; font-size:0.85rem;"><i class="far fa-file-alt"></i> documents</span>
+      </div>
+    </div>
 
-      .dtb-section {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 16px;
-        padding: 24px 28px;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.05);
-      }
-      .dtb-section-head {
-        margin-bottom: 18px;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
+    <!-- recent enquiries -->
+    <div class="section-title" style="margin-top: 1.8rem;">
+      <span>Recent Enquiries</span>
+      <a href="#" style="font-weight: 500; font-size: 0.9rem; color:#2a5f9e;">View all →</a>
+    </div>
+    <div class="enquiry-item">
+      <div><strong>John Mwangi</strong> · Interested in 6 Bedroom Mansion – Kitengela</div>
+      <span class="badge-new">New</span>
+    </div>
+    <div class="enquiry-item">
+      <div><strong>Grace Wanjiku</strong> · Interested in 10 Acres – Kimalat, Kitengela</div>
+      <span class="badge-new">New</span>
+    </div>
 
-      .dtb-empty {
-        font-size: 0.9rem;
-        color: #566B60;
-        margin: 0;
-      }
+    <!-- account summary + quick actions -->
+    <div class="summary-box">
+      <div class="item">
+        <span class="label">Account Type</span>
+        <span class="value">Verified User</span>
+      </div>
+      <div class="item">
+        <span class="label">Member Since</span>
+        <span class="value">15th May 2025</span>
+      </div>
+    </div>
 
-      .dtb-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border-radius: 999px;
-        border: 1px solid transparent;
-        padding: 3px 12px;
-        font-size: 0.72rem;
-        font-weight: 600;
-        line-height: 1.7;
-      }
-      .dtb-badge--role { background: #123B2B; color: #FFFFFF; }
-      .dtb-badge--success { background: #E4F5E9; color: #17843C; }
-      .dtb-badge--warning { background: #FCF0DC; color: #B4770E; }
-      .dtb-badge--danger { background: #FBE7E5; color: #C0392B; }
-      .dtb-badge--accent { background: #E4F5E9; color: #17843C; }
-      .dtb-badge--neutral { background: #EEF1EF; color: #5B6660; }
+    <div class="quick-actions">
+      <a href="#" class="btn"><i class="fas fa-plus-circle"></i> List Property</a>
+      <a href="#" class="btn"><i class="fas fa-check-double"></i> Verify Title</a>
+      <a href="#" class="btn"><i class="fas fa-calculator"></i> Book Valuation</a>
+      <a href="#" class="btn"><i class="fas fa-headset"></i> Contact Support</a>
+    </div>
 
-      .dtb-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-
-      .dtb-card {
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 14px;
-        padding: 18px 20px;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease;
-      }
-      .dtb-card:hover { border-color: #C7DECF; box-shadow: 0 2px 8px rgba(15,61,43,0.06); }
-      .dtb-card--tight { padding: 14px 20px; }
-
-      .dtb-card-tags {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-      }
-      .dtb-card-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #14231F;
-      }
-      .dtb-card-title--link { text-decoration: none; display: block; }
-      .dtb-card-title--link:hover { color: #17843C; }
-
-      .dtb-price {
-        margin-top: 8px;
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #123B2B;
-      }
-
-      .dtb-muted { font-size: 0.87rem; color: #566B60; margin-top: 6px; }
-      .dtb-strong { color: #14231F; }
-
-      .dtb-availability { margin-top: 12px; }
-
-      .dtb-meta {
-        margin-top: 12px;
-        font-size: 0.78rem;
-        color: #7C8A82;
-      }
-      .dtb-meta--block { margin-top: 6px; }
-
-      .dtb-note {
-        margin-top: 12px;
-        background: #FCF0DC;
-        border: 1px solid #F2DDAE;
-        color: #8A6A2E;
-        border-radius: 10px;
-        padding: 8px 14px;
-        font-size: 0.87rem;
-        font-style: italic;
-      }
-
-      .dtb-actions {
-        margin-top: 16px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .dtb-link {
-        font-size: 0.87rem;
-        font-weight: 600;
-        color: #17843C;
-        text-decoration: none;
-      }
-      .dtb-link:hover { color: #0F5D2A; text-decoration: underline; }
-
-      .dtb-subblock {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #EEF1EF;
-      }
-      .dtb-subhead {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #6B7A72;
-        margin: 0 0 8px;
-      }
-      .dtb-sublist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-
-      .dtb-filters {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #EEF1EF;
-        margin-bottom: 20px;
-      }
-      .dtb-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
-      .dtb-field { display: flex; flex-direction: column; gap: 5px; }
-      .dtb-label {
-        font-size: 0.72rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #7C8A82;
-      }
-      .dtb-input, .dtb-select {
-        font-family: 'Inter', sans-serif;
-        font-size: 0.88rem;
-        color: #14231F;
-        background: #FFFFFF;
-        border: 1px solid #DAE1DD;
-        border-radius: 10px;
-        padding: 8px 14px;
-        outline: none;
-      }
-      .dtb-input--wide { width: 220px; }
-      .dtb-input:focus-visible, .dtb-select:focus-visible, .dtb-button:focus-visible, a.dtb-link:focus-visible {
-        box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #17843C;
-      }
-      .dtb-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.86rem;
-        font-weight: 600;
-        color: #FFFFFF;
-        background: #123B2B;
-        border: 1px solid #123B2B;
-        border-radius: 10px;
-        padding: 8px 18px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background 0.15s ease;
-      }
-      .dtb-button:hover { background: #0D2B1F; }
-      .dtb-button--outline {
-        background: #FFFFFF;
-        color: #123B2B;
-        border: 1px solid #DAE1DD;
-      }
-      .dtb-button--outline:hover { background: #F4F6F5; border-color: #C7DECF; }
-
-      .dtb-embed { margin-top: 4px; }
-
-      .dtb-row {
-        list-style: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
-        border-radius: 12px;
-        padding: 12px 16px;
-      }
-      .dtb-row-title { font-weight: 600; color: #14231F; text-decoration: none; }
-      .dtb-row-title:hover { color: #17843C; }
-      .dtb-row-price {
-        font-size: 0.87rem;
-        font-weight: 600;
-        color: #566B60;
-        white-space: nowrap;
-      }
-
-      .dtb-notification-message {
-        font-size: 0.92rem;
-        font-weight: 600;
-        color: #14231F;
-        text-decoration: none;
-      }
-      a.dtb-notification-message:hover { color: #17843C; }
-
-      @media (min-width: 640px) {
-        .dtb-header { flex-direction: row; align-items: center; justify-content: space-between; padding: 28px 32px; }
-        .dtb-filters { flex-direction: row; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        * { transition-duration: 0.01ms !important; }
-      }
-    `}</style>
-  );
-}
+    <hr>
+    <div style="display: flex; justify-content: flex-end; font-size: 0.8rem; color: #6d89b0; padding-top: 0.5rem;">
+      <i class="fas fa-circle" style="color: #71b37f; font-size: 0.5rem; margin-right: 6px;"></i> All systems online
+    </div>
+  </main>
+</body>
+</html>
