@@ -50,10 +50,24 @@ export default function VerificationPanel({
     year: "numeric",
   });
 
+  const documentsVerified = documents.length > 0 && documents.every((doc) => doc.verified);
+
+  const checks = [
+    { label: "Location", verified: locationVerified },
+    { label: "Ownership", verified: ownershipVerified },
+    { label: "Survey", verified: surveyVerified },
+    { label: "Documents", verified: documentsVerified },
+  ];
+  const completedCount = checks.filter((check) => check.verified).length;
+  const totalCount = checks.length;
+  const allVerified = completedCount === totalCount;
+
   return (
     <section id="verification">
       <button type="button" onClick={() => setOpen((prev) => !prev)} aria-expanded={open}>
         {open ? "Hide verification details" : "View verification"}
+        {" — "}
+        {completedCount} of {totalCount} checks complete
         {daktopVerified && !open ? " — Daktop Verified" : ""}
       </button>
 
@@ -66,6 +80,22 @@ export default function VerificationPanel({
               <strong>DAKTOP VERIFIED</strong> — every check below has been completed.
             </p>
           )}
+
+          <div aria-label="Verification summary">
+            <p>
+              <strong>
+                {completedCount} of {totalCount} checks complete
+              </strong>
+              {allVerified ? " — fully verified" : ""}
+            </p>
+            <ul>
+              {checks.map((check) => (
+                <li key={check.label}>
+                  {check.verified ? "\u2713" : "\u25cb"} {check.label}
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {documents.length > 0 ? (
             <ul>

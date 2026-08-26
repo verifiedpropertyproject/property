@@ -10,6 +10,7 @@ import LocationView from "@/components/LocationView";
 import VerificationPanel from "@/components/VerificationPanel";
 import { getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import { toWhatsAppNumber } from "@/lib/phoneValidation";
+import { getAdminMailtoHref, getAdminCallHref, getAdminWhatsAppHref } from "@/lib/adminContact";
 
 const AVAILABILITY_LABELS: Record<string, string> = {
   AVAILABLE: "Available",
@@ -78,6 +79,14 @@ export default async function PropertyDetailPage({
       )}`
     : null;
 
+  // Lets the seller/agent reach the admin team about this specific listing (verification
+  // status, a correction, a dispute, etc) without needing to hunt for a support address.
+  const adminEnquirySubject = `Enquiry about listing: ${property.title} (${property.id})`;
+  const adminEnquiryMessage = `Hi, I have a question about my listing "${property.title}" (ID: ${property.id}) on DAKTOP360.`;
+  const adminMailtoHref = getAdminMailtoHref(adminEnquirySubject, adminEnquiryMessage);
+  const adminCallHref = getAdminCallHref();
+  const adminWhatsAppHref = getAdminWhatsAppHref(adminEnquiryMessage);
+
   if (property.status !== "APPROVED" && !isOwner && !isAdmin) {
     notFound();
   }
@@ -138,6 +147,29 @@ export default async function PropertyDetailPage({
           {(isOwner || isAdmin) && (
             <div>
               <AvailabilityForm propertyId={property.id} currentStatus={property.availabilityStatus} />
+            </div>
+          )}
+
+          {isOwner && (adminMailtoHref || adminCallHref || adminWhatsAppHref) && (
+            <div>
+              <p>Have a question about this listing? Enquire with the admin team:</p>
+              {adminMailtoHref && (
+                <a href={adminMailtoHref}>
+                  Enquire via Email
+                </a>
+              )}
+              {adminMailtoHref && (adminCallHref || adminWhatsAppHref) && " — "}
+              {adminCallHref && (
+                <a href={adminCallHref}>
+                  Call Admin
+                </a>
+              )}
+              {adminCallHref && adminWhatsAppHref && " — "}
+              {adminWhatsAppHref && (
+                <a href={adminWhatsAppHref} target="_blank" rel="noopener noreferrer">
+                  Enquire via WhatsApp
+                </a>
+              )}
             </div>
           )}
 
@@ -258,7 +290,7 @@ export default async function PropertyDetailPage({
           seller={{
             name: property.seller.name,
             email: property.seller.email,
-            role: property.seller.role,
+            role: property.seller.role ?? "OWNER",
             verified: property.seller.verified,
             identityVerificationStatus: property.seller.identityVerificationStatus,
             createdAt: property.seller.createdAt,
