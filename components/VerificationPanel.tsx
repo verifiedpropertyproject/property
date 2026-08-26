@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { getIdentityVerificationLabel } from "@/lib/identityVerification";
 import { getDaktopDecisionLabel } from "@/lib/verificationStatus";
-import { DOCUMENT_TYPE_LABELS } from "@/lib/documentStorage";
+import { DOCUMENT_TYPE_LABELS } from "@/lib/documentTypes";
 import { getRoleLabel } from "@/lib/propertyConstants";
 
 type DocumentSummary = {
