@@ -22,14 +22,23 @@ import {
   LOCATION_MIN_LENGTH,
   DEFAULT_COMMISSION_RATE,
   MAX_GALLERY_IMAGES,
+  VIDEO_MAX_SIZE_BYTES,
   commissionAgreementText,
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
+import { canRequestIdentityVerification } from "@/lib/identityVerification";
 
-export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
+export default function PropertyForm({
+  isAgent,
+  identityVerificationStatus,
+}: {
+  isAgent: boolean;
+  identityVerificationStatus: string;
+}) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const [galleryCount, setGalleryCount] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -46,6 +55,7 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
   const [pin, setPin] = useState<PickedLocation | null>(null);
   const [commissionAgreed, setCommissionAgreed] = useState(false);
   const [signedName, setSignedName] = useState("");
+  const [requestIdentityVerification, setRequestIdentityVerification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -137,8 +147,15 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
           formData.append("galleryImages", file);
         }
       }
+      const videoFile = videoInputRef.current?.files?.[0];
+      if (videoFile) {
+        formData.append("video", videoFile);
+      }
       formData.append("commissionAgreed", "true");
       formData.append("signedName", signedName.trim());
+      if (requestIdentityVerification) {
+        formData.append("requestIdentityVerification", "true");
+      }
 
       const res = await fetch("/api/properties", {
         method: "POST",
@@ -362,6 +379,38 @@ export default function PropertyForm({ isAgent }: { isAgent: boolean }) {
           </small>
         </label>
       </div>
+
+      <div>
+        <label>
+          Walkthrough video (optional)
+          <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" />
+          <small>
+            MP4, WebM, or MOV, max {Math.round(VIDEO_MAX_SIZE_BYTES / (1024 * 1024))}MB. Shown on
+            the full listing page. You can also add or replace this later from the edit page.
+          </small>
+        </label>
+      </div>
+
+      {canRequestIdentityVerification(identityVerificationStatus) && (
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              checked={requestIdentityVerification}
+              onChange={(e) => setRequestIdentityVerification(e.target.checked)}
+            />
+            {" "}
+            {identityVerificationStatus === "REJECTED"
+              ? "Also resubmit my identity verification request"
+              : "Also request identity verification for my account"}
+          </label>
+          <small>
+            {" "}An admin will review this alongside your listing. Once approved, it'll show on
+            your listings as a trust signal. You can also request this any time from your
+            dashboard.
+          </small>
+        </div>
+      )}
 
       {isAgent && (
         <>

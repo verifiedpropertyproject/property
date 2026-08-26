@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import PropertyEditForm from "@/components/PropertyEditForm";
 import PropertyGalleryManager from "@/components/PropertyGalleryManager";
+import PropertyVideoManager from "@/components/PropertyVideoManager";
 
 const EDITABLE_STATUSES = ["PENDING", "CHANGES_REQUESTED", "REJECTED"];
 
@@ -116,6 +117,11 @@ export default async function EditPropertyPage({ params }: { params: { id: strin
             propertyId={property.id}
             images={property.images.map((img) => ({ id: img.id, url: img.url }))}
           />
+        </section>
+
+        <section>
+          <h2>Walkthrough video</h2>
+          <PropertyVideoManager propertyId={property.id} videoUrl={property.videoUrl} />
         </section>
       </div>
     </div>

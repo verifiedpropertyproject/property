@@ -42,8 +42,22 @@ model User {
   emailVerified DateTime?
   suspended     Boolean   @default(false)
   // Account-level "Verified" badge for Owners/Agents (identity/legitimacy trust signal),
-  // admin-controlled and distinct from Property.verified (which is per-listing).
+  // admin-controlled and distinct from Property.verified (which is per-listing). An admin can
+  // still flip this directly at any time; the fields below are the request/review workflow that
+  // normally leads to it.
   verified      Boolean   @default(false)
+  // Seller/agent-initiated identity check: NOT_SUBMITTED (default/no request yet) | PENDING
+  // (submitted, awaiting admin review) | APPROVED | REJECTED. Requested from the dashboard or
+  // while creating a listing (see app/api/profile/identity-verification), reviewed by an admin
+  // (see app/api/admin/users/[id]/identity-verification). Approving also sets `verified` above
+  // to true; rejecting leaves it as-is (an admin can still hand-verify separately regardless of
+  // this workflow). Shown on the seller's own listings so buyers can see it's in progress.
+  identityVerificationStatus      String    @default("NOT_SUBMITTED")
+  identityVerificationRequestedAt DateTime?
+  identityVerificationReviewedAt  DateTime?
+  // Admin's note on the decision — mainly used to explain a rejection so the seller knows what
+  // to fix before resubmitting.
+  identityVerificationNote        String?
   createdAt     DateTime  @default(now())
 
   properties              Property[]
@@ -114,6 +128,11 @@ model Property {
   // A path under /public (e.g. "/uploads/properties/<id>/<file>.jpg") produced by a real
   // upload — not a user-supplied external URL. See lib/propertyImageStorage.ts.
   imageUrl     String?
+  // Optional walkthrough/tour video for the listing, stored the same way as imageUrl (public
+  // Vercel Blob URL in production, /public path locally). See savePropertyVideo in
+  // lib/propertyImageStorage.ts. Independent of the photo gallery below — a listing can have
+  // photos, a video, both, or neither.
+  videoUrl     String?
   status       String   @default("PENDING")
   adminNote    String?
   verified     Boolean  @default(false)

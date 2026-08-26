@@ -20,6 +20,12 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   "image/webp": ".webp",
 };
 
+const VIDEO_EXTENSION_BY_MIME: Record<string, string> = {
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/quicktime": ".mov",
+};
+
 function isBlobConfigured() {
   return Boolean(PROPERTY_BLOB_TOKEN);
 }
@@ -65,3 +71,31 @@ export async function deletePropertyImage(imageUrl: string | null) {
   const filePath = path.join(PUBLIC_UPLOAD_ROOT, relativePath);
   await fs.unlink(filePath).catch(() => {});
 }
+
+// Same storage backend as photos (public Blob store in production, /public locally) — a
+// listing's video just lives alongside its photos under the same propertyId folder/prefix.
+export async function savePropertyVideo(file: File, propertyId: string): Promise<string> {
+  const ext = VIDEO_EXTENSION_BY_MIME[file.type] || path.extname(file.name) || "";
+  const fileName = `${crypto.randomUUID()}${ext}`;
+
+  if (isBlobConfigured()) {
+    const { put } = await import("@vercel/blob");
+    const result = await put(`properties/${propertyId}/${fileName}`, file, {
+      access: "public",
+      contentType: file.type,
+      token: PROPERTY_BLOB_TOKEN,
+    });
+    return result.url;
+  }
+
+  const dir = path.join(PUBLIC_UPLOAD_ROOT, propertyId);
+  await fs.mkdir(dir, { recursive: true });
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(path.join(dir, fileName), buffer);
+
+  return `/uploads/properties/${propertyId}/${fileName}`;
+}
+
+// Videos are stored under the exact same URL scheme as photos, so removing one just reuses the
+// photo-deletion logic (this alias exists purely for readability at call sites).
+export const deletePropertyVideo = deletePropertyImage;

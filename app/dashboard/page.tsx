@@ -14,6 +14,7 @@ import SignOutButton from "@/components/SignOutButton";
 import NotificationBell from "@/components/NotificationBell";
 import ResendVerificationButton from "@/components/ResendVerificationButton";
 import PhoneForm from "@/components/PhoneForm";
+import IdentityVerificationRequestForm from "@/components/IdentityVerificationRequestForm";
 import { ROLE_LABELS, getRoleLabel } from "@/lib/propertyConstants";
 
 type NotificationWithSender = Notification & {
@@ -359,7 +360,18 @@ export default async function DashboardPage({
     role === "ADMIN"
       ? await prisma.user.findMany({
           where: allUsersWhere,
-          select: { id: true, name: true, email: true, phone: true, role: true, suspended: true, verified: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            role: true,
+            suspended: true,
+            verified: true,
+            identityVerificationStatus: true,
+            identityVerificationNote: true,
+            identityVerificationRequestedAt: true,
+          },
           orderBy: { createdAt: "desc" },
         })
       : [];
@@ -398,6 +410,9 @@ export default async function DashboardPage({
               <Badge label={getRoleLabel(role) || role} tone="role" />
               {(role === "OWNER" || role === "AGENT") && currentUser.verified && (
                 <Badge label="Verified account" tone="success" />
+              )}
+              {(role === "OWNER" || role === "AGENT") && currentUser.identityVerificationStatus === "PENDING" && (
+                <Badge label="Identity check pending" tone="warning" />
               )}
             </div>
           </div>
@@ -438,9 +453,18 @@ export default async function DashboardPage({
         </Section>
 
         {(role === "OWNER" || role === "AGENT") && (
+          <Section eyebrow="Trust & safety" title="Identity verification">
+            <IdentityVerificationRequestForm
+              status={currentUser.identityVerificationStatus}
+              note={currentUser.identityVerificationNote}
+            />
+          </Section>
+        )}
+
+        {(role === "OWNER" || role === "AGENT") && (
           <>
             <Section eyebrow="New listing" title="List a property">
-              <PropertyForm isAgent={role === "AGENT"} />
+              <PropertyForm isAgent={role === "AGENT"} identityVerificationStatus={currentUser.identityVerificationStatus} />
             </Section>
 
             <Section id="my-listings" eyebrow={`${myProperties.length} total`} title="Your listings">

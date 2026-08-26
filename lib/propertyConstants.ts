@@ -147,6 +147,12 @@ export const DEFAULT_MAP_ZOOM = 7;
 export const PICKED_MAP_ZOOM = 15;
 
 export const IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+export const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+// A single optional walkthrough video per listing (separate from the photo gallery above).
+// Kept generous but bounded — a full property tour, not an unlimited media dump.
+export const VIDEO_MAX_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+export const ALLOWED_VIDEO_MIME_TYPES = ["video/mp4", "video/webm", "video/quicktime"];
 
 // Beyond the one required cover photo, how many extra gallery photos a listing can have —
 // generous enough for a real walkthrough of a property, bounded so nobody can dump hundreds of
@@ -169,7 +175,6 @@ export function commissionAgreementText(rate: number): string {
   const pct = (rate * 100).toFixed(rate * 100 % 1 === 0 ? 0 : 2);
   return `By listing this property, I agree that if it sells through this platform, the platform retains a commission of ${pct}% of the final sale price. This is a legal agreement between the lister and the platform and does not involve any payment processing by the platform.`;
 }
-export const ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export function getPropertyTypeLabel(propertyType: string, propertyTypeOther?: string | null) {
   if (propertyType === "OTHER") {

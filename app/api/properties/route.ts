@@ -3,9 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
-import { savePropertyImage } from "@/lib/propertyImageStorage";
+import { savePropertyImage, savePropertyVideo } from "@/lib/propertyImageStorage";
 import { generateCommissionCertificatePdf } from "@/lib/commissionCertificate";
 import { saveCommissionCertificate } from "@/lib/commissionCertificateStorage";
+import { submitIdentityVerificationRequest } from "@/lib/identityVerificationRequest";
 import {
   PROPERTY_TYPES,
   LISTING_TYPES,
@@ -23,6 +24,8 @@ import {
   IMAGE_MAX_SIZE_BYTES,
   MAX_GALLERY_IMAGES,
   ALLOWED_IMAGE_MIME_TYPES,
+  VIDEO_MAX_SIZE_BYTES,
+  ALLOWED_VIDEO_MIME_TYPES,
   DEFAULT_COMMISSION_RATE,
   COMMISSION_AGREEMENT_VERSION,
   commissionAgreementText,
@@ -69,6 +72,10 @@ export async function POST(req: Request) {
     const signedName = str(formData, "signedName");
     const imageFile = formData.get("image");
     const galleryFiles = formData.getAll("galleryImages").filter((f): f is File => f instanceof File && f.size > 0);
+    // Optional — a listing can be created without a video and one can be added later from the
+    // edit page (see PropertyVideoManager / app/api/properties/[id]/video).
+    const videoFileRaw = formData.get("video");
+    const videoFile = videoFileRaw instanceof File && videoFileRaw.size > 0 ? videoFileRaw : null;
 
     if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
       return NextResponse.json(
@@ -227,6 +234,18 @@ export async function POST(req: Request) {
       }
     }
 
+    if (videoFile) {
+      if (videoFile.size > VIDEO_MAX_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: `Video is too large. Max size is ${Math.round(VIDEO_MAX_SIZE_BYTES / (1024 * 1024))}MB.` },
+          { status: 400 }
+        );
+      }
+      if (!ALLOWED_VIDEO_MIME_TYPES.includes(videoFile.type)) {
+        return NextResponse.json({ error: "Video must be an MP4, WebM, or MOV file." }, { status: 400 });
+      }
+    }
+
     // Best-effort — proxies/load balancers set these, but neither is guaranteed present.
     const ipAddress =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || null;
@@ -270,6 +289,21 @@ export async function POST(req: Request) {
       await prisma.propertyImage.createMany({
         data: galleryUrls.map((url) => ({ url, propertyId: property.id })),
       });
+    }
+
+    if (videoFile) {
+      const videoUrl = await savePropertyVideo(videoFile, property.id);
+      await prisma.property.update({ where: { id: property.id }, data: { videoUrl } });
+      property.videoUrl = videoUrl;
+    }
+
+    // Optional "also request identity verification" checkbox — best-effort side effect, never
+    // blocks or fails listing creation if the requester isn't currently eligible to request.
+    if (str(formData, "requestIdentityVerification") === "true") {
+      const requestingUser = await prisma.user.findUnique({ where: { id: session.user.id } });
+      if (requestingUser) {
+        await submitIdentityVerificationRequest(requestingUser);
+      }
     }
 
     // Full audit-trail row for this signing — separate from the denormalized

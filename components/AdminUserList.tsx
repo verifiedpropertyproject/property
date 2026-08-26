@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROLE_LABELS } from "@/lib/propertyConstants";
+import { getIdentityVerificationLabel } from "@/lib/identityVerification";
 
 type ManagedUser = {
   id: string;
@@ -12,6 +13,9 @@ type ManagedUser = {
   role: string | null;
   suspended: boolean;
   verified: boolean;
+  identityVerificationStatus: string;
+  identityVerificationNote: string | null;
+  identityVerificationRequestedAt: Date | null;
 };
 
 export default function AdminUserList({ users, currentUserId }: { users: ManagedUser[]; currentUserId: string }) {
@@ -19,6 +23,7 @@ export default function AdminUserList({ users, currentUserId }: { users: Managed
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [roleDrafts, setRoleDrafts] = useState<Record<string, string>>({});
+  const [rejectNoteDrafts, setRejectNoteDrafts] = useState<Record<string, string>>({});
 
   async function toggleSuspended(id: string, current: boolean) {
     setError("");
@@ -64,6 +69,34 @@ export default function AdminUserList({ users, currentUserId }: { users: Managed
         return;
       }
 
+      router.refresh();
+    } catch (err) {
+      setError("Could not reach the server. Check your connection and try again.");
+    } finally {
+      setLoadingId(null);
+    }
+  }
+
+  async function reviewIdentityVerification(id: string, decision: "APPROVED" | "REJECTED") {
+    setError("");
+    setLoadingId(id);
+
+    try {
+      const note = decision === "REJECTED" ? (rejectNoteDrafts[id] || "").trim() : undefined;
+      const res = await fetch(`/api/admin/users/${id}/identity-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision, ...(note ? { note } : {}) }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setError(data.error || `Failed to update identity verification (status ${res.status}).`);
+        return;
+      }
+
+      setRejectNoteDrafts((prev) => ({ ...prev, [id]: "" }));
       router.refresh();
     } catch (err) {
       setError("Could not reach the server. Check your connection and try again.");
@@ -169,12 +202,50 @@ export default function AdminUserList({ users, currentUserId }: { users: Managed
                     {u.verified ? "Verified" : "Not Verified"}
                   </span>
                 )}
+                {canBeVerified && u.identityVerificationStatus !== "NOT_SUBMITTED" && (
+                  <span>
+                    Identity check: {getIdentityVerificationLabel(u.identityVerificationStatus)}
+                  </span>
+                )}
                 {u.suspended && (
                   <span>
                     SUSPENDED
                   </span>
                 )}
               </div>
+
+              {canBeVerified && u.identityVerificationStatus === "REJECTED" && u.identityVerificationNote && (
+                <div>
+                  <small>Rejection note: {u.identityVerificationNote}</small>
+                </div>
+              )}
+
+              {canBeVerified && u.identityVerificationStatus === "PENDING" && !isSelf && (
+                <div>
+                  <small>Identity verification requested — review and decide:</small>
+                  <div>
+                    <button
+                      disabled={loadingId === u.id}
+                      onClick={() => reviewIdentityVerification(u.id, "APPROVED")}
+                    >
+                      {loadingId === u.id ? "Working..." : "Approve identity check"}
+                    </button>
+                    <input
+                      type="text"
+                      placeholder="Reason for rejection (optional)"
+                      value={rejectNoteDrafts[u.id] ?? ""}
+                      onChange={(e) => setRejectNoteDrafts((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                      disabled={loadingId === u.id}
+                    />
+                    <button
+                      disabled={loadingId === u.id}
+                      onClick={() => reviewIdentityVerification(u.id, "REJECTED")}
+                    >
+                      {loadingId === u.id ? "Working..." : "Reject identity check"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {isAdmin ? (
                 <small>
