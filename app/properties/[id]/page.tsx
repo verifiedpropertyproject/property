@@ -7,11 +7,9 @@ import EnquireForm from "@/components/EnquireForm";
 import SaveButton from "@/components/SaveButton";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import LocationView from "@/components/LocationView";
+import VerificationPanel from "@/components/VerificationPanel";
 import { getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
-import { getIdentityVerificationLabel } from "@/lib/identityVerification";
 import { toWhatsAppNumber } from "@/lib/phoneValidation";
-import { DOCUMENT_TYPE_LABELS } from "@/lib/documentStorage";
-import { getDaktopDecisionLabel } from "@/lib/verificationStatus";
 
 const AVAILABILITY_LABELS: Record<string, string> = {
   AVAILABLE: "Available",
@@ -24,7 +22,13 @@ function Badge({ label }: { label: string }) {
   return <span>{label}</span>;
 }
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
+export default async function PropertyDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { verification?: string };
+}) {
   const session = await getServerSession(authOptions);
 
   const property = await prisma.property.findUnique({
@@ -62,10 +66,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
   // from the phone/email contact info above, which stays admin-gated via showContact.
   const sellerListingCount = await prisma.property.count({
     where: { sellerId: property.sellerId, status: "APPROVED" },
-  });
-  const sellerMemberSinceLabel = property.seller.createdAt.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
   });
 
   const isOwner = session?.user?.id === property.sellerId;
@@ -218,20 +218,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
           <p>
             Listed by <strong>{property.seller.name || property.seller.email}</strong>{" "}
             ({getRoleLabel(property.seller.role)})
-            {property.seller.verified && <> — Verified {getRoleLabel(property.seller.role)}</>}
           </p>
-
-          <p>
-            Member since {sellerMemberSinceLabel} — {sellerListingCount} active listing
-            {sellerListingCount === 1 ? "" : "s"} on DAKTOP360
-            {property.daktopVerified && <> — Daktop Verified listing</>}
-          </p>
-
-          {property.seller.identityVerificationStatus !== "NOT_SUBMITTED" && (
-            <p>
-              Seller identity check: {getIdentityVerificationLabel(property.seller.identityVerificationStatus)}
-            </p>
-          )}
 
           {property.showContact && property.seller.phone ? (
             <p>
@@ -261,41 +248,24 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
           )}
         </section>
 
-        <section>
-          <h2>Daktop Verification</h2>
-
-          {property.daktopVerified && (
-            <p>
-              <Badge label="DAKTOP VERIFIED" /> — every check below has been completed.
-            </p>
-          )}
-
-          {property.documents.length > 0 ? (
-            <ul>
-              {property.documents.map((doc) => (
-                <li key={doc.id}>
-                  {(doc.documentType ? DOCUMENT_TYPE_LABELS[doc.documentType] : "Document")} received:{" "}
-                  {doc.verified ? "\u2713" : "Pending"}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No supporting documents submitted yet.</p>
-          )}
-
-          <p>
-            Location verification: {property.locationVerified ? "\u2713" : "Pending"}
-          </p>
-          <p>
-            Ownership verification: {property.ownershipVerified ? "\u2713" : "Pending"}
-          </p>
-          <p>
-            Survey verification: {property.surveyVerified ? "\u2713" : "Pending"}
-          </p>
-          <p>
-            Daktop Decision: {getDaktopDecisionLabel(property.daktopDecision)}
-          </p>
-        </section>
+        <VerificationPanel
+          daktopVerified={property.daktopVerified}
+          locationVerified={property.locationVerified}
+          ownershipVerified={property.ownershipVerified}
+          surveyVerified={property.surveyVerified}
+          daktopDecision={property.daktopDecision}
+          documents={property.documents}
+          seller={{
+            name: property.seller.name,
+            email: property.seller.email,
+            role: property.seller.role,
+            verified: property.seller.verified,
+            identityVerificationStatus: property.seller.identityVerificationStatus,
+            createdAt: property.seller.createdAt,
+          }}
+          sellerListingCount={sellerListingCount}
+          defaultOpen={searchParams?.verification === "1"}
+        />
 
         {!session?.user && (
           <section>

@@ -631,6 +631,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         .dk-seller-verified { color: var(--dk-primary); }
 
         .dk-contact-info { color: var(--dk-ink); display: block; font-size: 12.5px; margin-top: 5px; font-weight: 500; }
+        .dk-verification-link-wrap { margin-top: 8px; }
+        .dk-verification-link { font-size: 12.5px; font-weight: 600; color: var(--dk-primary); text-decoration: underline; }
 
         .dk-save-wrap { margin-top: auto; padding-top: 12px; }
       `}</style>
@@ -835,6 +837,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   {p.showContact && p.seller.phone && (
                     <small className="dk-contact-info">Contact: {p.seller.phone}</small>
                   )}
+
+                  <div className="dk-verification-link-wrap">
+                    <Link href={`/properties/${p.id}?verification=1#verification`} className="dk-verification-link">
+                      View verification
+                    </Link>
+                  </div>
 
                   {session?.user?.role === "BUYER" && (
                     <div className="dk-save-wrap">
