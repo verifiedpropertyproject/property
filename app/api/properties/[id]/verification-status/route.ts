@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
-import { DAKTOP_DECISIONS, recomputeDaktopVerified } from "@/lib/verificationStatus";
+import { notifyUser } from "@/lib/notify";
+import { DAKTOP_DECISIONS, getDaktopDecisionLabel, recomputeDaktopVerified } from "@/lib/verificationStatus";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -80,15 +81,34 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const daktopVerified = await recomputeDaktopVerified(params.id);
 
-    await prisma.notification.create({
-      data: {
-        message: daktopVerified
-          ? `Your listing "${property.title}" is now DAKTOP VERIFIED — everything has been checked.`
-          : `Daktop updated the verification status on your listing "${property.title}".`,
-        senderId: session.user.id,
-        receiverId: property.sellerId,
-        propertyId: property.id,
-      },
+    // Build a line per field that actually changed, so the seller/agent knows exactly what
+    // was updated rather than a generic "something changed" message.
+    const changeLines: string[] = [];
+    if (locationVerified !== undefined) {
+      changeLines.push(`Location verified: ${locationVerified ? "Yes" : "No"}`);
+    }
+    if (ownershipVerified !== undefined) {
+      changeLines.push(`Ownership verified: ${ownershipVerified ? "Yes" : "No"}`);
+    }
+    if (surveyVerified !== undefined) {
+      changeLines.push(`Survey verified: ${surveyVerified ? "Yes" : "No"}`);
+    }
+    if (daktopDecision !== undefined) {
+      changeLines.push(`Daktop decision: ${getDaktopDecisionLabel(daktopDecision)}`);
+    }
+
+    const updateMessage = `Daktop updated the verification status on your listing "${property.title}": ${changeLines.join(
+      "; "
+    )}.`;
+
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: property.sellerId,
+      message: daktopVerified
+        ? `Your listing "${property.title}" is now DAKTOP VERIFIED — everything has been checked.`
+        : updateMessage,
+      propertyId: property.id,
+      emailSubject: `Verification update on your listing "${property.title}"`,
     });
 
     return NextResponse.json({ ...updated, daktopVerified });

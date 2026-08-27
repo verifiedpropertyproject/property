@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { savePropertyImage, deletePropertyImage } from "@/lib/propertyImageStorage";
+import { notifyUsers } from "@/lib/notify";
 import {
   PROPERTY_TYPES,
   LISTING_TYPES,
@@ -242,14 +243,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (isResubmission) {
       const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
       if (admins.length > 0) {
-        await prisma.notification.createMany({
-          data: admins.map((admin: User) => ({
-            message: `${session.user.name || session.user.email} updated and resubmitted "${title}" for review.`,
+        await notifyUsers(
+          admins.map((admin: User) => ({
             senderId: session.user.id,
             receiverId: admin.id,
+            message: `${session.user.name || session.user.email} updated and resubmitted "${title}" for review.`,
             propertyId: updated.id,
-          })),
-        });
+            emailSubject: "Listing resubmitted for review",
+          }))
+        );
       }
     }
 

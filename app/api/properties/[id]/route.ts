@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -57,13 +58,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           ? `Changes were requested for your listing "${property.title}": ${note.trim()}`
           : `Your listing "${property.title}" was rejected.${note ? ` Reason: ${note.trim()}` : ""}`;
 
-    await prisma.notification.create({
-      data: {
-        message: outcomeMessage,
-        senderId: session.user.id,
-        receiverId: property.sellerId,
-        propertyId: property.id,
-      },
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: property.sellerId,
+      message: outcomeMessage,
+      propertyId: property.id,
+      emailSubject: `Update on your listing "${property.title}"`,
     });
 
     return NextResponse.json(updated);
@@ -90,12 +90,11 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     }
 
     // Let the seller know before the listing (and the notification's link to it) is gone
-    await prisma.notification.create({
-      data: {
-        message: `Your listing "${property.title}" was removed by an admin.`,
-        senderId: session.user.id,
-        receiverId: property.sellerId,
-      },
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: property.sellerId,
+      message: `Your listing "${property.title}" was removed by an admin.`,
+      emailSubject: `Your listing "${property.title}" was removed`,
     });
 
     // Enquiries and saves for this property are removed automatically (onDelete: Cascade);

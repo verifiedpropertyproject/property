@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -34,15 +35,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       data: { showContact },
     });
 
-    await prisma.notification.create({
-      data: {
-        message: showContact
-          ? `Your contact details are now shown publicly on "${property.title}".`
-          : `Your contact details are no longer shown publicly on "${property.title}".`,
-        senderId: session.user.id,
-        receiverId: property.sellerId,
-        propertyId: property.id,
-      },
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: property.sellerId,
+      message: showContact
+        ? `Your contact details are now shown publicly on "${property.title}".`
+        : `Your contact details are no longer shown publicly on "${property.title}".`,
+      propertyId: property.id,
+      emailSubject: `Update on your listing "${property.title}"`,
     });
 
     return NextResponse.json(updated);

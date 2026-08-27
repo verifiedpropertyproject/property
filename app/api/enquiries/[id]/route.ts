@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -38,23 +39,21 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     if (status === "APPROVED") {
       // Only now does the seller actually see it
-      await prisma.notification.create({
-        data: {
-          message: `${enquiry.buyer.name || enquiry.buyer.email} enquired about "${enquiry.property.title}": ${enquiry.message}`,
-          senderId: session.user.id,
-          receiverId: enquiry.property.sellerId,
-          propertyId: enquiry.propertyId,
-        },
+      await notifyUser({
+        senderId: session.user.id,
+        receiverId: enquiry.property.sellerId,
+        message: `${enquiry.buyer.name || enquiry.buyer.email} enquired about "${enquiry.property.title}": ${enquiry.message}`,
+        propertyId: enquiry.propertyId,
+        emailSubject: `New enquiry about "${enquiry.property.title}"`,
       });
     } else {
       // Let the buyer know their enquiry wasn't approved
-      await prisma.notification.create({
-        data: {
-          message: `Your enquiry about "${enquiry.property.title}" was not approved.`,
-          senderId: session.user.id,
-          receiverId: enquiry.buyerId,
-          propertyId: enquiry.propertyId,
-        },
+      await notifyUser({
+        senderId: session.user.id,
+        receiverId: enquiry.buyerId,
+        message: `Your enquiry about "${enquiry.property.title}" was not approved.`,
+        propertyId: enquiry.propertyId,
+        emailSubject: `Update on your enquiry about "${enquiry.property.title}"`,
       });
     }
 

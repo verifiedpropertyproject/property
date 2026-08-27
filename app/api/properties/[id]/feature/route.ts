@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -32,15 +33,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       data: { featured },
     });
 
-    await prisma.notification.create({
-      data: {
-        message: featured
-          ? `Your listing "${property.title}" was featured on the homepage.`
-          : `Your listing "${property.title}" is no longer featured.`,
-        senderId: session.user.id,
-        receiverId: property.sellerId,
-        propertyId: property.id,
-      },
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: property.sellerId,
+      message: featured
+        ? `Your listing "${property.title}" was featured on the homepage.`
+        : `Your listing "${property.title}" is no longer featured.`,
+      propertyId: property.id,
+      emailSubject: `Update on your listing "${property.title}"`,
     });
 
     return NextResponse.json(updated);

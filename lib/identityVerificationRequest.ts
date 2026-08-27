@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { canRequestIdentityVerification } from "@/lib/identityVerification";
+import { notifyUsers } from "@/lib/notify";
 import type { User } from "@prisma/client";
 
 // Shared by app/api/profile/identity-verification (dashboard request) and app/api/properties
@@ -24,13 +25,14 @@ export async function submitIdentityVerificationRequest(user: User): Promise<boo
 
   const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
   if (admins.length > 0) {
-    await prisma.notification.createMany({
-      data: admins.map((admin: User) => ({
-        message: `${user.name || user.email} requested identity verification.`,
+    await notifyUsers(
+      admins.map((admin: User) => ({
         senderId: user.id,
         receiverId: admin.id,
-      })),
-    });
+        message: `${user.name || user.email} requested identity verification.`,
+        emailSubject: "New identity verification request",
+      }))
+    );
   }
 
   return true;

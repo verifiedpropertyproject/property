@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUsers } from "@/lib/notify";
 import type { User } from "@prisma/client";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
@@ -49,14 +50,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
 
     if (admins.length > 0) {
-      await prisma.notification.createMany({
-        data: admins.map((admin: User) => ({
-          message: `${session.user.name || session.user.email} sent an enquiry about "${property.title}" that needs review.`,
+      await notifyUsers(
+        admins.map((admin: User) => ({
           senderId: session.user.id,
           receiverId: admin.id,
+          message: `${session.user.name || session.user.email} sent an enquiry about "${property.title}" that needs review.`,
           propertyId: property.id,
-        })),
-      });
+          emailSubject: "New enquiry needs review",
+        }))
+      );
     }
 
     return NextResponse.json(enquiry, { status: 201 });

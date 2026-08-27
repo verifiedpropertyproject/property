@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { recomputeDaktopVerified } from "@/lib/verificationStatus";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -38,17 +39,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const daktopVerified = await recomputeDaktopVerified(doc.property.id);
 
-    await prisma.notification.create({
-      data: {
-        message: daktopVerified
-          ? `Your listing "${doc.property.title}" is now DAKTOP VERIFIED — everything has been checked.`
-          : verified
-          ? `Daktop marked "${doc.fileName}" as received on your listing "${doc.property.title}".`
-          : `Daktop marked "${doc.fileName}" as pending review on your listing "${doc.property.title}".`,
-        senderId: session.user.id,
-        receiverId: doc.property.sellerId,
-        propertyId: doc.property.id,
-      },
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: doc.property.sellerId,
+      message: daktopVerified
+        ? `Your listing "${doc.property.title}" is now DAKTOP VERIFIED — everything has been checked.`
+        : verified
+        ? `Daktop marked "${doc.fileName}" as received on your listing "${doc.property.title}".`
+        : `Daktop marked "${doc.fileName}" as pending review on your listing "${doc.property.title}".`,
+      propertyId: doc.property.id,
+      emailSubject: `Document update on your listing "${doc.property.title}"`,
     });
 
     return NextResponse.json({ ...updated, daktopVerified });

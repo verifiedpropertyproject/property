@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUser } from "@/lib/notify";
 
 const AVAILABILITY_STATUSES = ["AVAILABLE", "RESERVED", "SOLD", "RENTED"];
 
@@ -49,13 +50,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     // Only notify if an admin made the change on someone else's behalf — no need to notify
     // yourself when you update your own listing.
     if (isAdmin && !isOwner) {
-      await prisma.notification.create({
-        data: {
-          message: `An admin marked "${property.title}" as ${availabilityStatus}.`,
-          senderId: session.user.id,
-          receiverId: property.sellerId,
-          propertyId: property.id,
-        },
+      await notifyUser({
+        senderId: session.user.id,
+        receiverId: property.sellerId,
+        message: `An admin marked "${property.title}" as ${availabilityStatus}.`,
+        propertyId: property.id,
+        emailSubject: `Availability updated on your listing "${property.title}"`,
       });
     }
 

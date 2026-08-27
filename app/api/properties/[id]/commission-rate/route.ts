@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -39,15 +40,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // Rate changes don't touch commissionAgreedAt/commissionAgreementText — the seller/agent's
     // original signed agreement stays on record as-is, at whatever wording/date they saw it.
-    await prisma.notification.create({
-      data: {
-        message: `The commission rate on your listing "${property.title}" was changed to ${(
-          commissionRate * 100
-        ).toFixed(commissionRate * 100 % 1 === 0 ? 0 : 2)}%.`,
-        senderId: session.user.id,
-        receiverId: property.sellerId,
-        propertyId: property.id,
-      },
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: property.sellerId,
+      message: `The commission rate on your listing "${property.title}" was changed to ${(
+        commissionRate * 100
+      ).toFixed(commissionRate * 100 % 1 === 0 ? 0 : 2)}%.`,
+      propertyId: property.id,
+      emailSubject: `Commission rate updated on your listing "${property.title}"`,
     });
 
     return NextResponse.json(updated);

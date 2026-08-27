@@ -7,6 +7,7 @@ import { savePropertyImage, savePropertyVideo } from "@/lib/propertyImageStorage
 import { generateCommissionCertificatePdf } from "@/lib/commissionCertificate";
 import { saveCommissionCertificate } from "@/lib/commissionCertificateStorage";
 import { submitIdentityVerificationRequest } from "@/lib/identityVerificationRequest";
+import { notifyUsers } from "@/lib/notify";
 import {
   PROPERTY_TYPES,
   LISTING_TYPES,
@@ -350,14 +351,15 @@ export async function POST(req: Request) {
     const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
 
     if (admins.length > 0) {
-      await prisma.notification.createMany({
-        data: admins.map((admin: User) => ({
-          message: `${session.user.name || session.user.email} listed a new property for review: "${title}"`,
+      await notifyUsers(
+        admins.map((admin: User) => ({
           senderId: session.user.id,
           receiverId: admin.id,
+          message: `${session.user.name || session.user.email} listed a new property for review: "${title}"`,
           propertyId: property.id,
-        })),
-      });
+          emailSubject: "New listing needs review",
+        }))
+      );
     }
 
     return NextResponse.json(property, { status: 201 });

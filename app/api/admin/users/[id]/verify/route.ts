@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { notifyUser } from "@/lib/notify";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -38,14 +39,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       data: { verified },
     });
 
-    await prisma.notification.create({
-      data: {
-        message: verified
-          ? "Your account is now marked as Verified."
-          : "Your account is no longer marked as Verified.",
-        senderId: session.user.id,
-        receiverId: updated.id,
-      },
+    await notifyUser({
+      senderId: session.user.id,
+      receiverId: updated.id,
+      message: verified
+        ? "Your account is now marked as Verified."
+        : "Your account is no longer marked as Verified.",
+      emailSubject: "Your account verification status changed",
     });
 
     return NextResponse.json({ id: updated.id, verified: updated.verified });
