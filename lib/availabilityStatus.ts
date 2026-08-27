@@ -26,16 +26,18 @@ export function getAvailabilityLabel(status: string): string {
 // for reserved (in progress), and a stronger tone for the two "gone" states so it reads as final
 // at a glance on cards, the detail page, and admin/dashboard lists alike.
 export const AVAILABILITY_BADGE_STYLES: Record<string, string> = {
-  AVAILABLE: "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200",
-  RESERVED: "bg-amber-50 text-amber-800 ring-1 ring-amber-200",
-  SOLD: "bg-rose-50 text-rose-800 ring-1 ring-rose-200",
-  RENTED: "bg-sky-50 text-sky-800 ring-1 ring-sky-200",
+  AVAILABLE:
+    "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/30",
+  RESERVED:
+    "bg-amber-50 text-amber-800 ring-1 ring-amber-200 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/30",
+  SOLD: "bg-rose-50 text-rose-800 ring-1 ring-rose-200 dark:bg-rose-400/10 dark:text-rose-300 dark:ring-rose-400/30",
+  RENTED: "bg-sky-50 text-sky-800 ring-1 ring-sky-200 dark:bg-sky-400/10 dark:text-sky-300 dark:ring-sky-400/30",
 };
 
 export function getAvailabilityBadgeClass(status: string): string {
   return (
     AVAILABILITY_BADGE_STYLES[status] ||
-    "bg-gray-50 text-gray-800 ring-1 ring-gray-200"
+    "bg-gray-50 text-gray-800 ring-1 ring-gray-200 dark:bg-gray-400/10 dark:text-gray-300 dark:ring-gray-400/30"
   );
 }
 

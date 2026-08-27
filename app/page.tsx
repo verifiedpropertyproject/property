@@ -14,6 +14,7 @@ import {
   isClosedAvailability,
 } from "@/lib/availabilityStatus";
 import BuySellCard from "@/components/BuySellCard";
+import ThemeToggle from "@/components/ThemeToggle";
 import PremiumSelect from "./PremiumSelect";
 
 type PropertyWithSeller = Property & {
@@ -165,7 +166,10 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
          ========================================================================== */}
       <style>{`
         .dk-page {
+          color-scheme: light;
+
           --dk-dark: #0b2e1f;
+          --dk-heading: var(--dk-dark);
           --dk-primary: #1f7a4c;
           --dk-primary-hover: #176339;
           --dk-primary-ring: rgba(31, 122, 76, 0.18);
@@ -191,6 +195,31 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           color: var(--dk-ink);
           font-family: var(--font-body);
           overflow-x: hidden;
+          transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* ---------- Dark mode ----------
+           Same tokens, repainted for a dark surface. --dk-dark stays a deep green
+           (it's also the "Featured" badge fill, which keeps white text on top of it),
+           so headings/price use their own --dk-heading token instead of reusing it. */
+        .dark .dk-page {
+          color-scheme: dark;
+
+          --dk-dark: #0e2e20;
+          --dk-heading: #eef2ea;
+          --dk-primary: #34a672;
+          --dk-primary-hover: #46b881;
+          --dk-primary-ring: rgba(52, 166, 114, 0.25);
+          --dk-ivory: #16241c;
+          --dk-card: #101a15;
+          --dk-border: #24352b;
+          --dk-ink: #e7eae4;
+          --dk-muted: #92a096;
+          --dk-gold: #d9a94a;
+          --dk-gold-deep: #f0c479;
+          --dk-gold-bg: rgba(217, 169, 74, 0.14);
+          --dk-shadow: rgba(0, 0, 0, 0.35);
+          --dk-shadow-strong: rgba(0, 0, 0, 0.55);
         }
 
         .dk-page * { box-sizing: border-box; }
@@ -267,7 +296,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           font-family: var(--font-display);
           font-weight: 600;
           font-optical-sizing: auto;
-          color: var(--dk-dark);
+          color: var(--dk-heading);
           margin: 0 0 16px;
           font-size: clamp(28px, 3.4vw, 41px);
           line-height: 1.14;
@@ -312,12 +341,31 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           border-radius: var(--radius-lg);
           padding: clamp(22px, 3vw, 30px);
           box-shadow: 0 1px 2px var(--dk-shadow);
+          transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
+
+        .dk-theme-toggle {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 34px;
+          height: 34px;
+          flex-shrink: 0;
+          border-radius: 999px;
+          border: 1px solid var(--dk-border);
+          background-color: var(--dk-ivory);
+          color: var(--dk-gold-deep);
+          cursor: pointer;
+          transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+        }
+        .dk-theme-toggle:hover { border-color: var(--dk-gold); transform: scale(1.05); }
+        .dk-theme-toggle:active { transform: scale(0.95); }
+        .dk-theme-toggle svg { width: 17px; height: 17px; }
 
         .dk-search-title {
           font-family: var(--font-display);
           font-weight: 600;
-          color: var(--dk-dark);
+          color: var(--dk-heading);
           margin: 0 0 8px;
           font-size: 19px;
         }
@@ -488,7 +536,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         .dk-listings-heading {
           font-family: var(--font-display);
           font-weight: 600;
-          color: var(--dk-dark);
+          color: var(--dk-heading);
           margin-bottom: 20px;
           font-size: 22px;
         }
@@ -521,7 +569,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           min-width: 0;
           animation: dkFadeInUp 0.45s ease both;
           box-shadow: 0 1px 2px var(--dk-shadow);
-          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+          transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.2s ease;
         }
         .dk-card:hover {
           transform: translateY(-6px);
@@ -609,7 +657,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         }
 
         .dk-price {
-          color: var(--dk-dark);
+          color: var(--dk-heading);
           font-family: var(--font-display);
           font-weight: 600;
           font-size: 20px;
@@ -639,7 +687,10 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         {/* ---------- Hero: intro + search panel ---------- */}
         <div className="dk-hero">
           <header className="dk-hero-intro">
-            <span className="dk-kicker">Verified property, East Africa</span>
+            <div className="flex items-center justify-between gap-3">
+              <span className="dk-kicker">Verified property, East Africa</span>
+              <ThemeToggle />
+            </div>
             <h1 className="dk-heading">A trusted marketplace for verified properties</h1>
             <p className="dk-lede">
               Buy and sell land, homes and commercial property with verified ownership and professional due
@@ -779,8 +830,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                     <Link href={`/properties/${p.id}`} className="dk-card-img-wrap relative block">
                       <img src={p.imageUrl} alt={p.title} className="dk-card-img" />
                       {isClosedAvailability(p.availabilityStatus) && (
-                        <span className="absolute inset-0 flex items-center justify-center bg-black/40">
-                          <span className="rounded-md bg-white/95 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-gray-900">
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/40 dark:bg-black/60">
+                          <span className="rounded-md bg-white/95 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-gray-900 dark:bg-neutral-900/95 dark:text-neutral-50">
                             {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
                           </span>
                         </span>

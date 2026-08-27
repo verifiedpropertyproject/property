@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+/* Class-based dark mode (Tailwind v4): toggling `dark` on <html> flips every
+   `dark:` utility in the app, instead of following the OS setting only. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  background-color: #ffffff;
+  transition: background-color 0.2s ease;
+}
+.dark body {
+  background-color: #101a15;
+}
