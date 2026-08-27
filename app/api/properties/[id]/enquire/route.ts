@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { notifyUsers } from "@/lib/notify";
+import { isClosedAvailability } from "@/lib/availabilityStatus";
 import type { User } from "@prisma/client";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
@@ -30,7 +31,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Property not found." }, { status: 404 });
     }
 
-    if (["SOLD", "RENTED"].includes(property.availabilityStatus)) {
+    if (isClosedAvailability(property.availabilityStatus)) {
       return NextResponse.json(
         { error: "This property is no longer accepting enquiries." },
         { status: 400 }

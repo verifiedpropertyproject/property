@@ -9,6 +9,7 @@ import DocumentVerifyButton from "@/components/DocumentVerifyButton";
 import VerificationStatusForm from "@/components/VerificationStatusForm";
 import { getRoleLabel } from "@/lib/propertyConstants";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documentTypes";
+import { getAvailabilityLabel, getAvailabilityBadgeClass } from "@/lib/availabilityStatus";
 
 type ManagedProperty = {
   id: string;
@@ -131,6 +132,13 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
             <div>
               <span>
                 Status: {p.status}
+              </span>
+              <span
+                className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getAvailabilityBadgeClass(
+                  p.availabilityStatus
+                )}`}
+              >
+                {getAvailabilityLabel(p.availabilityStatus)}
               </span>
               <span>
                 {p.verified ? "Verified" : "Not Verified"}

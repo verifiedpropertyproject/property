@@ -3,13 +3,12 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { AVAILABILITY_STATUSES, getAvailabilityLabel } from "@/lib/availabilityStatus";
 
-const AVAILABILITY_OPTIONS = [
-  { value: "AVAILABLE", label: "Available" },
-  { value: "RESERVED", label: "Reserved" },
-  { value: "SOLD", label: "Sold" },
-  { value: "RENTED", label: "Rented" },
-];
+const AVAILABILITY_OPTIONS = AVAILABILITY_STATUSES.map((value) => ({
+  value,
+  label: getAvailabilityLabel(value),
+}));
 
 export default function AvailabilityForm({
   propertyId,

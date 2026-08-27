@@ -8,6 +8,11 @@ import NotificationBell from "@/components/NotificationBell";
 
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS, getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import { getIdentityVerificationLabel } from "@/lib/identityVerification";
+import {
+  AVAILABILITY_LABELS,
+  getAvailabilityBadgeClass,
+  isClosedAvailability,
+} from "@/lib/availabilityStatus";
 import BuySellCard from "@/components/BuySellCard";
 import PremiumSelect from "./PremiumSelect";
 
@@ -24,13 +29,6 @@ type SearchParams = {
   minPrice?: string;
   maxPrice?: string;
   sort?: string;
-};
-
-const AVAILABILITY_LABELS: Record<string, string> = {
-  AVAILABLE: "Available",
-  RESERVED: "Reserved",
-  SOLD: "Sold",
-  RENTED: "Rented",
 };
 
 const LISTING_TYPE_OPTIONS = [
@@ -778,15 +776,26 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               {properties.map((p: PropertyWithSeller, index: number) => (
                 <li key={p.id} className="dk-card" style={{ animationDelay: `${Math.min(index, 10) * 0.06}s` }}>
                   {p.imageUrl && (
-                    <Link href={`/properties/${p.id}`} className="dk-card-img-wrap">
+                    <Link href={`/properties/${p.id}`} className="dk-card-img-wrap relative block">
                       <img src={p.imageUrl} alt={p.title} className="dk-card-img" />
+                      {isClosedAvailability(p.availabilityStatus) && (
+                        <span className="absolute inset-0 flex items-center justify-center bg-black/40">
+                          <span className="rounded-md bg-white/95 px-3 py-1 text-sm font-semibold uppercase tracking-wide text-gray-900">
+                            {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
+                          </span>
+                        </span>
+                      )}
                     </Link>
                   )}
 
                   <div className="dk-badge-row">
                     {p.featured && <span className="dk-badge dk-badge-featured">Featured</span>}
                     {p.daktopVerified && <VerifiedSeal />}
-                    <span className="dk-badge dk-badge-availability">
+                    <span
+                      className={`dk-badge dk-badge-availability inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getAvailabilityBadgeClass(
+                        p.availabilityStatus
+                      )}`}
+                    >
                       {AVAILABILITY_LABELS[p.availabilityStatus] || p.availabilityStatus}
                     </span>
                   </div>

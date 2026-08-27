@@ -3,9 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
-import { notifyUser } from "@/lib/notify";
-
-const AVAILABILITY_STATUSES = ["AVAILABLE", "RESERVED", "SOLD", "RENTED"];
+import { notifyUser, notifyUsers } from "@/lib/notify";
+import { AVAILABILITY_STATUSES, getAvailabilityLabel, isClosedAvailability } from "@/lib/availabilityStatus";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -47,16 +46,41 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       data: { availabilityStatus },
     });
 
+    const label = getAvailabilityLabel(availabilityStatus);
+
     // Only notify if an admin made the change on someone else's behalf — no need to notify
     // yourself when you update your own listing.
     if (isAdmin && !isOwner) {
       await notifyUser({
         senderId: session.user.id,
         receiverId: property.sellerId,
-        message: `An admin marked "${property.title}" as ${availabilityStatus}.`,
+        message: `An admin marked "${property.title}" as ${label}.`,
         propertyId: property.id,
         emailSubject: `Availability updated on your listing "${property.title}"`,
       });
+    }
+
+    // Let every buyer who saved this listing know it's changed, so the update reaches them
+    // even though they aren't watching the listing page live.
+    const savers = await prisma.savedProperty.findMany({
+      where: { propertyId: property.id },
+      select: { buyerId: true },
+    });
+
+    if (savers.length > 0) {
+      const message = isClosedAvailability(availabilityStatus)
+        ? `A property you saved, "${property.title}", is now marked ${label.toLowerCase()} and is no longer accepting enquiries.`
+        : `A property you saved, "${property.title}", is now marked ${label.toLowerCase()}.`;
+
+      await notifyUsers(
+        savers.map((s: { buyerId: string }) => ({
+          senderId: session.user.id,
+          receiverId: s.buyerId,
+          message,
+          propertyId: property.id,
+          emailSubject: `Availability updated on a listing you saved: "${property.title}"`,
+        }))
+      );
     }
 
     return NextResponse.json(updated);

@@ -15,7 +15,9 @@ import NotificationBell from "@/components/NotificationBell";
 import ResendVerificationButton from "@/components/ResendVerificationButton";
 import PhoneForm from "@/components/PhoneForm";
 import IdentityVerificationRequestForm from "@/components/IdentityVerificationRequestForm";
-import { ROLE_LABELS, getRoleLabel } from "@/lib/propertyConstants";
+import { ROLE_LABELS, getRoleLabel, getPropertyTypeLabel } from "@/lib/propertyConstants";
+import { getAvailabilityLabel } from "@/lib/availabilityStatus";
+import SaveButton from "@/components/SaveButton";
 
 type NotificationWithSender = Notification & {
   sender: Pick<User, "name" | "email" | "role">;
@@ -36,9 +38,13 @@ type ManagedProperty = Property & {
   documents: { id: string; documentType: string | null; verified: boolean }[];
 };
 
-type SavedWithProperty = SavedProperty & { property: Property };
+type SavedWithProperty = SavedProperty & {
+  property: Property & { seller: Pick<User, "name" | "email" | "role"> };
+};
 
-type EnquiryWithProperty = Enquiry & { property: Pick<Property, "id" | "title"> };
+type EnquiryWithProperty = Enquiry & {
+  property: Pick<Property, "id" | "title" | "price" | "imageUrl" | "location" | "availabilityStatus">;
+};
 
 type PendingEnquiry = Enquiry & {
   property: Pick<Property, "id" | "title">;
@@ -76,6 +82,20 @@ function statusTone(status: string): Tone {
     case "CHANGES_REQUESTED":
       return "warning";
     case "REJECTED":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
+function availabilityTone(status: string): Tone {
+  switch (status) {
+    case "AVAILABLE":
+      return "success";
+    case "RESERVED":
+      return "warning";
+    case "SOLD":
+    case "RENTED":
       return "danger";
     default:
       return "neutral";
@@ -380,7 +400,13 @@ export default async function DashboardPage({
     role === "BUYER"
       ? await prisma.savedProperty.findMany({
           where: { buyerId: currentUserId },
-          include: { property: true },
+          include: {
+            property: {
+              include: {
+                seller: { select: { name: true, email: true, role: true } },
+              },
+            },
+          },
           orderBy: { createdAt: "desc" },
         })
       : [];
@@ -389,7 +415,11 @@ export default async function DashboardPage({
     role === "BUYER"
       ? await prisma.enquiry.findMany({
           where: { buyerId: currentUserId },
-          include: { property: { select: { id: true, title: true } } },
+          include: {
+            property: {
+              select: { id: true, title: true, price: true, imageUrl: true, location: true, availabilityStatus: true },
+            },
+          },
           orderBy: { createdAt: "desc" },
         })
       : [];
@@ -441,7 +471,7 @@ export default async function DashboardPage({
         )}
         {role === "BUYER" && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <StatCard href="#saved-properties" chip="purple" icon={<IconHeart />} label="Saved Properties" value={savedProperties.length} />
+            <StatCard href="#saved-properties" chip="purple" icon={<IconHeart />} label="Favorites" value={savedProperties.length} />
             <StatCard href="#my-enquiries" chip="blue" icon={<IconMail />} label="Enquiries Sent" value={myEnquiries.length} />
             <StatCard href="#notifications" chip="amber" icon={<IconEye />} label="Notifications" value={receivedNotifications.length} />
           </div>
@@ -478,6 +508,7 @@ export default async function DashboardPage({
                         <div className="flex flex-wrap items-center gap-2">
                           <strong className="text-lg font-bold text-[#14231F]">{p.title}</strong>
                           <Badge label={p.status.replace("_", " ")} tone={statusTone(p.status)} />
+                          <Badge label={getAvailabilityLabel(p.availabilityStatus)} tone={availabilityTone(p.availabilityStatus)} />
                           {p.verified ? (
                             <Badge label="Verified" tone="success" />
                           ) : (
@@ -654,19 +685,69 @@ export default async function DashboardPage({
               </p>
             </Section>
 
-            <Section id="saved-properties" eyebrow={`${savedProperties.length} saved`} title="Your saved properties">
+            <Section id="saved-properties" eyebrow={`${savedProperties.length} saved`} title="Your favorites">
               {savedProperties.length === 0 ? (
-                <p className="text-sm text-[#566B60] m-0">You haven&apos;t saved any properties yet.</p>
+                <p className="text-sm text-[#566B60] m-0">
+                  You haven&apos;t favorited any properties yet. Browse the{" "}
+                  <Link href="/" className="font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
+                    homepage
+                  </Link>{" "}
+                  and tap &quot;Save property&quot; on any listing to add it here.
+                </p>
               ) : (
-                <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
-                  {savedProperties.map((s) => (
-                    <li key={s.id} className="list-none flex items-center justify-between gap-3 bg-white border border-[#E7EBE8] rounded-xl px-4 py-3">
-                      <Link href={`/properties/${s.property.id}`} className="font-semibold text-[#14231F] hover:text-[#17843C] no-underline">
-                        {s.property.title}
-                      </Link>
-                      <span className="text-sm font-semibold text-[#566B60] whitespace-nowrap">KSh {s.property.price.toLocaleString()}</span>
-                    </li>
-                  ))}
+                <ul className="list-none m-0 p-0 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {savedProperties.map((s) => {
+                    const p = s.property;
+                    const noLongerPublic = p.status !== "APPROVED";
+                    return (
+                      <li
+                        key={s.id}
+                        className="bg-white border border-[#E7EBE8] rounded-xl overflow-hidden transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]"
+                      >
+                        <Link href={`/properties/${p.id}`} className="block relative">
+                          {p.imageUrl ? (
+                            <img src={p.imageUrl} alt={p.title} className="w-full h-36 object-cover" />
+                          ) : (
+                            <div className="w-full h-36 bg-[#F4F6F5] flex items-center justify-center text-xs text-[#7C8A82]">
+                              No photo
+                            </div>
+                          )}
+                          <span className="absolute top-2 left-2">
+                            <Badge label={getAvailabilityLabel(p.availabilityStatus)} tone={availabilityTone(p.availabilityStatus)} />
+                          </span>
+                        </Link>
+
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-2">
+                            <Link href={`/properties/${p.id}`} className="font-bold text-[#14231F] hover:text-[#17843C] no-underline leading-snug">
+                              {p.title}
+                            </Link>
+                          </div>
+
+                          <div className="mt-1 text-sm font-semibold text-[#123B2B]">KSh {p.price.toLocaleString()}</div>
+
+                          <div className="mt-1 text-xs text-[#566B60]">
+                            {p.location} — {getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)} —{" "}
+                            {p.listingType === "SALE" ? "For sale" : "For rent"}
+                          </div>
+
+                          <div className="mt-1 text-xs text-[#7C8A82]">
+                            Listed by {p.seller.name || p.seller.email}
+                          </div>
+
+                          {noLongerPublic && (
+                            <div className="mt-2 text-xs italic text-[#8A6A2E]">
+                              This listing is no longer public ({p.status.replace("_", " ").toLowerCase()}).
+                            </div>
+                          )}
+
+                          <div className="mt-3">
+                            <SaveButton propertyId={p.id} initiallySaved={true} />
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </Section>
@@ -679,13 +760,43 @@ export default async function DashboardPage({
                   {myEnquiries.map((e: EnquiryWithProperty) => {
                     const { label, tone } = enquiryStatusLabelAndTone(e.status);
                     return (
-                      <li key={e.id} className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]">
-                        <Link href={`/properties/${e.property.id}`} className="text-lg font-bold text-[#14231F] hover:text-[#17843C] no-underline block">
-                          {e.property.title}
-                        </Link>
-                        <div className="text-sm text-[#566B60] mt-1">{e.message}</div>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <Badge label={label} tone={tone} />
+                      <li
+                        key={e.id}
+                        className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)] flex gap-4"
+                      >
+                        {e.property.imageUrl ? (
+                          <img
+                            src={e.property.imageUrl}
+                            alt={e.property.title}
+                            className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-lg bg-[#F4F6F5] flex-shrink-0 flex items-center justify-center text-[10px] text-[#7C8A82]">
+                            No photo
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <Link href={`/properties/${e.property.id}`} className="text-lg font-bold text-[#14231F] hover:text-[#17843C] no-underline block">
+                              {e.property.title}
+                            </Link>
+                            <span className="text-sm font-semibold text-[#123B2B] whitespace-nowrap">
+                              KSh {e.property.price.toLocaleString()}
+                            </span>
+                          </div>
+
+                          <div className="text-xs text-[#7C8A82] mt-0.5">{e.property.location}</div>
+
+                          <div className="text-sm text-[#566B60] mt-2">{e.message}</div>
+
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <Badge label={label} tone={tone} />
+                            <Badge label={getAvailabilityLabel(e.property.availabilityStatus)} tone={availabilityTone(e.property.availabilityStatus)} />
+                            <span className="text-xs text-[#7C8A82]">
+                              Sent {new Date(e.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </li>
                     );

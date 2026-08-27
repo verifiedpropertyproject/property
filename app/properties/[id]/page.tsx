@@ -11,16 +11,22 @@ import VerificationPanel from "@/components/VerificationPanel";
 import { getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import { toWhatsAppNumber } from "@/lib/phoneValidation";
 import { getAdminMailtoHref, getAdminCallHref, getAdminWhatsAppHref } from "@/lib/adminContact";
+import {
+  AVAILABILITY_LABELS,
+  getAvailabilityBadgeClass,
+  isClosedAvailability,
+} from "@/lib/availabilityStatus";
 
-const AVAILABILITY_LABELS: Record<string, string> = {
-  AVAILABLE: "Available",
-  RESERVED: "Reserved",
-  SOLD: "Sold",
-  RENTED: "Rented",
-};
-
-function Badge({ label }: { label: string }) {
-  return <span>{label}</span>;
+function Badge({ label, className }: { label: string; className?: string }) {
+  return (
+    <span
+      className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+        className || "bg-gray-100 text-gray-800 ring-1 ring-gray-200"
+      }`}
+    >
+      {label}
+    </span>
+  );
 }
 
 export default async function PropertyDetailPage({
@@ -138,6 +144,7 @@ export default async function PropertyDetailPage({
             />
             <Badge
               label={AVAILABILITY_LABELS[property.availabilityStatus] || property.availabilityStatus}
+              className={getAvailabilityBadgeClass(property.availabilityStatus)}
             />
             {property.status !== "APPROVED" && (
               <Badge label={`${property.status} — not yet public`} />
@@ -194,11 +201,20 @@ export default async function PropertyDetailPage({
 
           {property.imageUrl && (
             <div>
-              <img
-                src={property.imageUrl}
-                alt={property.title}
-                width={480}
-              />
+              <div className="relative inline-block">
+                <img
+                  src={property.imageUrl}
+                  alt={property.title}
+                  width={480}
+                />
+                {isClosedAvailability(property.availabilityStatus) && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <span className="rounded-md bg-white/95 px-4 py-1.5 text-base font-semibold uppercase tracking-wide text-gray-900">
+                      {AVAILABILITY_LABELS[property.availabilityStatus] || property.availabilityStatus}
+                    </span>
+                  </span>
+                )}
+              </div>
               {property.images.length > 0 && (
                 <div>
                   {property.images.map((img) => (
@@ -315,7 +331,7 @@ export default async function PropertyDetailPage({
             <div>
               <SaveButton propertyId={property.id} initiallySaved={alreadySaved} />
             </div>
-            {["SOLD", "RENTED"].includes(property.availabilityStatus) ? (
+            {isClosedAvailability(property.availabilityStatus) ? (
               <p>
                 This property is marked {AVAILABILITY_LABELS[property.availabilityStatus].toLowerCase()} and
                 is no longer accepting enquiries.
