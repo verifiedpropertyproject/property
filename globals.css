@@ -1,1 +1,63 @@
 @import "tailwindcss";
+
+
+/* app/globals.css */
+
+:root {
+  color-scheme: light;
+
+  --dk-dark: #0b2e1f;
+  --dk-heading: var(--dk-dark);
+  --dk-primary: #1f7a4c;
+  --dk-primary-hover: #176339;
+  --dk-primary-ring: rgba(31, 122, 76, 0.18);
+  --dk-ivory: #faf7f0;
+  --dk-card: #ffffff;
+  --dk-border: #e8e2d3;
+  --dk-ink: #1c2420;
+  --dk-muted: #6b6357;
+  --dk-gold: #b9872f;
+  --dk-gold-deep: #93691f;
+  --dk-gold-bg: #fbf3e4;
+  --dk-shadow: rgba(35, 28, 14, 0.08);
+  --dk-shadow-strong: rgba(35, 28, 14, 0.16);
+
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+
+  --radius-sm: 7px;
+  --radius-md: 11px;
+  --radius-lg: 18px;
+}
+
+/* Dark mode: repaint the same tokens */
+.dark {
+  color-scheme: dark;
+
+  --dk-dark: #0e2e20;
+  --dk-heading: #eef2ea;
+  --dk-primary: #34a672;
+  --dk-primary-hover: #46b881;
+  --dk-primary-ring: rgba(52, 166, 114, 0.25);
+  --dk-ivory: #16241c;
+  --dk-card: #101a15;
+  --dk-border: #24352b;
+  --dk-ink: #e7eae4;
+  --dk-muted: #92a096;
+  --dk-gold: #d9a94a;
+  --dk-gold-deep: #f0c479;
+  --dk-gold-bg: rgba(217, 169, 74, 0.14);
+  --dk-shadow: rgba(0, 0, 0, 0.35);
+  --dk-shadow-strong: rgba(0, 0, 0, 0.55);
+}
+
+body {
+  background-color: var(--dk-card);
+  color: var(--dk-ink);
+  font-family: var(--font-body);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* All your .dk-* component classes (dk-page, dk-hero, dk-card, dk-input,
+   dk-select, dk-badge, etc.) can now just be pasted in here verbatim —
+   drop the ".dk-page " prefix requirement since the tokens are global. */

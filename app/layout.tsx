@@ -2,6 +2,11 @@ import { ReactNode } from "react";
 import Providers from "./providers";
 import "./globals.css";
 
+
+
+
+
+
 export const metadata = {
   title: "Notify App",
   description: "Simple MVP with admin, buyer, and seller accounts",
