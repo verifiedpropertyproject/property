@@ -168,7 +168,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
          ========================================================================== */}
       
 
-<Nav></Nav>
+       <Nav session={session} />
+
       <div className="dk-container">
         {/* ---------- Hero: intro + search panel ---------- */}
         <div className="dk-hero">
