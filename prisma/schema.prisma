@@ -63,6 +63,7 @@ model User {
   properties              Property[]
   documents               PropertyDocument[]
   enquiries               Enquiry[]
+  viewingRequests         ViewingRequest[]
   savedProperties         SavedProperty[]
   sentNotifications       Notification[]           @relation("sender")
   receivedNotifications   Notification[]           @relation("receiver")
@@ -171,6 +172,7 @@ model Property {
   seller   User @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
   enquiries     Enquiry[]
+  viewingRequests ViewingRequest[]
   savedBy       SavedProperty[]
   notifications Notification[]
   documents     PropertyDocument[]
@@ -265,6 +267,26 @@ model Enquiry {
   message   String
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
+
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  buyerId String
+  buyer   User @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+}
+
+// A buyer's request to physically view a property in person. Same admin-moderated shape as
+// Enquiry above (an admin must approve before the seller sees it, to filter spam/abuse before
+// it turns into a real-world visit) — status: "PENDING" | "APPROVED" | "REJECTED".
+// preferredDate is the buyer's requested viewing date/time; the actual visit is then arranged
+// directly between buyer and seller (phone/notification), so there's no further in-app
+// scheduling state beyond this request's own approval status.
+model ViewingRequest {
+  id            String   @id @default(cuid())
+  preferredDate DateTime
+  message       String?
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
 
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)

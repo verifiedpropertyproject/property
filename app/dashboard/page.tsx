@@ -3,17 +3,19 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { Notification, Property, Enquiry, SavedProperty, User, Prisma } from "@prisma/client";
+import type { Notification, Property, Enquiry, ViewingRequest, SavedProperty, User, Prisma } from "@prisma/client";
 import PropertyForm from "@/components/PropertyForm";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import PropertyApprovalList from "@/components/PropertyApprovalList";
 import AdminPropertyList from "@/components/AdminPropertyList";
 import EnquiryApprovalList from "@/components/EnquiryApprovalList";
+import ViewingRequestApprovalList from "@/components/ViewingRequestApprovalList";
 import AdminUserList from "@/components/AdminUserList";
 import SignOutButton from "@/components/SignOutButton";
 import NotificationBell from "@/components/NotificationBell";
 import ResendVerificationButton from "@/components/ResendVerificationButton";
 import PhoneForm from "@/components/PhoneForm";
+import ProfileNameForm from "@/components/ProfileNameForm";
 import IdentityVerificationRequestForm from "@/components/IdentityVerificationRequestForm";
 import { ROLE_LABELS, getRoleLabel, getPropertyTypeLabel } from "@/lib/propertyConstants";
 import { getAvailabilityLabel } from "@/lib/availabilityStatus";
@@ -29,6 +31,7 @@ type PendingProperty = Property & {
 
 type MyPropertyWithEnquiries = Property & {
   enquiries: (Enquiry & { buyer: Pick<User, "name" | "email"> })[];
+  viewingRequests: (ViewingRequest & { buyer: Pick<User, "name" | "email"> })[];
   _count: { savedBy: number };
 };
 
@@ -47,6 +50,15 @@ type EnquiryWithProperty = Enquiry & {
 };
 
 type PendingEnquiry = Enquiry & {
+  property: Pick<Property, "id" | "title">;
+  buyer: Pick<User, "name" | "email">;
+};
+
+type ViewingRequestWithProperty = ViewingRequest & {
+  property: Pick<Property, "id" | "title" | "price" | "imageUrl" | "location" | "availabilityStatus">;
+};
+
+type PendingViewingRequest = ViewingRequest & {
   property: Pick<Property, "id" | "title">;
   buyer: Pick<User, "name" | "email">;
 };
@@ -106,6 +118,12 @@ function enquiryStatusLabelAndTone(status: string): { label: string; tone: Tone 
   if (status === "PENDING") return { label: "Awaiting admin review", tone: "warning" };
   if (status === "APPROVED") return { label: "Sent to seller", tone: "success" };
   return { label: "Not approved", tone: "danger" };
+}
+
+function viewingRequestStatusLabelAndTone(status: string): { label: string; tone: Tone } {
+  if (status === "PENDING") return { label: "Pending", tone: "warning" };
+  if (status === "APPROVED") return { label: "Confirmed", tone: "success" };
+  return { label: "Declined", tone: "danger" };
 }
 
 function Section({
@@ -185,6 +203,16 @@ function IconMail() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="5.5" width="18" height="13" rx="2" />
       <path d="m4 7 8 6 8-6" />
+    </svg>
+  );
+}
+
+function IconCalendar() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 9.5h17" />
+      <path d="M8 3v4M16 3v4" />
     </svg>
   );
 }
@@ -305,6 +333,11 @@ export default async function DashboardPage({
               where: { status: "APPROVED" },
               include: { buyer: { select: { name: true, email: true } } },
             },
+            viewingRequests: {
+              where: { status: "APPROVED" },
+              include: { buyer: { select: { name: true, email: true } } },
+              orderBy: { preferredDate: "asc" },
+            },
             _count: { select: { savedBy: true } },
           },
           orderBy: { createdAt: "desc" },
@@ -323,6 +356,18 @@ export default async function DashboardPage({
   const pendingEnquiries: PendingEnquiry[] =
     role === "ADMIN"
       ? await prisma.enquiry.findMany({
+          where: { status: "PENDING" },
+          include: {
+            property: { select: { id: true, title: true } },
+            buyer: { select: { name: true, email: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        })
+      : [];
+
+  const pendingViewingRequests: PendingViewingRequest[] =
+    role === "ADMIN"
+      ? await prisma.viewingRequest.findMany({
           where: { status: "PENDING" },
           include: {
             property: { select: { id: true, title: true } },
@@ -424,7 +469,21 @@ export default async function DashboardPage({
         })
       : [];
 
+  const myViewingRequests: ViewingRequestWithProperty[] =
+    role === "BUYER"
+      ? await prisma.viewingRequest.findMany({
+          where: { buyerId: currentUserId },
+          include: {
+            property: {
+              select: { id: true, title: true, price: true, imageUrl: true, location: true, availabilityStatus: true },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        })
+      : [];
+
   const totalEnquiriesOnMyListings = myProperties.reduce((sum, p) => sum + p.enquiries.length, 0);
+  const totalViewingRequestsOnMyListings = myProperties.reduce((sum, p) => sum + p.viewingRequests.length, 0);
   const totalViewsOnMyListings = myProperties.reduce((sum, p) => sum + p.views, 0);
   const totalSavedOnMyListings = myProperties.reduce((sum, p) => sum + p._count.savedBy, 0);
 
@@ -454,28 +513,71 @@ export default async function DashboardPage({
 
         {/* Stat row */}
         {(role === "OWNER" || role === "AGENT") && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <StatCard href="#my-listings" chip="green" icon={<IconHouse />} label="My Properties" value={myProperties.length} />
             <StatCard href="#my-listings" chip="blue" icon={<IconPeople />} label="Enquiries" value={totalEnquiriesOnMyListings} />
+            <StatCard href="#my-listings" chip="purple" icon={<IconCalendar />} label="Viewing Requests" value={totalViewingRequestsOnMyListings} />
             <StatCard href="#my-listings" chip="amber" icon={<IconEye />} label="Profile Views" value={totalViewsOnMyListings} />
             <StatCard href="#my-listings" chip="purple" icon={<IconHeart />} label="Saved by buyers" value={totalSavedOnMyListings} />
+            <StatCard href="#notifications" chip="amber" icon={<IconMail />} label="Notifications" value={receivedNotifications.length} />
           </div>
         )}
         {role === "ADMIN" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <StatCard href="#pending-listings" chip="amber" icon={<IconHouse />} label="Pending Listings" value={pendingProperties.length} />
             <StatCard href="#pending-enquiries" chip="blue" icon={<IconMail />} label="Pending Enquiries" value={pendingEnquiries.length} />
+            <StatCard href="#pending-viewing-requests" chip="purple" icon={<IconCalendar />} label="Pending Viewing Requests" value={pendingViewingRequests.length} />
             <StatCard href="#all-listings" chip="green" icon={<IconEye />} label="Total Listings" value={allProperties.length} />
             <StatCard href="#manage-users" chip="purple" icon={<IconPeople />} label="Total Users" value={allUsers.length} />
+            <StatCard href="#notifications" chip="amber" icon={<IconMail />} label="Notifications" value={receivedNotifications.length} />
           </div>
         )}
         {role === "BUYER" && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard href="#saved-properties" chip="purple" icon={<IconHeart />} label="Favorites" value={savedProperties.length} />
             <StatCard href="#my-enquiries" chip="blue" icon={<IconMail />} label="Enquiries Sent" value={myEnquiries.length} />
+            <StatCard href="#my-viewing-requests" chip="purple" icon={<IconCalendar />} label="Viewing Requests" value={myViewingRequests.length} />
             <StatCard href="#notifications" chip="amber" icon={<IconEye />} label="Notifications" value={receivedNotifications.length} />
           </div>
         )}
+
+        {/* Account profile */}
+        <Section eyebrow="Account" title="Profile">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+            <div className="flex items-start gap-4 md:w-64 flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-[#123B2B] text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
+                {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-bold text-[#14231F] leading-tight break-words m-0">
+                  {currentUser.name || "No name set"}
+                </p>
+                <p className="text-sm text-[#566B60] break-words mt-0.5 m-0">{currentUser.email}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <Badge label={getRoleLabel(role) || role} tone="role" />
+                  {currentUser.emailVerified ? (
+                    <Badge label="Email verified" tone="success" />
+                  ) : (
+                    <Badge label="Email not verified" tone="warning" />
+                  )}
+                  {(role === "OWNER" || role === "AGENT") &&
+                    (currentUser.verified ? (
+                      <Badge label="Verified account" tone="success" />
+                    ) : (
+                      <Badge label="Not verified" tone="neutral" />
+                    ))}
+                </div>
+                <p className="text-xs text-[#7C8A82] mt-2 m-0">
+                  Member since {new Date(currentUser.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-0 pt-1 md:pt-0 md:border-l md:border-[#EEF1EF] md:pl-8">
+              <ProfileNameForm currentName={currentUser.name} />
+            </div>
+          </div>
+        </Section>
 
         {/* Phone number */}
         <Section eyebrow="Contact" title="Phone number">
@@ -532,7 +634,8 @@ export default async function DashboardPage({
 
                         <div className="mt-3 text-xs text-[#7C8A82]">
                           {p.views} views · {p._count.savedBy} saved · {p.enquiries.length} enquir
-                          {p.enquiries.length === 1 ? "y" : "ies"}
+                          {p.enquiries.length === 1 ? "y" : "ies"} · {p.viewingRequests.length} viewing request
+                          {p.viewingRequests.length === 1 ? "" : "s"}
                         </div>
 
                         {p.adminNote && (p.status === "CHANGES_REQUESTED" || p.status === "REJECTED") && (
@@ -564,6 +667,21 @@ export default async function DashboardPage({
                             </ul>
                           </div>
                         )}
+
+                        {p.viewingRequests.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-[#EEF1EF]">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7A72] m-0 mb-2">Viewing requests</p>
+                            <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
+                              {p.viewingRequests.map((v: ViewingRequest & { buyer: Pick<User, "name" | "email"> }) => (
+                                <li key={v.id} className="text-sm text-[#566B60]">
+                                  <strong className="text-[#14231F]">{v.buyer.name || v.buyer.email}</strong> wants to view on{" "}
+                                  {new Date(v.preferredDate).toLocaleString()}
+                                  {v.message && <> — {v.message}</>}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </li>
                     );
                   })}
@@ -581,6 +699,10 @@ export default async function DashboardPage({
 
             <Section id="pending-enquiries" eyebrow={`${pendingEnquiries.length} pending`} title="Enquiries awaiting review">
               <EnquiryApprovalList enquiries={pendingEnquiries} />
+            </Section>
+
+            <Section id="pending-viewing-requests" eyebrow={`${pendingViewingRequests.length} pending`} title="Viewing requests awaiting review">
+              <ViewingRequestApprovalList viewingRequests={pendingViewingRequests} />
             </Section>
 
             <Section id="all-listings" eyebrow={`${allProperties.length} total`} title="All listings">
@@ -795,6 +917,63 @@ export default async function DashboardPage({
                             <Badge label={getAvailabilityLabel(e.property.availabilityStatus)} tone={availabilityTone(e.property.availabilityStatus)} />
                             <span className="text-xs text-[#7C8A82]">
                               Sent {new Date(e.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Section>
+
+            <Section id="my-viewing-requests" eyebrow={`${myViewingRequests.length} sent`} title="Your viewing requests">
+              {myViewingRequests.length === 0 ? (
+                <p className="text-sm text-[#566B60] m-0">You haven&apos;t requested any viewings yet.</p>
+              ) : (
+                <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
+                  {myViewingRequests.map((v: ViewingRequestWithProperty) => {
+                    const { label, tone } = viewingRequestStatusLabelAndTone(v.status);
+                    return (
+                      <li
+                        key={v.id}
+                        className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)] flex gap-4"
+                      >
+                        {v.property.imageUrl ? (
+                          <img
+                            src={v.property.imageUrl}
+                            alt={v.property.title}
+                            className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 rounded-lg bg-[#F4F6F5] flex-shrink-0 flex items-center justify-center text-[10px] text-[#7C8A82]">
+                            No photo
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <Link href={`/properties/${v.property.id}`} className="text-lg font-bold text-[#14231F] hover:text-[#17843C] no-underline block">
+                              {v.property.title}
+                            </Link>
+                            <span className="text-sm font-semibold text-[#123B2B] whitespace-nowrap">
+                              KSh {v.property.price.toLocaleString()}
+                            </span>
+                          </div>
+
+                          <div className="text-xs text-[#7C8A82] mt-0.5">{v.property.location}</div>
+
+                          <div className="text-sm text-[#566B60] mt-2">
+                            Requested viewing on <strong className="text-[#14231F]">{new Date(v.preferredDate).toLocaleString()}</strong>
+                          </div>
+
+                          {v.message && <div className="text-sm text-[#566B60] mt-1">{v.message}</div>}
+
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <Badge label={label} tone={tone} />
+                            <Badge label={getAvailabilityLabel(v.property.availabilityStatus)} tone={availabilityTone(v.property.availabilityStatus)} />
+                            <span className="text-xs text-[#7C8A82]">
+                              Sent {new Date(v.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                         </div>

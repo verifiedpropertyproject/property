@@ -4,6 +4,7 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import EnquireForm from "@/components/EnquireForm";
+import ViewingRequestForm from "@/components/ViewingRequestForm";
 import SaveButton from "@/components/SaveButton";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import LocationView from "@/components/LocationView";
@@ -342,6 +343,11 @@ export default async function PropertyDetailPage({
                   Contact the seller
                 </h2>
                 <EnquireForm propertyId={property.id} />
+
+                <h2>
+                  Request a viewing
+                </h2>
+                <ViewingRequestForm propertyId={property.id} />
               </>
             )}
           </section>
