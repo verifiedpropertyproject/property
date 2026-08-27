@@ -14,8 +14,10 @@ import {
   isClosedAvailability,
 } from "@/lib/availabilityStatus";
 import BuySellCard from "@/components/BuySellCard";
-import ThemeToggle from "@/components/ThemeToggle";
+// import ThemeToggle from "@/components/ThemeToggle";
 import PremiumSelect from "./PremiumSelect";
+import Nav from "@/components/Nav";
+
 
 type PropertyWithSeller = Property & {
   seller: Pick<User, "name" | "email" | "role" | "phone" | "verified" | "createdAt" | "identityVerificationStatus">;
@@ -166,13 +168,14 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
          ========================================================================== */}
       
 
+<Nav></Nav>
       <div className="dk-container">
         {/* ---------- Hero: intro + search panel ---------- */}
         <div className="dk-hero">
           <header className="dk-hero-intro">
             <div className="flex items-center justify-between gap-3">
               <span className="dk-kicker">Verified property, East Africa</span>
-              <ThemeToggle />
+              
             </div>
             <h1 className="dk-heading">A trusted marketplace for verified properties</h1>
             <p className="dk-lede">

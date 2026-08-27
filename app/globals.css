@@ -4,13 +4,13 @@
    `dark:` utility in the app, instead of following the OS setting only. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-body {
+/* body {
   background-color: #ffffff;
   transition: background-color 0.2s ease;
 }
 .dark body {
   background-color: #101a15;
-}
+} */
 
 :root{
 
@@ -530,6 +530,211 @@ body {
         .dk-verification-link { font-size: 12.5px; font-weight: 600; color: var(--dk-primary); text-decoration: underline; }
 
         .dk-save-wrap { margin-top: auto; padding-top: 12px; }
+
+
+
+
+
+
+        /* ---------- Nav ----------
+   Paste this inside the `.dk-page { ... }` block in global.css, right
+   after `.dk-save-wrap`, so it picks up the same --dk-* tokens and flips
+   correctly with .dark .dk-page. */
+
+.dk-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: var(--dk-card);
+  border-bottom: 1px solid var(--dk-border);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dk-nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 14px clamp(20px, 4vw, 48px);
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.dk-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--dk-heading);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.dk-nav-brand-mark {
+  display: inline-flex;
+  color: var(--dk-gold-deep);
+}
+.dk-nav-brand-mark svg { width: 20px; height: 20px; }
+
+.dk-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex: 1;
+}
+
+.dk-nav-link {
+  color: var(--dk-muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.dk-nav-link:hover { color: var(--dk-primary); }
+
+.dk-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+
+.dk-nav-auth {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dk-nav-cta {
+  background-color: var(--dk-primary);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+.dk-nav-cta:hover { background-color: var(--dk-primary-hover); }
+
+/* account dropdown */
+.dk-nav-account { position: relative; }
+
+.dk-nav-account-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 4px 10px 4px 4px;
+  cursor: pointer;
+  color: var(--dk-ink);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.dk-nav-account-trigger:hover { border-color: var(--dk-border); background-color: var(--dk-ivory); }
+
+.dk-nav-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background-color: var(--dk-gold-bg);
+  color: var(--dk-gold-deep);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dk-nav-account-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dk-nav-account-chevron { width: 12px; height: 12px; color: var(--dk-muted); }
+
+.dk-nav-account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: var(--dk-card);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 36px var(--dk-shadow-strong);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dk-nav-account-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--dk-ink);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  padding: 9px 11px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.dk-nav-account-item:hover { background-color: var(--dk-ivory); }
+.dk-nav-account-item-danger { color: #b23b3b; }
+
+/* hamburger (mobile only) */
+.dk-nav-burger {
+  display: none;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--dk-border);
+  background: var(--dk-ivory);
+  color: var(--dk-ink);
+  cursor: pointer;
+}
+.dk-nav-burger svg { width: 17px; height: 17px; }
+
+.dk-nav-mobile {
+  display: none;
+  flex-direction: column;
+  padding: 6px clamp(20px, 4vw, 48px) 18px;
+  border-top: 1px solid var(--dk-border);
+}
+.dk-nav-mobile-rule { border: none; border-top: 1px solid var(--dk-border); margin: 8px 0; }
+.dk-nav-mobile-link {
+  padding: 11px 2px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--dk-ink);
+  text-decoration: none;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+.dk-nav-mobile-link-danger { color: #b23b3b; }
+
+@media (max-width: 767px) {
+  .dk-nav-links,
+  .dk-nav-auth,
+  .dk-nav-account-name,
+  .dk-nav-account-chevron { display: none; }
+  .dk-nav-burger { display: inline-flex; }
+  .dk-nav-mobile { display: flex; }
+}
+
 
 
 }
