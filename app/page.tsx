@@ -17,6 +17,7 @@ import BuySellCard from "@/components/BuySellCard";
 // import ThemeToggle from "@/components/ThemeToggle";
 import PremiumSelect from "./PremiumSelect";
 import Nav from "@/components/Nav";
+import Footer from "@/components/Footer";
 
 
 type PropertyWithSeller = Property & {
@@ -403,6 +404,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         </section>
 
         <BuySellCard session={session} />
+        <Footer/>
       </div>
     </div>
   );

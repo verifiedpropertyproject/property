@@ -20,6 +20,7 @@ import IdentityVerificationRequestForm from "@/components/IdentityVerificationRe
 import { ROLE_LABELS, getRoleLabel, getPropertyTypeLabel } from "@/lib/propertyConstants";
 import { getAvailabilityLabel } from "@/lib/availabilityStatus";
 import SaveButton from "@/components/SaveButton";
+import Nav from "@/components/Nav";
 
 type NotificationWithSender = Notification & {
   sender: Pick<User, "name" | "email" | "role">;
@@ -490,7 +491,7 @@ export default async function DashboardPage({
   return (
     <div className="min-h-screen bg-[var(--dk-ivory)] font-sans text-[var(--dk-ink)]">
       <div className="max-w-[1120px] mx-auto px-5 py-8 pb-16 flex flex-col gap-6">
-        {/* Header */}
+         <Nav />
         <header className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-2xl p-6 md:p-7 md:flex-row flex flex-col gap-4 shadow-[0_1px_3px_var(--dk-shadow)] md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dk-muted)] m-0">Dashboard</p>

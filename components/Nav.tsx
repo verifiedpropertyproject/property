@@ -15,7 +15,11 @@ type NavSession = {
 } | null;
 
 // Adjust these to match your real routes.
-const PRIMARY_LINKS = [{ href: "/", label: "Browse" }];
+const PRIMARY_LINKS = [
+  { href: "/", label: "Browse" },
+  { href: "/?listingType=SALE", label: "Buy" },
+  { href: "/dashboard/listings/new", label: "Sell" },
+];
 
 function initialsFor(name?: string | null, email?: string | null) {
   const source = name?.trim() || email?.trim() || "";
