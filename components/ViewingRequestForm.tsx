@@ -12,6 +12,9 @@ function toLocalDateTimeInputValue(date: Date) {
   )}:${pad(date.getMinutes())}`;
 }
 
+const fieldInputClass =
+  "w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2.5 text-sm font-normal text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]";
+
 export default function ViewingRequestForm({ propertyId }: { propertyId: string }) {
   const [preferredDate, setPreferredDate] = useState("");
   const [message, setMessage] = useState("");
@@ -71,9 +74,9 @@ export default function ViewingRequestForm({ propertyId }: { propertyId: string 
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--dk-ink)]">
           Preferred date and time
           <input
             type="datetime-local"
@@ -81,29 +84,42 @@ export default function ViewingRequestForm({ propertyId }: { propertyId: string 
             onChange={(e) => setPreferredDate(e.target.value)}
             min={minDateTime}
             required
+            className={fieldInputClass}
           />
         </label>
       </div>
 
-      <div>
-        <label>
+      <div className="flex flex-col gap-1.5">
+        <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--dk-ink)]">
           Anything the seller should know? (optional)
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows={2}
+            className={`resize-y ${fieldInputClass}`}
           />
         </label>
       </div>
 
-      {error && <p>{error}</p>}
+      {error && (
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-3.5 py-2 text-sm text-[var(--dk-danger-ink)]">
+          {error}
+        </p>
+      )}
 
-      {success && <p>{success}</p>}
+      {success && (
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-primary)]/30 bg-[var(--dk-success-bg)] px-3.5 py-2 text-sm text-[var(--dk-primary)]">
+          {success}
+        </p>
+      )}
 
-      <button type="submit" disabled={loading}>
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+      >
         {loading ? "Sending..." : "Request a viewing"}
       </button>
     </form>
   );
 }
-

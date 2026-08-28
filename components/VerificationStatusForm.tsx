@@ -5,6 +5,9 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DAKTOP_DECISIONS, DAKTOP_DECISION_LABELS } from "@/lib/verificationStatus";
 
+const checkboxRowClass = "flex items-center gap-2 text-sm text-[var(--dk-ink)]";
+const checkboxInputClass = "h-4 w-4 shrink-0 accent-[var(--dk-primary)]";
+
 export default function VerificationStatusForm({
   propertyId,
   currentLocationVerified,
@@ -63,57 +66,69 @@ export default function VerificationStatusForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        <input
-          type="checkbox"
-          checked={locationVerified}
-          onChange={(e) => setLocationVerified(e.target.checked)}
-          disabled={loading}
-        />
-        {" "}Location verified
-      </label>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        <label className={checkboxRowClass}>
+          <input
+            type="checkbox"
+            checked={locationVerified}
+            onChange={(e) => setLocationVerified(e.target.checked)}
+            disabled={loading}
+            className={checkboxInputClass}
+          />
+          Location verified
+        </label>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={ownershipVerified}
-          onChange={(e) => setOwnershipVerified(e.target.checked)}
-          disabled={loading}
-        />
-        {" "}Ownership verified
-      </label>
+        <label className={checkboxRowClass}>
+          <input
+            type="checkbox"
+            checked={ownershipVerified}
+            onChange={(e) => setOwnershipVerified(e.target.checked)}
+            disabled={loading}
+            className={checkboxInputClass}
+          />
+          Ownership verified
+        </label>
 
-      <label>
-        <input
-          type="checkbox"
-          checked={surveyVerified}
-          onChange={(e) => setSurveyVerified(e.target.checked)}
-          disabled={loading}
-        />
-        {" "}Survey verified
-      </label>
+        <label className={checkboxRowClass}>
+          <input
+            type="checkbox"
+            checked={surveyVerified}
+            onChange={(e) => setSurveyVerified(e.target.checked)}
+            disabled={loading}
+            className={checkboxInputClass}
+          />
+          Survey verified
+        </label>
+      </div>
 
-      <label>
-        {" "}Daktop decision:{" "}
-        <select
-          value={daktopDecision}
-          onChange={(e) => setDaktopDecision(e.target.value)}
-          disabled={loading}
+      <div className="flex flex-wrap items-center gap-2.5">
+        <label className="flex items-center gap-2 text-sm font-medium text-[var(--dk-ink)]">
+          Daktop decision
+          <select
+            value={daktopDecision}
+            onChange={(e) => setDaktopDecision(e.target.value)}
+            disabled={loading}
+            className="rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2 text-sm text-[var(--dk-ink)] outline-none transition-colors duration-150 hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {DAKTOP_DECISIONS.map((d) => (
+              <option key={d} value={d}>
+                {DAKTOP_DECISION_LABELS[d]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="submit"
+          disabled={loading || unchanged}
+          className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {DAKTOP_DECISIONS.map((d) => (
-            <option key={d} value={d}>
-              {DAKTOP_DECISION_LABELS[d]}
-            </option>
-          ))}
-        </select>
-      </label>
+          {loading ? "Saving..." : "Update verification status"}
+        </button>
+      </div>
 
-      <button type="submit" disabled={loading || unchanged}>
-        {loading ? "Saving..." : "Update verification status"}
-      </button>
-
-      {error && <span> {error}</span>}
+      {error && <span className="w-full text-sm text-[var(--dk-danger-ink)]">{error}</span>}
     </form>
   );
 }
