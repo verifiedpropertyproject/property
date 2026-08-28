@@ -220,19 +220,21 @@ export default function LocationPicker({
           />
 
           {results.length > 0 && (
-            <ul className="dk-select-panel dk-select-open absolute m-0 list-none p-1.5" role="listbox">
-              {results.map((r) => (
-                <li key={r.placeId} className="dk-select-option">
-                  <button
-                    type="button"
-                    onClick={() => pickResult(r)}
-                    className="w-full text-left"
-                  >
-                    {r.address}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="dk-select-open">
+              <ul className="dk-select-panel m-0 list-none p-1.5" role="listbox">
+                {results.map((r) => (
+                  <li key={r.placeId} className="dk-select-option">
+                    <button
+                      type="button"
+                      onClick={() => pickResult(r)}
+                      className="w-full text-left"
+                    >
+                      {r.address}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </label>
