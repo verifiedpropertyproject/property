@@ -38,7 +38,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#F7F6F2] flex items-stretch font-sans">
+    <div className="min-h-screen w-full bg-[var(--dk-ivory)] flex items-stretch font-sans">
       <div className="mx-auto flex w-full max-w-6xl flex-col lg:flex-row lg:my-auto lg:h-[720px] lg:shadow-2xl lg:rounded-[28px] overflow-hidden">
         {/* Left panel — brand / imagery */}
         <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between bg-gradient-to-br from-[#0B3D2E] via-[#0F4A38] to-[#0B3D2E] p-12 text-white overflow-hidden">
@@ -95,33 +95,33 @@ export default function LoginPage() {
         </div>
 
         {/* Right panel — form */}
-        <div className="flex w-full flex-1 items-center justify-center bg-white px-6 py-12 sm:px-12 lg:w-1/2">
+        <div className="flex w-full flex-1 items-center justify-center bg-[var(--dk-card)] px-6 py-12 sm:px-12 lg:w-1/2">
           <div className="w-full max-w-sm">
             {/* Mobile-only brand mark */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#0B3D2E] text-lg font-bold text-[#C9A227]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--dk-dark)] text-lg font-bold text-[var(--dk-gold)]">
                 360
               </div>
               <div>
-                <div className="text-lg font-semibold tracking-wide text-[#0B3D2E]">
+                <div className="text-lg font-semibold tracking-wide text-[var(--dk-heading)]">
                   DAKTOP360
                 </div>
-                <div className="text-[11px] uppercase tracking-[0.25em] text-[#8A7A3D]">
+                <div className="text-[11px] uppercase tracking-[0.25em] text-[var(--dk-gold-deep)]">
                   Realtors Limited
                 </div>
               </div>
             </div>
 
-            <h1 className="text-2xl font-semibold text-[#0B3D2E] sm:text-3xl">
+            <h1 className="[font-family:var(--font-display)] text-2xl font-semibold text-[var(--dk-heading)] sm:text-3xl">
               Welcome back
             </h1>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-[var(--dk-muted)]">
               Log in to manage your listings and saved properties.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                <label className="mb-1.5 block text-sm font-medium text-[var(--dk-ink)]">
                   Email
                 </label>
                 <input
@@ -130,12 +130,12 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="you@example.com"
-                  className="w-full rounded-xl border border-gray-200 bg-[#FAFAF8] px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/30"
+                  className="w-full rounded-xl border border-[var(--dk-border)] bg-[var(--dk-card)] px-4 py-3 text-sm text-[var(--dk-ink)] placeholder:text-[var(--dk-muted)] outline-none transition focus:border-[var(--dk-gold)] focus:ring-2 focus:ring-[var(--dk-gold)]/30"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                <label className="mb-1.5 block text-sm font-medium text-[var(--dk-ink)]">
                   Password
                 </label>
                 <input
@@ -144,21 +144,21 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="••••••••"
-                  className="w-full rounded-xl border border-gray-200 bg-[#FAFAF8] px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/30"
+                  className="w-full rounded-xl border border-[var(--dk-border)] bg-[var(--dk-card)] px-4 py-3 text-sm text-[var(--dk-ink)] placeholder:text-[var(--dk-muted)] outline-none transition focus:border-[var(--dk-gold)] focus:ring-2 focus:ring-[var(--dk-gold)]/30"
                 />
               </div>
 
               <p className="text-right">
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-medium text-[#0B3D2E] underline-offset-2 hover:text-[#C9A227] hover:underline"
+                  className="text-sm font-medium text-[var(--dk-heading)] underline-offset-2 hover:text-[var(--dk-gold-deep)] hover:underline"
                 >
                   Forgot your password?
                 </Link>
               </p>
 
               {error && (
-                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+                <p className="rounded-lg bg-[var(--dk-danger-bg)] px-3 py-2 text-sm text-[var(--dk-danger-ink)]">
                   {error}
                 </p>
               )}
@@ -166,11 +166,11 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0B3D2E] px-4 py-3 text-sm font-semibold text-white shadow-md shadow-[#0B3D2E]/20 transition hover:bg-[#0F4A38] disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--dk-dark)] px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_18px_var(--dk-shadow-strong)] transition hover:bg-[#0F4A38] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {loading ? (
                   <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-[#C9A227]" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-[var(--dk-gold)]" />
                     Logging in...
                   </>
                 ) : (
@@ -180,16 +180,16 @@ export default function LoginPage() {
             </form>
 
             <div className="my-6 flex items-center gap-3">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-xs font-medium uppercase tracking-wider text-gray-400">
+              <div className="h-px flex-1 bg-[var(--dk-border)]" />
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--dk-muted)]">
                 Or
               </span>
-              <div className="h-px flex-1 bg-gray-200" />
+              <div className="h-px flex-1 bg-[var(--dk-border)]" />
             </div>
 
             <button
               onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--dk-border)] bg-[var(--dk-card)] px-4 py-3 text-sm font-medium text-[var(--dk-ink)] shadow-sm transition hover:border-[var(--dk-border-hover)] hover:bg-[var(--dk-ivory)]"
             >
               <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
                 <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z" />
@@ -200,9 +200,9 @@ export default function LoginPage() {
               Log in with Google
             </button>
 
-            <p className="mt-8 text-center text-sm text-gray-500">
+            <p className="mt-8 text-center text-sm text-[var(--dk-muted)]">
               Don&apos;t have an account?{" "}
-              <Link href="/register" className="font-semibold text-[#0B3D2E] hover:text-[#C9A227]">
+              <Link href="/register" className="font-semibold text-[var(--dk-heading)] hover:text-[var(--dk-gold-deep)]">
                 Register
               </Link>
             </p>

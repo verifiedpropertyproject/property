@@ -102,29 +102,32 @@ export default function ForgotPasswordPage() {
 function FpwStyles() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
       * { box-sizing: border-box; }
+
+      /* Uses the same --dk-* design tokens (defined in app/globals.css) as the rest of
+         the app, so this page follows light/dark mode instead of being stuck light-only. */
 
       .fpw-page {
         min-height: 100vh;
-        background: #F4F6F5;
-        font-family: 'Inter', -apple-system, sans-serif;
-        color: #17251E;
+        background: var(--dk-ivory);
+        font-family: var(--font-body);
+        color: var(--dk-ink);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 24px;
+        transition: background-color 0.2s ease, color 0.2s ease;
       }
 
       .fpw-card {
         width: 100%;
         max-width: 420px;
-        background: #FFFFFF;
-        border: 1px solid #E7EBE8;
+        background: var(--dk-card);
+        border: 1px solid var(--dk-border);
         border-radius: 16px;
         padding: 36px 32px;
-        box-shadow: 0 1px 3px rgba(15,61,43,0.06);
+        box-shadow: 0 1px 3px var(--dk-shadow);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
       }
 
       .fpw-eyebrow {
@@ -132,14 +135,15 @@ function FpwStyles() {
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: #6B7A72;
+        color: var(--dk-muted);
         margin: 0;
       }
 
       .fpw-title {
+        font-family: var(--font-display);
         font-size: 1.5rem;
-        font-weight: 700;
-        color: #14231F;
+        font-weight: 600;
+        color: var(--dk-heading);
         margin: 6px 0 0;
         line-height: 1.25;
       }
@@ -147,7 +151,7 @@ function FpwStyles() {
       .fpw-copy {
         font-size: 0.9rem;
         line-height: 1.55;
-        color: #566B60;
+        color: var(--dk-muted);
         margin: 12px 0 0;
       }
 
@@ -167,25 +171,25 @@ function FpwStyles() {
       .fpw-label {
         font-size: 0.78rem;
         font-weight: 600;
-        color: #3E4A44;
+        color: var(--dk-ink);
       }
 
       .fpw-input {
-        font-family: 'Inter', sans-serif;
+        font-family: var(--font-body);
         font-size: 0.92rem;
-        color: #14231F;
-        background: #FFFFFF;
-        border: 1px solid #DAE1DD;
+        color: var(--dk-ink);
+        background: var(--dk-card);
+        border: 1px solid var(--dk-border);
         border-radius: 10px;
         padding: 10px 14px;
         outline: none;
         width: 100%;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
       }
-      .fpw-input::placeholder { color: #9DA9A2; }
+      .fpw-input::placeholder { color: var(--dk-muted); }
       .fpw-input:focus-visible {
-        border-color: #17843C;
-        box-shadow: 0 0 0 3px rgba(23,132,60,0.15);
+        border-color: var(--dk-primary);
+        box-shadow: 0 0 0 3px var(--dk-primary-ring);
       }
 
       .fpw-alert {
@@ -196,40 +200,52 @@ function FpwStyles() {
         border-radius: 10px;
         border: 1px solid transparent;
       }
-      .fpw-alert--error { background: #FBE7E5; color: #C0392B; border-color: #F3CCC7; }
-      .fpw-alert--success { background: #E4F5E9; color: #17843C; border-color: #C8E9D3; }
-      .fpw-alert--info { background: #FCF0DC; color: #8A6A2E; border-color: #F2DDAE; }
+      .fpw-alert--error {
+        background: var(--dk-danger-bg);
+        color: var(--dk-danger-ink);
+        border-color: color-mix(in srgb, var(--dk-danger-ink) 35%, transparent);
+      }
+      .fpw-alert--success {
+        background: var(--dk-success-bg);
+        color: var(--dk-primary);
+        border-color: color-mix(in srgb, var(--dk-primary) 35%, transparent);
+      }
+      .fpw-alert--info {
+        background: var(--dk-gold-bg);
+        color: var(--dk-gold-deep);
+        border-color: var(--dk-gold);
+      }
 
       .fpw-reset-link {
         display: inline-block;
         margin-top: 6px;
-        color: #8A6A2E;
+        color: var(--dk-gold-deep);
         font-weight: 600;
         word-break: break-all;
         text-decoration: underline;
       }
-      .fpw-reset-link:hover { color: #6B5220; }
+      .fpw-reset-link:hover { color: var(--dk-gold); }
 
       .fpw-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-family: 'Inter', sans-serif;
+        font-family: var(--font-body);
         font-size: 0.92rem;
         font-weight: 600;
-        color: #FFFFFF;
-        background: #123B2B;
-        border: 1px solid #123B2B;
+        color: #ffffff;
+        background: var(--dk-primary);
+        border: 1px solid var(--dk-primary);
         border-radius: 10px;
         padding: 11px 18px;
         cursor: pointer;
-        transition: background 0.15s ease;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
         width: 100%;
       }
-      .fpw-button:hover:not(:disabled) { background: #0D2B1F; }
+      .fpw-button:hover:not(:disabled) { background: var(--dk-primary-hover); border-color: var(--dk-primary-hover); }
       .fpw-button:disabled { opacity: 0.65; cursor: not-allowed; }
       .fpw-button:focus-visible {
-        box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #17843C;
+        box-shadow: 0 0 0 2px var(--dk-card), 0 0 0 4px var(--dk-primary);
       }
 
       .fpw-footer {
@@ -238,11 +254,11 @@ function FpwStyles() {
         font-size: 0.88rem;
       }
       .fpw-link {
-        color: #17843C;
+        color: var(--dk-primary);
         font-weight: 600;
         text-decoration: none;
       }
-      .fpw-link:hover { color: #0F5D2A; text-decoration: underline; }
+      .fpw-link:hover { color: var(--dk-primary-hover); text-decoration: underline; }
 
       @media (prefers-reduced-motion: reduce) {
         * { transition-duration: 0.01ms !important; }
