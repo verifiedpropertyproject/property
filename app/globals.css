@@ -41,7 +41,11 @@
   --dk-info-ink: #2563ae;
   --dk-purple-bg: #efe7fa;
   --dk-purple-ink: #7c4ec4;
-  --dk-border-hover: #c7decf;
+  /* Warm border tone used on hover for inputs/selects/cards — previously hardcoded
+     as #d8cfba in three places, which meant it never repainted for dark mode. */
+  --dk-border-hover: #d8cfba;
+  /* Dimmer than --dk-muted, purely for input placeholder text. */
+  --dk-placeholder: #a39a89;
 
   --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -82,6 +86,7 @@
   --dk-purple-bg: rgba(158, 122, 214, 0.18);
   --dk-purple-ink: #b79bea;
   --dk-border-hover: #35493d;
+  --dk-placeholder: #5f6d63;
 }
 
 /* every interactive element gets ONE consistent green ring, never the
@@ -477,8 +482,8 @@ button:focus-visible,
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.dk-input::placeholder { color: #a39a89; }
-.dk-input:hover { border-color: #d8cfba; }
+.dk-input::placeholder { color: var(--dk-placeholder); }
+.dk-input:hover { border-color: var(--dk-border-hover); }
 .dk-input:focus {
   border-color: var(--dk-primary);
   box-shadow: 0 0 0 3px var(--dk-primary-ring);
@@ -505,8 +510,8 @@ button:focus-visible,
   text-align: left;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.dk-select-trigger:hover { border-color: #d8cfba; }
-.dk-select-placeholder { color: #a39a89; }
+.dk-select-trigger:hover { border-color: var(--dk-border-hover); }
+.dk-select-placeholder { color: var(--dk-placeholder); }
 
 .dk-select-chevron {
   width: 11px;
@@ -649,7 +654,7 @@ button:focus-visible,
 .dk-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 20px 34px var(--dk-shadow-strong);
-  border-color: #d8cfba;
+  border-color: var(--dk-border-hover);
 }
 
 .dk-card-img-wrap {
