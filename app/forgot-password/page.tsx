@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Nav from "@/components/Nav";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -44,6 +45,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="fpw-page">
+      <Nav/>
       <FpwStyles />
       <div className="fpw-card">
         <p className="fpw-eyebrow">Account recovery</p>

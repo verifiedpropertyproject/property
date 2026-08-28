@@ -404,8 +404,9 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         </section>
 
         <BuySellCard session={session} />
-        <Footer/>
       </div>
+        <Footer/>
+
     </div>
   );
 }
