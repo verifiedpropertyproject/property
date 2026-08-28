@@ -53,7 +53,13 @@ function ChevronIcon() {
   );
 }
 
-export default function Nav({ session }: { session: NavSession }) {
+
+  export default function Nav({ session }: { session?: NavSession }) {
+
+
+
+
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
