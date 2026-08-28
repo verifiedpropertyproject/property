@@ -48,13 +48,14 @@ export default function ResetPasswordForm({ token }: { token: string }) {
 
   if (success) {
     return (
-      <div>
-        <p>
+      <div className="mt-6">
+        <p className="rounded-lg border border-[var(--dk-border)] bg-[var(--dk-success-bg)] px-3.5 py-3 text-sm leading-relaxed text-[var(--dk-primary)]">
           Your password has been reset.
         </p>
-        <p>
+        <p className="mt-5 text-center text-sm">
           <Link
             href="/login"
+            className="font-semibold text-[var(--dk-primary)] transition-colors duration-150 hover:text-[var(--dk-primary-hover)] hover:underline"
           >
             Log in with your new password
           </Link>
@@ -64,35 +65,47 @@ export default function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="mt-6 space-y-5">
       <div>
-        <label>
+        <label
+          htmlFor="reset-password"
+          className="mb-1.5 block text-sm font-medium text-[var(--dk-ink)]"
+        >
           New password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
         </label>
+        <input
+          id="reset-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={6}
+          placeholder="••••••••"
+          className="w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3.5 py-2.5 text-sm text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]"
+        />
       </div>
 
       <div>
-        <label>
+        <label
+          htmlFor="reset-confirm-password"
+          className="mb-1.5 block text-sm font-medium text-[var(--dk-ink)]"
+        >
           Confirm new password
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            minLength={6}
-          />
         </label>
+        <input
+          id="reset-confirm-password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          minLength={6}
+          placeholder="••••••••"
+          className="w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3.5 py-2.5 text-sm text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]"
+        />
       </div>
 
       {error && (
-        <p>
+        <p className="rounded-lg border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-3.5 py-2.5 text-sm leading-relaxed text-[var(--dk-danger-ink)]">
           {error}
         </p>
       )}
@@ -100,8 +113,16 @@ export default function ResetPasswordForm({ token }: { token: string }) {
       <button
         type="submit"
         disabled={loading}
+        className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-3 text-sm font-semibold text-white shadow-[0_4px_10px_var(--dk-shadow)] transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Saving..." : "Set new password"}
+        {loading ? (
+          <>
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+            Saving...
+          </>
+        ) : (
+          "Set new password"
+        )}
       </button>
     </form>
   );
