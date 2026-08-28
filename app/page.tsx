@@ -180,13 +180,13 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <div className="dk-hero">
           <header className="dk-hero-intro">
             <div className="flex items-center justify-between gap-3">
-              <span className="dk-kicker">Verified property, East Africa</span>
+              <span className="dk-kicker">Premium property, Nairobi &amp; Kiambu</span>
               
             </div>
-            <h1 className="dk-heading">A trusted marketplace for verified properties</h1>
+            <h1 className="dk-heading">Nairobi and Kiambu's trusted marketplace for high-end properties</h1>
             <p className="dk-lede">
-              Buy and sell land, homes and commercial property with verified ownership and professional due
-              diligence.
+              Buy and sell premium homes, land and commercial property across Nairobi and Kiambu, with verified
+              ownership and professional due diligence on every listing.
             </p>
 
             {session?.user ? (
@@ -227,12 +227,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 </div>
 
                 <div className="dk-field">
-                  <label className="dk-field-label">Location / County</label>
+                  <label className="dk-field-label">Location</label>
                   <input
                     type="text"
                     name="location"
                     defaultValue={searchParams.location}
-                    placeholder="e.g. Kitengela"
+                    placeholder="e.g. Karen, Runda, Kiambu Road"
                     className="dk-input"
                   />
                 </div>
@@ -311,10 +311,10 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
         {/* ---------- Listings ---------- */}
         <section>
-          <h2 className="dk-listings-heading">Verified listings ({properties.length})</h2>
+          <h2 className="dk-listings-heading">Premium listings in Nairobi &amp; Kiambu ({properties.length})</h2>
 
           {properties.length === 0 ? (
-            <p className="dk-empty-state">No properties match your search. Try adjusting your filters.</p>
+            <p className="dk-empty-state">No premium properties match your search. Try adjusting your filters.</p>
           ) : (
             <ul className="dk-grid">
               {properties.map((p: PropertyWithSeller, index: number) => (

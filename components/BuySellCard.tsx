@@ -19,7 +19,7 @@ export default function BuySellCards({ session }: Props) {
         Whatever you&apos;re looking to do, we&apos;ve got you covered
       </h2>
       <p className="dk-lede mb-8 max-w-none">
-        List a property for sale or rent, or start browsing verified listings today.
+        List a premium property for sale or rent, or start browsing high-end listings across Nairobi and Kiambu today.
       </p>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -38,8 +38,8 @@ export default function BuySellCards({ session }: Props) {
             Sell or Rent Out a Property
           </h3>
           <p className="mb-5 text-sm leading-relaxed text-[var(--dk-muted)]">
-            List your land, home or commercial property and reach verified buyers and tenants across Kenya.
-            Our team handles due diligence so listings stay trustworthy.
+            List your premium land, home or commercial property and reach verified buyers and tenants across
+            Nairobi and Kiambu. Our team handles due diligence so listings stay trustworthy.
           </p>
 
           <Link
@@ -66,8 +66,8 @@ export default function BuySellCards({ session }: Props) {
             Find Your Next Property
           </h3>
           <p className="mb-5 text-sm leading-relaxed text-[var(--dk-muted)]">
-            Browse verified land, homes and commercial listings for sale or rent, save your favourites,
-            and connect directly with trusted sellers and agents.
+            Browse verified, high-end land, homes and commercial listings for sale or rent across Nairobi
+            and Kiambu, save your favourites, and connect directly with trusted sellers and agents.
           </p>
 
           <Link
