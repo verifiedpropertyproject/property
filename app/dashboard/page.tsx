@@ -70,12 +70,12 @@ type Tone = "role" | "success" | "warning" | "danger" | "accent" | "neutral";
 
 function Badge({ label, tone = "neutral" }: { label: string; tone?: Tone }) {
   const toneClasses = {
-    role: "bg-[#123B2B] text-white",
-    success: "bg-[#E4F5E9] text-[#17843C]",
-    warning: "bg-[#FCF0DC] text-[#B4770E]",
-    danger: "bg-[#FBE7E5] text-[#C0392B]",
-    accent: "bg-[#E4F5E9] text-[#17843C]",
-    neutral: "bg-[#EEF1EF] text-[#5B6660]",
+    role: "bg-[var(--dk-dark)] text-white",
+    success: "bg-[var(--dk-success-bg)] text-[var(--dk-primary)]",
+    warning: "bg-[var(--dk-gold-bg)] text-[var(--dk-gold-deep)]",
+    danger: "bg-[var(--dk-danger-bg)] text-[var(--dk-danger-ink)]",
+    accent: "bg-[var(--dk-success-bg)] text-[var(--dk-primary)]",
+    neutral: "bg-[var(--dk-border)] text-[var(--dk-muted)]",
   };
 
   return (
@@ -140,11 +140,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="bg-white border border-[#E7EBE8] rounded-2xl p-6 md:p-7 shadow-[0_1px_3px_rgba(15,61,43,0.05)]">
+    <section id={id} className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-2xl p-6 md:p-7 shadow-[0_1px_3px_var(--dk-shadow)]">
       <div className="mb-4.5 flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7A72] m-0">{eyebrow}</p>
-          <h2 className="text-lg font-bold mt-0.5 text-[#14231F]">{title}</h2>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dk-muted)] m-0">{eyebrow}</p>
+          <h2 className="[font-family:var(--font-display)] text-lg font-semibold mt-0.5 text-[var(--dk-heading)]">{title}</h2>
         </div>
         {action}
       </div>
@@ -231,22 +231,22 @@ function StatCard({
   value: number;
 }) {
   const chipClasses = {
-    green: "bg-[#E4F5E9] text-[#17843C]",
-    blue: "bg-[#E5EEFB] text-[#2563AE]",
-    amber: "bg-[#FCF0DC] text-[#B4770E]",
-    purple: "bg-[#EFE7FA] text-[#7C4EC4]",
+    green: "bg-[var(--dk-success-bg)] text-[var(--dk-primary)]",
+    blue: "bg-[var(--dk-info-bg)] text-[var(--dk-info-ink)]",
+    amber: "bg-[var(--dk-gold-bg)] text-[var(--dk-gold-deep)]",
+    purple: "bg-[var(--dk-purple-bg)] text-[var(--dk-purple-ink)]",
   };
 
   return (
-    <div className="bg-white border border-[#E7EBE8] rounded-2xl p-4.5 shadow-[0_1px_3px_rgba(15,61,43,0.05)]">
+    <div className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-2xl p-4.5 shadow-[0_1px_3px_var(--dk-shadow)]">
       <div className="flex items-center gap-2.5">
         <span className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${chipClasses[chip]}`}>
           <span className="w-4.5 h-4.5">{icon}</span>
         </span>
-        <span className="text-sm font-medium text-[#566B60]">{label}</span>
+        <span className="text-sm font-medium text-[var(--dk-muted)]">{label}</span>
       </div>
-      <div className="mt-2.5 text-[1.9rem] font-bold text-[#14231F] leading-none">{value}</div>
-      <Link href={href} className="inline-block mt-2 text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] no-underline">
+      <div className="mt-2.5 text-[1.9rem] font-bold text-[var(--dk-heading)] leading-none">{value}</div>
+      <Link href={href} className="inline-block mt-2 text-sm font-semibold text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] no-underline">
         View all &rarr;
       </Link>
     </div>
@@ -279,11 +279,11 @@ export default async function DashboardPage({
 
   if (currentUser.suspended) {
     return (
-      <div className="min-h-screen bg-[#F4F6F5] font-sans text-[#17251E] flex items-center justify-center p-6">
-        <div className="w-full max-w-[440px] bg-white border border-[#E7EBE8] rounded-2xl p-8 text-center shadow-[0_1px_3px_rgba(15,61,43,0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#C0392B] m-0">Account status</p>
-          <h1 className="text-[1.6rem] font-bold mt-0.5 text-[#14231F]">Account suspended</h1>
-          <p className="text-sm leading-6 text-[#566B60] mt-3">
+      <div className="min-h-screen bg-[var(--dk-ivory)] font-sans text-[var(--dk-ink)] flex items-center justify-center p-6">
+        <div className="w-full max-w-[440px] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-2xl p-8 text-center shadow-[0_1px_3px_var(--dk-shadow)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dk-danger-ink)] m-0">Account status</p>
+          <h1 className="text-[1.6rem] font-bold mt-0.5 text-[var(--dk-heading)]">Account suspended</h1>
+          <p className="text-sm leading-6 text-[var(--dk-muted)] mt-3">
             Your account has been suspended. Contact support if you believe this is a mistake.
           </p>
           <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
@@ -296,15 +296,15 @@ export default async function DashboardPage({
 
   if (!currentUser.emailVerified) {
     return (
-      <div className="min-h-screen bg-[#F4F6F5] font-sans text-[#17251E] flex items-center justify-center p-6">
-        <div className="w-full max-w-[440px] bg-white border border-[#E7EBE8] rounded-2xl p-8 text-center shadow-[0_1px_3px_rgba(15,61,43,0.06)]">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7A72] m-0">One step left</p>
-          <h1 className="text-[1.6rem] font-bold mt-0.5 text-[#14231F]">Verify your email</h1>
-          <p className="text-sm leading-6 text-[#566B60] mt-3">
+      <div className="min-h-screen bg-[var(--dk-ivory)] font-sans text-[var(--dk-ink)] flex items-center justify-center p-6">
+        <div className="w-full max-w-[440px] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-2xl p-8 text-center shadow-[0_1px_3px_var(--dk-shadow)]">
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dk-muted)] m-0">One step left</p>
+          <h1 className="text-[1.6rem] font-bold mt-0.5 text-[var(--dk-heading)]">Verify your email</h1>
+          <p className="text-sm leading-6 text-[var(--dk-muted)] mt-3">
             Please verify your email address (<strong>{currentUser.email}</strong>) before using
             your dashboard.
           </p>
-          <p className="text-sm leading-6 text-[#566B60] mt-3">
+          <p className="text-sm leading-6 text-[var(--dk-muted)] mt-3">
             If you registered with email/password, you should have seen a verification link right
             after signing up. If you didn&apos;t click it (or it expired), generate a new one
             below.
@@ -488,13 +488,13 @@ export default async function DashboardPage({
   const totalSavedOnMyListings = myProperties.reduce((sum, p) => sum + p._count.savedBy, 0);
 
   return (
-    <div className="min-h-screen bg-[#F4F6F5] font-sans text-[#17251E]">
+    <div className="min-h-screen bg-[var(--dk-ivory)] font-sans text-[var(--dk-ink)]">
       <div className="max-w-[1120px] mx-auto px-5 py-8 pb-16 flex flex-col gap-6">
         {/* Header */}
-        <header className="bg-white border border-[#E7EBE8] rounded-2xl p-6 md:p-7 md:flex-row flex flex-col gap-4 shadow-[0_1px_3px_rgba(15,61,43,0.05)] md:items-center md:justify-between">
+        <header className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-2xl p-6 md:p-7 md:flex-row flex flex-col gap-4 shadow-[0_1px_3px_var(--dk-shadow)] md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-[#6B7A72] m-0">Dashboard</p>
-            <h1 className="text-2xl font-bold mt-1 leading-tight text-[#14231F]">Welcome back, {session.user.name || session.user.email} 👋</h1>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dk-muted)] m-0">Dashboard</p>
+            <h1 className="[font-family:var(--font-display)] text-2xl font-semibold mt-1 leading-tight text-[var(--dk-heading)]">Welcome back, {session.user.name || session.user.email} 👋</h1>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge label={getRoleLabel(role) || role} tone="role" />
               {(role === "OWNER" || role === "AGENT") && currentUser.verified && (
@@ -545,14 +545,14 @@ export default async function DashboardPage({
         <Section eyebrow="Account" title="Profile">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8">
             <div className="flex items-start gap-4 md:w-64 flex-shrink-0">
-              <div className="w-14 h-14 rounded-full bg-[#123B2B] text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
+              <div className="w-14 h-14 rounded-full bg-[var(--dk-dark)] text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
                 {(currentUser.name || currentUser.email).charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-base font-bold text-[#14231F] leading-tight break-words m-0">
+                <p className="text-base font-bold text-[var(--dk-heading)] leading-tight break-words m-0">
                   {currentUser.name || "No name set"}
                 </p>
-                <p className="text-sm text-[#566B60] break-words mt-0.5 m-0">{currentUser.email}</p>
+                <p className="text-sm text-[var(--dk-muted)] break-words mt-0.5 m-0">{currentUser.email}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <Badge label={getRoleLabel(role) || role} tone="role" />
                   {currentUser.emailVerified ? (
@@ -567,13 +567,13 @@ export default async function DashboardPage({
                       <Badge label="Not verified" tone="neutral" />
                     ))}
                 </div>
-                <p className="text-xs text-[#7C8A82] mt-2 m-0">
+                <p className="text-xs text-[var(--dk-muted)] mt-2 m-0">
                   Member since {new Date(currentUser.createdAt).toLocaleDateString()}
                 </p>
               </div>
             </div>
 
-            <div className="flex-1 min-w-0 pt-1 md:pt-0 md:border-l md:border-[#EEF1EF] md:pl-8">
+            <div className="flex-1 min-w-0 pt-1 md:pt-0 md:border-l md:border-[var(--dk-border)] md:pl-8">
               <ProfileNameForm currentName={currentUser.name} />
             </div>
           </div>
@@ -601,14 +601,14 @@ export default async function DashboardPage({
 
             <Section id="my-listings" eyebrow={`${myProperties.length} total`} title="Your listings">
               {myProperties.length === 0 ? (
-                <p className="text-sm text-[#566B60] m-0">You haven&apos;t listed any properties yet.</p>
+                <p className="text-sm text-[var(--dk-muted)] m-0">You haven&apos;t listed any properties yet.</p>
               ) : (
                 <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
                   {myProperties.map((p) => {
                     return (
-                      <li key={p.id} className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]">
+                      <li key={p.id} className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[var(--dk-border-hover)] hover:shadow-[0_2px_8px_var(--dk-shadow-strong)]">
                         <div className="flex flex-wrap items-center gap-2">
-                          <strong className="text-lg font-bold text-[#14231F]">{p.title}</strong>
+                          <strong className="text-lg font-bold text-[var(--dk-heading)]">{p.title}</strong>
                           <Badge label={p.status.replace("_", " ")} tone={statusTone(p.status)} />
                           <Badge label={getAvailabilityLabel(p.availabilityStatus)} tone={availabilityTone(p.availabilityStatus)} />
                           {p.verified ? (
@@ -619,10 +619,10 @@ export default async function DashboardPage({
                           {p.featured && <Badge label="Featured" tone="accent" />}
                         </div>
 
-                        <div className="mt-2 text-lg font-bold text-[#123B2B]">KSh {p.price.toLocaleString()}</div>
+                        <div className="mt-2 text-lg font-bold text-[var(--dk-heading)]">KSh {p.price.toLocaleString()}</div>
 
                         {p.representingName && (
-                          <div className="mt-1.5 text-sm text-[#566B60]">
+                          <div className="mt-1.5 text-sm text-[var(--dk-muted)]">
                             Representing: {p.representingName}
                             {p.representingContact && <> ({p.representingContact})</>}
                           </div>
@@ -632,36 +632,36 @@ export default async function DashboardPage({
                           <AvailabilityForm propertyId={p.id} currentStatus={p.availabilityStatus} />
                         </div>
 
-                        <div className="mt-3 text-xs text-[#7C8A82]">
+                        <div className="mt-3 text-xs text-[var(--dk-muted)]">
                           {p.views} views · {p._count.savedBy} saved · {p.enquiries.length} enquir
                           {p.enquiries.length === 1 ? "y" : "ies"} · {p.viewingRequests.length} viewing request
                           {p.viewingRequests.length === 1 ? "" : "s"}
                         </div>
 
                         {p.adminNote && (p.status === "CHANGES_REQUESTED" || p.status === "REJECTED") && (
-                          <div className="mt-3 bg-[#FCF0DC] border border-[#F2DDAE] text-[#8A6A2E] rounded-xl px-3.5 py-2 text-sm italic">
+                          <div className="mt-3 bg-[var(--dk-gold-bg)] border border-[var(--dk-gold)] text-[var(--dk-gold-deep)] rounded-xl px-3.5 py-2 text-sm italic">
                             Admin note: {p.adminNote}
                           </div>
                         )}
 
                         <div className="mt-4 flex flex-wrap gap-2.5">
                           {["PENDING", "CHANGES_REQUESTED", "REJECTED"].includes(p.status) && (
-                            <Link href={`/properties/${p.id}/edit`} className="inline-flex items-center justify-center font-sans text-sm font-semibold text-[#123B2B] bg-white border border-[#DAE1DD] rounded-xl px-4.5 py-2 hover:bg-[#F4F6F5] hover:border-[#C7DECF] no-underline transition-colors duration-150">
+                            <Link href={`/properties/${p.id}/edit`} className="inline-flex items-center justify-center font-sans text-sm font-semibold text-[var(--dk-heading)] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl px-4.5 py-2 hover:bg-[var(--dk-ivory)] hover:border-[var(--dk-border-hover)] no-underline transition-colors duration-150">
                               {p.status === "PENDING" ? "Edit listing" : "Edit and resubmit"}
                             </Link>
                           )}
-                          <Link href={`/properties/${p.id}/documents`} className="inline-flex items-center justify-center font-sans text-sm font-semibold text-[#123B2B] bg-white border border-[#DAE1DD] rounded-xl px-4.5 py-2 hover:bg-[#F4F6F5] hover:border-[#C7DECF] no-underline transition-colors duration-150">
+                          <Link href={`/properties/${p.id}/documents`} className="inline-flex items-center justify-center font-sans text-sm font-semibold text-[var(--dk-heading)] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl px-4.5 py-2 hover:bg-[var(--dk-ivory)] hover:border-[var(--dk-border-hover)] no-underline transition-colors duration-150">
                             Manage documents
                           </Link>
                         </div>
 
                         {p.enquiries.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-[#EEF1EF]">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7A72] m-0 mb-2">Enquiries</p>
+                          <div className="mt-4 pt-4 border-t border-[var(--dk-border)]">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)] m-0 mb-2">Enquiries</p>
                             <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
                               {p.enquiries.map((e: Enquiry & { buyer: Pick<User, "name" | "email"> }) => (
-                                <li key={e.id} className="text-sm text-[#566B60]">
-                                  <strong className="text-[#14231F]">{e.buyer.name || e.buyer.email}</strong>: {e.message}
+                                <li key={e.id} className="text-sm text-[var(--dk-muted)]">
+                                  <strong className="text-[var(--dk-heading)]">{e.buyer.name || e.buyer.email}</strong>: {e.message}
                                 </li>
                               ))}
                             </ul>
@@ -669,12 +669,12 @@ export default async function DashboardPage({
                         )}
 
                         {p.viewingRequests.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-[#EEF1EF]">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7A72] m-0 mb-2">Viewing requests</p>
+                          <div className="mt-4 pt-4 border-t border-[var(--dk-border)]">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)] m-0 mb-2">Viewing requests</p>
                             <ul className="list-none m-0 p-0 flex flex-col gap-1.5">
                               {p.viewingRequests.map((v: ViewingRequest & { buyer: Pick<User, "name" | "email"> }) => (
-                                <li key={v.id} className="text-sm text-[#566B60]">
-                                  <strong className="text-[#14231F]">{v.buyer.name || v.buyer.email}</strong> wants to view on{" "}
+                                <li key={v.id} className="text-sm text-[var(--dk-muted)]">
+                                  <strong className="text-[var(--dk-heading)]">{v.buyer.name || v.buyer.email}</strong> wants to view on{" "}
                                   {new Date(v.preferredDate).toLocaleString()}
                                   {v.message && <> — {v.message}</>}
                                 </li>
@@ -706,11 +706,11 @@ export default async function DashboardPage({
             </Section>
 
             <Section id="all-listings" eyebrow={`${allProperties.length} total`} title="All listings">
-              <div className="flex flex-col gap-4 pb-5 border-b border-[#EEF1EF] mb-5 md:flex-row md:flex-wrap md:items-end md:justify-between">
+              <div className="flex flex-col gap-4 pb-5 border-b border-[var(--dk-border)] mb-5 md:flex-row md:flex-wrap md:items-end md:justify-between">
                 <FilterForm>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Filter by status</label>
-                    <select name="status" defaultValue={searchParams.status || ""} className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)]">Filter by status</label>
+                    <select name="status" defaultValue={searchParams.status || ""} className="font-sans text-sm text-[var(--dk-heading)] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl px-3.5 py-2 outline-none focus:shadow-[0_0_0_2px_var(--dk-card),0_0_0_4px_var(--dk-primary)]">
                       <option value="">All</option>
                       <option value="PENDING">Pending</option>
                       <option value="APPROVED">Approved</option>
@@ -718,28 +718,28 @@ export default async function DashboardPage({
                       <option value="REJECTED">Rejected</option>
                     </select>
                   </div>
-                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[var(--dk-primary)] border border-[var(--dk-primary)] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[var(--dk-primary-hover)]">
                     Filter
                   </button>
                 </FilterForm>
 
                 <FilterForm>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Search by seller name or phone</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)]">Search by seller name or phone</label>
                     <input
                       type="text"
                       name="q"
                       defaultValue={searchParams.q}
                       placeholder="e.g. Jane or 0712..."
-                      className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 w-auto md:w-55 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]"
+                      className="font-sans text-sm text-[var(--dk-heading)] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl px-3.5 py-2 w-auto md:w-55 outline-none focus:shadow-[0_0_0_2px_var(--dk-card),0_0_0_4px_var(--dk-primary)]"
                     />
                   </div>
-                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[var(--dk-primary)] border border-[var(--dk-primary)] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[var(--dk-primary-hover)]">
                     Search
                   </button>
                 </FilterForm>
 
-                <a href="/dashboard" className="text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
+                <a href="/dashboard" className="text-sm font-semibold text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] hover:underline no-underline">
                   Clear filters
                 </a>
               </div>
@@ -750,11 +750,11 @@ export default async function DashboardPage({
             </Section>
 
             <Section id="manage-users" eyebrow={`${allUsers.length} total`} title="Manage users">
-              <div className="flex flex-col gap-4 pb-5 border-b border-[#EEF1EF] mb-5 md:flex-row md:flex-wrap md:items-end md:justify-between">
+              <div className="flex flex-col gap-4 pb-5 border-b border-[var(--dk-border)] mb-5 md:flex-row md:flex-wrap md:items-end md:justify-between">
                 <FilterForm>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Filter by role</label>
-                    <select name="userRole" defaultValue={searchParams.userRole || ""} className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)]">Filter by role</label>
+                    <select name="userRole" defaultValue={searchParams.userRole || ""} className="font-sans text-sm text-[var(--dk-heading)] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl px-3.5 py-2 outline-none focus:shadow-[0_0_0_2px_var(--dk-card),0_0_0_4px_var(--dk-primary)]">
                       <option value="">All</option>
                       <option value="BUYER">{ROLE_LABELS.BUYER}</option>
                       <option value="OWNER">{ROLE_LABELS.OWNER}</option>
@@ -762,28 +762,28 @@ export default async function DashboardPage({
                       <option value="ADMIN">{ROLE_LABELS.ADMIN}</option>
                     </select>
                   </div>
-                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[var(--dk-primary)] border border-[var(--dk-primary)] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[var(--dk-primary-hover)]">
                     Filter
                   </button>
                 </FilterForm>
 
                 <FilterForm>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold uppercase tracking-wide text-[#7C8A82]">Search by name, email, or phone</label>
+                    <label className="text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)]">Search by name, email, or phone</label>
                     <input
                       type="text"
                       name="userQ"
                       defaultValue={searchParams.userQ}
                       placeholder="e.g. Jane, jane@example.com, or 0712..."
-                      className="font-sans text-sm text-[#14231F] bg-white border border-[#DAE1DD] rounded-xl px-3.5 py-2 w-auto md:w-55 outline-none focus:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#17843C]"
+                      className="font-sans text-sm text-[var(--dk-heading)] bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl px-3.5 py-2 w-auto md:w-55 outline-none focus:shadow-[0_0_0_2px_var(--dk-card),0_0_0_4px_var(--dk-primary)]"
                     />
                   </div>
-                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[#123B2B] border border-[#123B2B] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[#0D2B1F]">
+                  <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[var(--dk-primary)] border border-[var(--dk-primary)] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[var(--dk-primary-hover)]">
                     Search
                   </button>
                 </FilterForm>
 
-                <a href="/dashboard" className="text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
+                <a href="/dashboard" className="text-sm font-semibold text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] hover:underline no-underline">
                   Clear filters
                 </a>
               </div>
@@ -798,9 +798,9 @@ export default async function DashboardPage({
         {role === "BUYER" && (
           <>
             <Section eyebrow="Explore" title="Browse properties">
-              <p className="text-sm leading-6 text-[#566B60] mt-3">
+              <p className="text-sm leading-6 text-[var(--dk-muted)] mt-3">
                 Browse properties on the{" "}
-                <Link href="/" className="text-sm font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
+                <Link href="/" className="text-sm font-semibold text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] hover:underline no-underline">
                   homepage
                 </Link>
                 .
@@ -809,9 +809,9 @@ export default async function DashboardPage({
 
             <Section id="saved-properties" eyebrow={`${savedProperties.length} saved`} title="Your favorites">
               {savedProperties.length === 0 ? (
-                <p className="text-sm text-[#566B60] m-0">
+                <p className="text-sm text-[var(--dk-muted)] m-0">
                   You haven&apos;t favorited any properties yet. Browse the{" "}
-                  <Link href="/" className="font-semibold text-[#17843C] hover:text-[#0F5D2A] hover:underline no-underline">
+                  <Link href="/" className="font-semibold text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] hover:underline no-underline">
                     homepage
                   </Link>{" "}
                   and tap &quot;Save property&quot; on any listing to add it here.
@@ -824,13 +824,13 @@ export default async function DashboardPage({
                     return (
                       <li
                         key={s.id}
-                        className="bg-white border border-[#E7EBE8] rounded-xl overflow-hidden transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]"
+                        className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl overflow-hidden transition-shadow duration-150 ease-in hover:border-[var(--dk-border-hover)] hover:shadow-[0_2px_8px_var(--dk-shadow-strong)]"
                       >
                         <Link href={`/properties/${p.id}`} className="block relative">
                           {p.imageUrl ? (
                             <img src={p.imageUrl} alt={p.title} className="w-full h-36 object-cover" />
                           ) : (
-                            <div className="w-full h-36 bg-[#F4F6F5] flex items-center justify-center text-xs text-[#7C8A82]">
+                            <div className="w-full h-36 bg-[var(--dk-ivory)] flex items-center justify-center text-xs text-[var(--dk-muted)]">
                               No photo
                             </div>
                           )}
@@ -841,24 +841,24 @@ export default async function DashboardPage({
 
                         <div className="p-4">
                           <div className="flex items-start justify-between gap-2">
-                            <Link href={`/properties/${p.id}`} className="font-bold text-[#14231F] hover:text-[#17843C] no-underline leading-snug">
+                            <Link href={`/properties/${p.id}`} className="font-bold text-[var(--dk-heading)] hover:text-[var(--dk-primary)] no-underline leading-snug">
                               {p.title}
                             </Link>
                           </div>
 
-                          <div className="mt-1 text-sm font-semibold text-[#123B2B]">KSh {p.price.toLocaleString()}</div>
+                          <div className="mt-1 text-sm font-semibold text-[var(--dk-heading)]">KSh {p.price.toLocaleString()}</div>
 
-                          <div className="mt-1 text-xs text-[#566B60]">
+                          <div className="mt-1 text-xs text-[var(--dk-muted)]">
                             {p.location} — {getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)} —{" "}
                             {p.listingType === "SALE" ? "For sale" : "For rent"}
                           </div>
 
-                          <div className="mt-1 text-xs text-[#7C8A82]">
+                          <div className="mt-1 text-xs text-[var(--dk-muted)]">
                             Listed by {p.seller.name || p.seller.email}
                           </div>
 
                           {noLongerPublic && (
-                            <div className="mt-2 text-xs italic text-[#8A6A2E]">
+                            <div className="mt-2 text-xs italic text-[var(--dk-gold-deep)]">
                               This listing is no longer public ({p.status.replace("_", " ").toLowerCase()}).
                             </div>
                           )}
@@ -876,7 +876,7 @@ export default async function DashboardPage({
 
             <Section id="my-enquiries" eyebrow={`${myEnquiries.length} sent`} title="Your enquiries">
               {myEnquiries.length === 0 ? (
-                <p className="text-sm text-[#566B60] m-0">You haven&apos;t sent any enquiries yet.</p>
+                <p className="text-sm text-[var(--dk-muted)] m-0">You haven&apos;t sent any enquiries yet.</p>
               ) : (
                 <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
                   {myEnquiries.map((e: EnquiryWithProperty) => {
@@ -884,7 +884,7 @@ export default async function DashboardPage({
                     return (
                       <li
                         key={e.id}
-                        className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)] flex gap-4"
+                        className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[var(--dk-border-hover)] hover:shadow-[0_2px_8px_var(--dk-shadow-strong)] flex gap-4"
                       >
                         {e.property.imageUrl ? (
                           <img
@@ -893,29 +893,29 @@ export default async function DashboardPage({
                             className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-20 h-20 rounded-lg bg-[#F4F6F5] flex-shrink-0 flex items-center justify-center text-[10px] text-[#7C8A82]">
+                          <div className="w-20 h-20 rounded-lg bg-[var(--dk-ivory)] flex-shrink-0 flex items-center justify-center text-[10px] text-[var(--dk-muted)]">
                             No photo
                           </div>
                         )}
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-start justify-between gap-2">
-                            <Link href={`/properties/${e.property.id}`} className="text-lg font-bold text-[#14231F] hover:text-[#17843C] no-underline block">
+                            <Link href={`/properties/${e.property.id}`} className="text-lg font-bold text-[var(--dk-heading)] hover:text-[var(--dk-primary)] no-underline block">
                               {e.property.title}
                             </Link>
-                            <span className="text-sm font-semibold text-[#123B2B] whitespace-nowrap">
+                            <span className="text-sm font-semibold text-[var(--dk-heading)] whitespace-nowrap">
                               KSh {e.property.price.toLocaleString()}
                             </span>
                           </div>
 
-                          <div className="text-xs text-[#7C8A82] mt-0.5">{e.property.location}</div>
+                          <div className="text-xs text-[var(--dk-muted)] mt-0.5">{e.property.location}</div>
 
-                          <div className="text-sm text-[#566B60] mt-2">{e.message}</div>
+                          <div className="text-sm text-[var(--dk-muted)] mt-2">{e.message}</div>
 
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <Badge label={label} tone={tone} />
                             <Badge label={getAvailabilityLabel(e.property.availabilityStatus)} tone={availabilityTone(e.property.availabilityStatus)} />
-                            <span className="text-xs text-[#7C8A82]">
+                            <span className="text-xs text-[var(--dk-muted)]">
                               Sent {new Date(e.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -929,7 +929,7 @@ export default async function DashboardPage({
 
             <Section id="my-viewing-requests" eyebrow={`${myViewingRequests.length} sent`} title="Your viewing requests">
               {myViewingRequests.length === 0 ? (
-                <p className="text-sm text-[#566B60] m-0">You haven&apos;t requested any viewings yet.</p>
+                <p className="text-sm text-[var(--dk-muted)] m-0">You haven&apos;t requested any viewings yet.</p>
               ) : (
                 <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
                   {myViewingRequests.map((v: ViewingRequestWithProperty) => {
@@ -937,7 +937,7 @@ export default async function DashboardPage({
                     return (
                       <li
                         key={v.id}
-                        className="bg-white border border-[#E7EBE8] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)] flex gap-4"
+                        className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl p-4.5 md:p-5 transition-shadow duration-150 ease-in hover:border-[var(--dk-border-hover)] hover:shadow-[0_2px_8px_var(--dk-shadow-strong)] flex gap-4"
                       >
                         {v.property.imageUrl ? (
                           <img
@@ -946,33 +946,33 @@ export default async function DashboardPage({
                             className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
                           />
                         ) : (
-                          <div className="w-20 h-20 rounded-lg bg-[#F4F6F5] flex-shrink-0 flex items-center justify-center text-[10px] text-[#7C8A82]">
+                          <div className="w-20 h-20 rounded-lg bg-[var(--dk-ivory)] flex-shrink-0 flex items-center justify-center text-[10px] text-[var(--dk-muted)]">
                             No photo
                           </div>
                         )}
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-start justify-between gap-2">
-                            <Link href={`/properties/${v.property.id}`} className="text-lg font-bold text-[#14231F] hover:text-[#17843C] no-underline block">
+                            <Link href={`/properties/${v.property.id}`} className="text-lg font-bold text-[var(--dk-heading)] hover:text-[var(--dk-primary)] no-underline block">
                               {v.property.title}
                             </Link>
-                            <span className="text-sm font-semibold text-[#123B2B] whitespace-nowrap">
+                            <span className="text-sm font-semibold text-[var(--dk-heading)] whitespace-nowrap">
                               KSh {v.property.price.toLocaleString()}
                             </span>
                           </div>
 
-                          <div className="text-xs text-[#7C8A82] mt-0.5">{v.property.location}</div>
+                          <div className="text-xs text-[var(--dk-muted)] mt-0.5">{v.property.location}</div>
 
-                          <div className="text-sm text-[#566B60] mt-2">
-                            Requested viewing on <strong className="text-[#14231F]">{new Date(v.preferredDate).toLocaleString()}</strong>
+                          <div className="text-sm text-[var(--dk-muted)] mt-2">
+                            Requested viewing on <strong className="text-[var(--dk-heading)]">{new Date(v.preferredDate).toLocaleString()}</strong>
                           </div>
 
-                          {v.message && <div className="text-sm text-[#566B60] mt-1">{v.message}</div>}
+                          {v.message && <div className="text-sm text-[var(--dk-muted)] mt-1">{v.message}</div>}
 
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <Badge label={label} tone={tone} />
                             <Badge label={getAvailabilityLabel(v.property.availabilityStatus)} tone={availabilityTone(v.property.availabilityStatus)} />
-                            <span className="text-xs text-[#7C8A82]">
+                            <span className="text-xs text-[var(--dk-muted)]">
                               Sent {new Date(v.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -989,19 +989,19 @@ export default async function DashboardPage({
         {/* Notifications */}
         <Section id="notifications" eyebrow={`${receivedNotifications.length} total`} title="Notifications">
           {receivedNotifications.length === 0 ? (
-            <p className="text-sm text-[#566B60] m-0">No notifications yet.</p>
+            <p className="text-sm text-[var(--dk-muted)] m-0">No notifications yet.</p>
           ) : (
             <ul className="list-none m-0 p-0 flex flex-col gap-3.5">
               {receivedNotifications.map((n) => (
-                <li key={n.id} className="bg-white border border-[#E7EBE8] rounded-xl p-3.5 md:p-4 transition-shadow duration-150 ease-in hover:border-[#C7DECF] hover:shadow-[0_2px_8px_rgba(15,61,43,0.06)]">
+                <li key={n.id} className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-xl p-3.5 md:p-4 transition-shadow duration-150 ease-in hover:border-[var(--dk-border-hover)] hover:shadow-[0_2px_8px_var(--dk-shadow-strong)]">
                   {n.propertyId ? (
-                    <Link href={`/properties/${n.propertyId}`} className="text-sm font-semibold text-[#14231F] hover:text-[#17843C] no-underline">
+                    <Link href={`/properties/${n.propertyId}`} className="text-sm font-semibold text-[var(--dk-heading)] hover:text-[var(--dk-primary)] no-underline">
                       {n.message}
                     </Link>
                   ) : (
-                    <span className="text-sm font-semibold text-[#14231F]">{n.message}</span>
+                    <span className="text-sm font-semibold text-[var(--dk-heading)]">{n.message}</span>
                   )}
-                  <div className="text-xs text-[#7C8A82] mt-1.5 block">
+                  <div className="text-xs text-[var(--dk-muted)] mt-1.5 block">
                     From {n.sender.name || n.sender.email} — {new Date(n.createdAt).toLocaleString()}
                   </div>
                 </li>

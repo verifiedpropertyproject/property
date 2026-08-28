@@ -31,6 +31,18 @@
   --dk-shadow: rgba(35, 28, 14, 0.08);
   --dk-shadow-strong: rgba(35, 28, 14, 0.16);
 
+  /* Semantic tone tints, shared by badges, stat-card chips, and inline callouts
+     wherever a status needs a colored pill (dashboard, admin lists, etc). Warning
+     reuses the gold tokens above rather than duplicating them. */
+  --dk-success-bg: #e4f5e9;
+  --dk-danger-bg: #fbe7e5;
+  --dk-danger-ink: #c0392b;
+  --dk-info-bg: #e5eefb;
+  --dk-info-ink: #2563ae;
+  --dk-purple-bg: #efe7fa;
+  --dk-purple-ink: #7c4ec4;
+  --dk-border-hover: #c7decf;
+
   --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 
@@ -61,6 +73,15 @@
   --dk-gold-bg: rgba(217, 169, 74, 0.14);
   --dk-shadow: rgba(0, 0, 0, 0.35);
   --dk-shadow-strong: rgba(0, 0, 0, 0.55);
+
+  --dk-success-bg: rgba(52, 166, 114, 0.16);
+  --dk-danger-bg: rgba(224, 92, 74, 0.18);
+  --dk-danger-ink: #e2695a;
+  --dk-info-bg: rgba(88, 149, 214, 0.18);
+  --dk-info-ink: #7fb0e8;
+  --dk-purple-bg: rgba(158, 122, 214, 0.18);
+  --dk-purple-ink: #b79bea;
+  --dk-border-hover: #35493d;
 }
 
 /* every interactive element gets ONE consistent green ring, never the
