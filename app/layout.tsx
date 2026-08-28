@@ -7,9 +7,11 @@ import "./globals.css";
 
 
 
+
+
 export const metadata = {
-  title: "Notify App",
-  description: "Simple MVP with admin, buyer, and seller accounts",
+  title: "Daktop 360",
+  description: "Buy and Sell premium properties across Nairobi and Kiambu",
 };
 
 // Runs before hydration so the correct theme is applied on first paint — otherwise a

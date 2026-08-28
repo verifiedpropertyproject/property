@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import Nav from "@/components/Nav";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,6 +41,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full bg-[var(--dk-ivory)] flex items-stretch font-sans">
       <div className="mx-auto flex w-full max-w-6xl flex-col lg:flex-row lg:my-auto lg:h-[720px] lg:shadow-2xl lg:rounded-[28px] overflow-hidden">
+        
         {/* Left panel — brand / imagery */}
         <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between bg-gradient-to-br from-[#0B3D2E] via-[#0F4A38] to-[#0B3D2E] p-12 text-white overflow-hidden">
           {/* Skyline silhouette signature element */}
