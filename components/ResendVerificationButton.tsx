@@ -58,7 +58,7 @@ export default function ResendVerificationButton() {
       )}
 
       {verifyUrl && (
-        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-2 text-sm text-[var(--dk-ink)] break-words">
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-info-ink)]/30 bg-[var(--dk-info-bg)] px-3.5 py-2 text-sm text-[var(--dk-info-ink)] break-words">
           Real email sending isn&apos;t configured, so here&apos;s your link directly:
           <br />
           <a href={verifyUrl} className="text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] break-all">
