@@ -18,6 +18,7 @@ import BuySellCard from "@/components/BuySellCard";
 import PremiumSelect from "./PremiumSelect";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import PropertyBackground from "@/components/PropertyBackground";
 
 
 type PropertyWithSeller = Property & {
@@ -173,7 +174,10 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
       <div className="dk-container">
         {/* ---------- Hero: intro + search panel ---------- */}
-        <div className="dk-hero">
+        <div className="dk-hero-section">
+          <PropertyBackground />
+
+          <div className="dk-hero">
           <header className="dk-hero-intro">
             <div className="flex items-center justify-between gap-3">
               <span className="dk-kicker">Verified property, East Africa</span>
@@ -300,6 +304,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               </div>
             </form>
           </section>
+          </div>
         </div>
 
         <hr className="dk-divider" />

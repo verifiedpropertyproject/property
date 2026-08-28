@@ -131,6 +131,7 @@ button:focus-visible,
   z-index: 40;
   background-color: var(--dk-card);
   border-bottom: 1px solid var(--dk-border);
+  box-shadow: 0 1px 0 var(--dk-shadow);
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -140,7 +141,7 @@ button:focus-visible,
   padding: 14px clamp(20px, 4vw, 48px);
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
 }
 
 .dk-nav-brand {
@@ -150,37 +151,69 @@ button:focus-visible,
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 18px;
+  letter-spacing: -0.01em;
   color: var(--dk-heading);
   text-decoration: none;
   flex-shrink: 0;
+  transition: opacity 0.2s ease;
 }
+.dk-nav-brand:hover { opacity: 0.82; }
 .dk-nav-brand-mark {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background-color: var(--dk-gold-bg);
   color: var(--dk-gold-deep);
+  flex-shrink: 0;
 }
-.dk-nav-brand-mark svg { width: 20px; height: 20px; }
+.dk-nav-brand-mark svg { width: 18px; height: 18px; }
 
 .dk-nav-links {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 6px;
   flex: 1;
+  min-width: 0;
 }
 
 .dk-nav-link {
-  color: var(--dk-muted);
-  font-size: 14px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--dk-ink);
+  font-size: 13.5px;
   font-weight: 500;
   text-decoration: none;
-  transition: color 0.2s ease;
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
-.dk-nav-link:hover { color: var(--dk-primary); }
+.dk-nav-link:hover { color: var(--dk-primary); background-color: var(--dk-ivory); }
+.dk-nav-link-active {
+  color: var(--dk-primary);
+  font-weight: 600;
+}
+.dk-nav-link-active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 1px;
+  height: 2px;
+  border-radius: 999px;
+  background-color: var(--dk-primary);
+}
 
 .dk-nav-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .dk-nav-auth {
@@ -293,11 +326,11 @@ button:focus-visible,
 .dk-nav-account-item:hover { background-color: var(--dk-ivory); }
 .dk-nav-account-item-danger { color: #b23b3b; }
 
-/* hamburger (mobile only) */
+/* hamburger (mobile/tablet only) */
 .dk-nav-burger {
   display: none;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
@@ -305,19 +338,42 @@ button:focus-visible,
   background: var(--dk-ivory);
   color: var(--dk-ink);
   cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
 }
+.dk-nav-burger:hover { border-color: var(--dk-gold); }
+.dk-nav-burger:active { transform: scale(0.94); }
 .dk-nav-burger svg { width: 17px; height: 17px; }
 
+/* Collapsible drawer: kept in the DOM (not display:none) and animated by
+   grid-template-rows so open/close can transition smoothly instead of
+   snapping — the inner wrapper collapses to zero height, not the drawer
+   itself, which is what makes the height auto-animate. */
 .dk-nav-mobile {
   display: none;
-  flex-direction: column;
-  padding: 6px clamp(20px, 4vw, 48px) 18px;
-  border-top: 1px solid var(--dk-border);
+  grid-template-rows: 0fr;
+  border-top: 1px solid transparent;
+  transition: grid-template-rows 0.28s ease, border-color 0.28s ease;
 }
-.dk-nav-mobile-rule { border: none; border-top: 1px solid var(--dk-border); margin: 8px 0; }
+.dk-nav-mobile > * { min-height: 0; }
+.dk-nav-mobile-open {
+  grid-template-rows: 1fr;
+  border-top-color: var(--dk-border);
+}
+.dk-nav-mobile-links,
+.dk-nav-mobile-foot {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.dk-nav-mobile-links { padding: 10px clamp(20px, 4vw, 48px) 0; gap: 2px; }
+.dk-nav-mobile-foot { padding: 0 clamp(20px, 4vw, 48px) 18px; gap: 2px; }
+
+.dk-nav-mobile-rule { border: none; border-top: 1px solid var(--dk-border); margin: 10px clamp(20px, 4vw, 48px); }
+
 .dk-nav-mobile-link {
-  padding: 11px 2px;
-  font-size: 14.5px;
+  padding: 12px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
   font-weight: 500;
   color: var(--dk-ink);
   text-decoration: none;
@@ -325,16 +381,56 @@ button:focus-visible,
   border: none;
   text-align: left;
   cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
+.dk-nav-mobile-link:hover { background-color: var(--dk-ivory); }
+.dk-nav-mobile-link-active { color: var(--dk-primary); font-weight: 600; background-color: var(--dk-ivory); }
 .dk-nav-mobile-link-danger { color: #b23b3b; }
 
-@media (max-width: 767px) {
+.dk-nav-mobile-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 14px;
+}
+.dk-nav-mobile-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dk-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dk-nav-mobile-cta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--dk-primary);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+.dk-nav-mobile-cta:hover { background-color: var(--dk-primary-hover); }
+
+@media (max-width: 1023px) {
   .dk-nav-links,
   .dk-nav-auth,
   .dk-nav-account-name,
   .dk-nav-account-chevron { display: none; }
   .dk-nav-burger { display: inline-flex; }
-  .dk-nav-mobile { display: flex; }
+  .dk-nav-mobile { display: grid; }
+}
+
+@media (max-width: 480px) {
+  .dk-nav-brand span:last-child,
+  .dk-nav-brand { font-size: 16.5px; }
+  .dk-nav-inner { padding-top: 12px; padding-bottom: 12px; }
 }
 
 /* ==========================================================================
@@ -361,12 +457,125 @@ button:focus-visible,
   padding: clamp(20px, 4vw, 48px);
 }
 
+/* ==========================================================================
+   Hero background — a subtle, property-themed animated scene sitting behind
+   the hero copy and search panel. Pure CSS keyframes (no JS), and every
+   animation is zeroed out by the existing prefers-reduced-motion rule above.
+   ========================================================================== */
+
+.dk-hero-section {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  isolation: isolate; /* keeps the bg's z-index contained to this box */
+}
+
+.dk-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  color: var(--dk-border);
+  transition: color 0.2s ease;
+}
+
+.dk-hero-bg-glow {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  width: 70%;
+  min-width: 480px;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--dk-primary-ring), transparent 72%);
+  opacity: 0.9;
+}
+
+/* clouds drift left-to-right at different depths/speeds */
+.dk-hero-bg-cloud {
+  position: absolute;
+  width: 130px;
+  color: var(--dk-border);
+  opacity: 0.65;
+}
+.dark .dk-hero-bg-cloud { color: rgba(255, 255, 255, 0.06); opacity: 1; }
+.dk-hero-bg-cloud-1 { top: 6%; left: -140px; width: 150px; animation: dkDrift 42s linear infinite; }
+.dk-hero-bg-cloud-2 { top: 18%; left: -140px; width: 100px; opacity: 0.7; animation: dkDrift 58s linear infinite; animation-delay: -20s; }
+.dk-hero-bg-cloud-3 { top: 2%; left: -140px; width: 80px; opacity: 0.55; animation: dkDrift 70s linear infinite; animation-delay: -45s; }
+
+/* map-pin markers bob gently, as if marking listings on a map */
+.dk-hero-bg-pin {
+  position: absolute;
+  width: 20px;
+  color: var(--dk-gold);
+  opacity: 0.5;
+  animation: dkBob 5s ease-in-out infinite;
+}
+.dark .dk-hero-bg-pin { color: var(--dk-gold-deep); opacity: 0.4; }
+.dk-hero-bg-pin-1 { top: 14%; right: 30%; animation-delay: 0s; }
+.dk-hero-bg-pin-2 { top: 42%; right: 8%; width: 16px; opacity: 0.4; animation-delay: -1.7s; }
+.dk-hero-bg-pin-3 { top: 66%; right: 20%; width: 14px; opacity: 0.32; animation-delay: -3.2s; }
+
+/* house / search / key outlines float slowly with a slight rotation */
+.dk-hero-bg-icon {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  color: var(--dk-primary);
+  opacity: 0.14;
+  animation: dkFloat 9s ease-in-out infinite;
+}
+.dark .dk-hero-bg-icon { opacity: 0.16; }
+.dk-hero-bg-icon-1 { top: 10%; right: 14%; width: 46px; height: 46px; animation-duration: 10s; }
+.dk-hero-bg-icon-2 { top: 55%; right: 34%; animation-duration: 8s; animation-delay: -2.5s; }
+.dk-hero-bg-icon-3 { top: 28%; right: 46%; width: 28px; height: 28px; animation-duration: 11s; animation-delay: -5s; }
+
+/* skyline silhouette sits along the bottom edge of the hero */
+.dk-hero-bg-skyline {
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  bottom: -6px;
+  width: 104%;
+  height: 90px;
+  color: var(--dk-border);
+  opacity: 0.75;
+}
+.dark .dk-hero-bg-skyline { color: rgba(255, 255, 255, 0.05); opacity: 1; }
+
+@keyframes dkDrift {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(100vw + 200px)); }
+}
+@keyframes dkBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes dkFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-6px, -14px) rotate(-4deg); }
+}
+
+@media (max-width: 640px) {
+  /* Keep the scene readable and calm on small screens: fewer, smaller,
+     fainter elements rather than a shrunk-down copy of the desktop scene. */
+  .dk-hero-bg-cloud-3,
+  .dk-hero-bg-pin-3,
+  .dk-hero-bg-icon-3 { display: none; }
+  .dk-hero-bg-icon { opacity: 0.1; }
+}
+
 .dk-hero {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 32px;
   align-items: flex-start;
   margin-bottom: 8px;
+  padding: 4px 4px 0;
   animation: dkFadeIn 0.5s ease both;
 }
 

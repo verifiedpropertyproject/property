@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import ThemeToggle2 from "./ThemeToggle2";
 import NotificationBell from "./NotificationBell";
@@ -15,10 +16,14 @@ type NavSession = {
 } | null;
 
 // Adjust these to match your real routes.
+// `exact: true` means the link is only "active" on a precise pathname match
+// (used for Home, since Buy Property also lives at "/" via a query string).
 const PRIMARY_LINKS = [
-  { href: "/", label: "Browse" },
-  { href: "/?listingType=SALE", label: "Buy" },
-  { href: "/dashboard/listings/new", label: "Sell" },
+  { href: "/", label: "Home", exact: true },
+  { href: "/?listingType=SALE", label: "Buy Property" },
+  { href: "/dashboard", label: "Sell Property" },
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact" },
 ];
 
 function initialsFor(name?: string | null, email?: string | null) {
@@ -63,8 +68,19 @@ function ChevronIcon() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   const user = session?.user;
+
+  // Links that carry a query string (e.g. Buy Property) are intentionally
+  // never marked active here, since reading the query safely needs a
+  // Suspense boundary this component doesn't have — plain pathname matches
+  // (Home, Sell Property, About Us, Contact) are enough for a clear "you are
+  // here" indicator without that complexity.
+  function isLinkActive(href: string) {
+    if (href.includes("?")) return false;
+    return pathname === href;
+  }
 
   // Close the account dropdown on outside click.
   useEffect(() => {
@@ -80,11 +96,19 @@ function ChevronIcon() {
   // Close the mobile drawer whenever the viewport grows back to desktop.
   useEffect(() => {
     function onResize() {
-      if (window.innerWidth >= 768) setMobileOpen(false);
+      if (window.innerWidth >= 1024) setMobileOpen(false);
     }
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
 
   return (
     <header className="dk-nav">
@@ -105,18 +129,18 @@ function ChevronIcon() {
 
         <nav className="dk-nav-links" aria-label="Primary">
           {PRIMARY_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="dk-nav-link">
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`dk-nav-link${isLinkActive(link.href) ? " dk-nav-link-active" : ""}`}
+              aria-current={isLinkActive(link.href) ? "page" : undefined}
+            >
               {link.label}
             </Link>
           ))}
           {user?.role === "BUYER" && (
             <Link href="/dashboard/saved" className="dk-nav-link">
               Saved
-            </Link>
-          )}
-          {(user?.role === "SELLER" || user?.role === "AGENT") && (
-            <Link href="/dashboard/listings/new" className="dk-nav-link">
-              List a property
             </Link>
           )}
         </nav>
@@ -174,16 +198,23 @@ function ChevronIcon() {
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
+            aria-controls="dk-mobile-menu"
           >
             {mobileOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
         </div>
       </div>
 
-      {mobileOpen && (
-        <div className="dk-nav-mobile">
+      <div id="dk-mobile-menu" className={`dk-nav-mobile${mobileOpen ? " dk-nav-mobile-open" : ""}`}>
+        <nav aria-label="Primary mobile" className="dk-nav-mobile-links">
           {PRIMARY_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`dk-nav-mobile-link${isLinkActive(link.href) ? " dk-nav-mobile-link-active" : ""}`}
+              aria-current={isLinkActive(link.href) ? "page" : undefined}
+              onClick={() => setMobileOpen(false)}
+            >
               {link.label}
             </Link>
           ))}
@@ -192,16 +223,17 @@ function ChevronIcon() {
               Saved
             </Link>
           )}
-          {(user?.role === "SELLER" || user?.role === "AGENT") && (
-            <Link href="/dashboard/listings/new" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
-              List a property
-            </Link>
-          )}
+        </nav>
 
-          <hr className="dk-nav-mobile-rule" />
+        <hr className="dk-nav-mobile-rule" />
 
+        <div className="dk-nav-mobile-foot">
           {user ? (
             <>
+              <div className="dk-nav-mobile-user">
+                <span className="dk-nav-avatar">{initialsFor(user.name, user.email)}</span>
+                <span className="dk-nav-mobile-user-name">{user.name || user.email}</span>
+              </div>
               <Link href="/dashboard" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
                 Dashboard
               </Link>
@@ -218,13 +250,13 @@ function ChevronIcon() {
               <Link href="/login" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
                 Log in
               </Link>
-              <Link href="/register" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
+              <Link href="/register" className="dk-nav-mobile-cta" onClick={() => setMobileOpen(false)}>
                 Create account
               </Link>
             </>
           )}
         </div>
-      )}
+      </div>
     </header>
   );
 }
