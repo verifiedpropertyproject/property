@@ -23,10 +23,10 @@ function toneForStatus(status: string): Tone {
 }
 
 const TONE_CLASSES: Record<Tone, string> = {
-  success: "bg-[#E4F5E9] text-[#17843C]",
-  warning: "bg-[#FCF0DC] text-[#B4770E]",
-  danger: "bg-[#FBE7E5] text-[#C0392B]",
-  neutral: "bg-[#EEF1EF] text-[#5B6660]",
+  success: "bg-[var(--dk-success-bg)] text-[var(--dk-primary)]",
+  warning: "bg-[var(--dk-gold-bg)] text-[var(--dk-gold-deep)]",
+  danger: "bg-[var(--dk-danger-bg)] text-[var(--dk-danger-ink)]",
+  neutral: "bg-[var(--dk-border)] text-[var(--dk-muted)]",
 };
 
 export default function IdentityVerificationRequestForm({
@@ -73,7 +73,7 @@ export default function IdentityVerificationRequestForm({
         </span>
       </div>
 
-      <p className="text-sm leading-6 text-[#566B60] m-0">
+      <p className="text-sm leading-6 text-[var(--dk-muted)] m-0">
         {status === "NOT_SUBMITTED" &&
           "Submit an identity verification request so admins can review and verify your account. Once approved, your listings will show this status."}
         {status === "PENDING" && "Your request is with an admin for review. You'll be notified once it's been decided."}
@@ -82,7 +82,7 @@ export default function IdentityVerificationRequestForm({
       </p>
 
       {status === "REJECTED" && note && (
-        <p className="text-sm leading-6 text-[#C0392B] m-0">Admin note: {note}</p>
+        <p className="text-sm leading-6 text-[var(--dk-danger-ink)] m-0">Admin note: {note}</p>
       )}
 
       {canRequest && (
@@ -91,14 +91,14 @@ export default function IdentityVerificationRequestForm({
             type="button"
             disabled={loading}
             onClick={handleRequest}
-            className="inline-flex items-center rounded-lg bg-[#17843C] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0F5D2A] disabled:opacity-60"
+            className="inline-flex items-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Submitting..." : status === "REJECTED" ? "Resubmit request" : "Request identity verification"}
           </button>
         </div>
       )}
 
-      {error && <p className="text-sm text-[#C0392B] m-0">{error}</p>}
+      {error && <p className="text-sm text-[var(--dk-danger-ink)] m-0">{error}</p>}
     </div>
   );
 }

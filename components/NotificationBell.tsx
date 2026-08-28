@@ -91,50 +91,60 @@ export default function NotificationBell() {
   }
 
   return (
-    <div ref={wrapperRef} style={{ position: "relative", display: "inline-block" }}>
-      <button onClick={handleToggle} aria-label="Notifications">
-        {"\uD83D\uDD14"} {unreadCount > 0 && <span>({unreadCount})</span>}
+    <div ref={wrapperRef} className="relative inline-block">
+      <button
+        onClick={handleToggle}
+        aria-label="Notifications"
+        className="dk-theme-toggle relative"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path
+            d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M13.73 21a2 2 0 01-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--dk-danger-ink)] px-1 text-[10px] font-bold leading-none text-white">
+            {unreadCount}
+          </span>
+        )}
       </button>
 
       {open && (
-        <div
-          style={{
-            position: "absolute",
-            right: 0,
-            top: "100%",
-            zIndex: 20,
-            minWidth: "280px",
-            maxWidth: "360px",
-            maxHeight: "400px",
-            overflowY: "auto",
-            background: "white",
-            border: "1px solid #ccc",
-          }}
-        >
-          <div>
-            <strong>Notifications</strong>
+        <div className="dk-nav-account-menu absolute right-0 top-[calc(100%+8px)] z-20 max-h-[400px] min-w-[280px] max-w-[360px] overflow-y-auto">
+          <div className="px-2.5 py-1.5">
+            <strong className="text-sm font-semibold text-[var(--dk-heading)]">Notifications</strong>
           </div>
 
-          {loading && <p>Loading...</p>}
-          {error && <p>{error}</p>}
+          {loading && <p className="px-2.5 py-2 text-sm text-[var(--dk-muted)]">Loading...</p>}
+          {error && <p className="px-2.5 py-2 text-sm text-[var(--dk-danger-ink)]">{error}</p>}
 
           {!loading && !error && loaded && notifications.length === 0 && (
-            <p>No notifications yet.</p>
+            <p className="px-2.5 py-2 text-sm text-[var(--dk-muted)]">No notifications yet.</p>
           )}
 
           {!loading && !error && notifications.length > 0 && (
-            <ul>
+            <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
               {notifications.map((n) => (
-                <li key={n.id}>
+                <li
+                  key={n.id}
+                  className="rounded-[var(--radius-sm)] px-2.5 py-2 text-sm text-[var(--dk-ink)] transition-colors duration-150 hover:bg-[var(--dk-ivory)]"
+                >
                   {n.propertyId ? (
-                    <Link href={`/properties/${n.propertyId}`} onClick={() => setOpen(false)}>
+                    <Link
+                      href={`/properties/${n.propertyId}`}
+                      onClick={() => setOpen(false)}
+                      className="font-medium text-[var(--dk-ink)] no-underline hover:text-[var(--dk-primary)]"
+                    >
                       {n.message}
                     </Link>
                   ) : (
                     <span>{n.message}</span>
                   )}
                   <div>
-                    <small>
+                    <small className="text-xs text-[var(--dk-muted)]">
                       From {n.sender.name || n.sender.email} — {new Date(n.createdAt).toLocaleString()}
                     </small>
                   </div>

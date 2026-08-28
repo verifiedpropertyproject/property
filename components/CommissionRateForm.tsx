@@ -56,8 +56,8 @@ export default function CommissionRateForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2.5">
+      <label className="flex items-center gap-2 text-sm font-medium text-[var(--dk-ink)]">
         Commission %
         <input
           type="number"
@@ -67,14 +67,19 @@ export default function CommissionRateForm({
           value={percent}
           onChange={(e) => setPercent(e.target.value)}
           disabled={loading}
+          className="w-24 rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2 text-sm text-[var(--dk-ink)] outline-none transition-colors duration-150 hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)] disabled:cursor-not-allowed disabled:opacity-60"
         />
       </label>
 
-      <button type="submit" disabled={loading || percent === currentPercent}>
+      <button
+        type="submit"
+        disabled={loading || percent === currentPercent}
+        className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+      >
         {loading ? "Saving..." : "Update rate"}
       </button>
 
-      {error && <span>{error}</span>}
+      {error && <span className="w-full text-sm text-[var(--dk-danger-ink)]">{error}</span>}
     </form>
   );
 }

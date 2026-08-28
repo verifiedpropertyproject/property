@@ -28,6 +28,14 @@ import {
 } from "@/lib/propertyConstants";
 import { canRequestIdentityVerification } from "@/lib/identityVerification";
 
+const fieldInputClass =
+  "w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2 text-sm font-normal text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]";
+
+const fieldLabelClass = "flex flex-col gap-1.5 text-sm font-medium text-[var(--dk-ink)]";
+
+const checkboxRowClass = "flex items-start gap-2 text-sm text-[var(--dk-ink)]";
+const checkboxInputClass = "mt-0.5 h-4 w-4 shrink-0 accent-[var(--dk-primary)]";
+
 export default function PropertyForm({
   isAgent,
   identityVerificationStatus,
@@ -179,11 +187,16 @@ export default function PropertyForm({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <p role="note">{PRIME_PROPERTY_NOTICE}</p>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <p
+        role="note"
+        className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-gold)] bg-[var(--dk-gold-bg)] px-3.5 py-2.5 text-sm text-[var(--dk-gold-deep)]"
+      >
+        {PRIME_PROPERTY_NOTICE}
+      </p>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Title
           <input
             value={title}
@@ -191,12 +204,13 @@ export default function PropertyForm({
             minLength={TITLE_MIN_LENGTH}
             maxLength={TITLE_MAX_LENGTH}
             required
+            className={fieldInputClass}
           />
         </label>
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Description
           <textarea
             value={description}
@@ -205,12 +219,13 @@ export default function PropertyForm({
             minLength={DESCRIPTION_MIN_LENGTH}
             maxLength={DESCRIPTION_MAX_LENGTH}
             required
+            className={`${fieldInputClass} resize-y`}
           />
         </label>
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Location
           <input
             value={location}
@@ -218,6 +233,7 @@ export default function PropertyForm({
             placeholder="e.g. Kitengela, Kajiado"
             minLength={LOCATION_MIN_LENGTH}
             required
+            className={fieldInputClass}
           />
         </label>
       </div>
@@ -227,11 +243,12 @@ export default function PropertyForm({
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Property type
           <select
             value={propertyType}
             onChange={(e) => handlePropertyTypeChange(e.target.value)}
+            className={fieldInputClass}
           >
             {PROPERTY_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -244,7 +261,7 @@ export default function PropertyForm({
 
       {propertyType === "OTHER" && (
         <div>
-          <label>
+          <label className={fieldLabelClass}>
             Please specify property type
             <input
               value={propertyTypeOther}
@@ -252,6 +269,7 @@ export default function PropertyForm({
               placeholder="e.g. Boathouse, Warehouse, Farm"
               list="property-type-suggestions"
               required
+              className={fieldInputClass}
             />
             <datalist id="property-type-suggestions">
               {PROPERTY_TYPE_SUGGESTIONS.map((suggestion) => (
@@ -263,11 +281,12 @@ export default function PropertyForm({
       )}
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Listing type
           <select
             value={listingType}
             onChange={(e) => setListingType(e.target.value)}
+            className={fieldInputClass}
           >
             <option value="SALE">For sale</option>
             <option value="RENT">For rent</option>
@@ -276,7 +295,7 @@ export default function PropertyForm({
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Price (KSh)
           <input
             type="number"
@@ -286,8 +305,9 @@ export default function PropertyForm({
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
+            className={fieldInputClass}
           />
-          <small>
+          <small className="text-xs font-normal text-[var(--dk-muted)]">
             {listingType === "SALE"
               ? `Minimum KSh ${SALE_PRICE_MIN.toLocaleString()} for properties for sale — maximum KSh ${PRICE_MAX.toLocaleString()}`
               : `Minimum KSh ${PRICE_MIN.toLocaleString()} — maximum KSh ${PRICE_MAX.toLocaleString()}`}
@@ -296,10 +316,10 @@ export default function PropertyForm({
       </div>
 
       {(fields.bedrooms || fields.bathrooms || fields.acreage) && (
-        <div>
+        <div className="flex flex-wrap gap-4">
           {fields.bedrooms && (
-            <div>
-              <label>
+            <div className="min-w-[140px] flex-1">
+              <label className={fieldLabelClass}>
                 Bedrooms (optional)
                 <input
                   type="number"
@@ -307,14 +327,15 @@ export default function PropertyForm({
                   max={BEDROOMS_MAX}
                   value={bedrooms}
                   onChange={(e) => setBedrooms(e.target.value)}
+                  className={fieldInputClass}
                 />
               </label>
             </div>
           )}
 
           {fields.bathrooms && (
-            <div>
-              <label>
+            <div className="min-w-[140px] flex-1">
+              <label className={fieldLabelClass}>
                 Bathrooms (optional)
                 <input
                   type="number"
@@ -322,14 +343,15 @@ export default function PropertyForm({
                   max={BATHROOMS_MAX}
                   value={bathrooms}
                   onChange={(e) => setBathrooms(e.target.value)}
+                  className={fieldInputClass}
                 />
               </label>
             </div>
           )}
 
           {fields.acreage && (
-            <div>
-              <label>
+            <div className="min-w-[140px] flex-1">
+              <label className={fieldLabelClass}>
                 {fields.acreageLabel}
                 {!fields.acreageRequired && " (optional)"}
                 <input
@@ -340,6 +362,7 @@ export default function PropertyForm({
                   value={acreage}
                   onChange={(e) => setAcreage(e.target.value)}
                   required={fields.acreageRequired}
+                  className={fieldInputClass}
                 />
               </label>
             </div>
@@ -348,15 +371,16 @@ export default function PropertyForm({
       )}
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Cover photo
           <input
             ref={imageInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             required
+            className={`${fieldInputClass} file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--dk-ivory)] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[var(--dk-primary)]`}
           />
-          <small>
+          <small className="text-xs font-normal text-[var(--dk-muted)]">
             Required — JPEG, PNG, or WEBP, max 5MB. This is the photo shown on listing cards
             across the site.
           </small>
@@ -364,7 +388,7 @@ export default function PropertyForm({
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Additional photos (optional)
           <input
             ref={galleryInputRef}
@@ -372,8 +396,9 @@ export default function PropertyForm({
             accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={(e) => setGalleryCount(e.target.files?.length ?? 0)}
+            className={`${fieldInputClass} file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--dk-ivory)] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[var(--dk-primary)]`}
           />
-          <small>
+          <small className="text-xs font-normal text-[var(--dk-muted)]">
             Up to {MAX_GALLERY_IMAGES} more photos — JPEG, PNG, or WEBP, max 5MB each. These only
             show up when a buyer opens the full listing, not on listing cards.
           </small>
@@ -381,10 +406,15 @@ export default function PropertyForm({
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Walkthrough video (optional)
-          <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" />
-          <small>
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime"
+            className={`${fieldInputClass} file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--dk-ivory)] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[var(--dk-primary)]`}
+          />
+          <small className="text-xs font-normal text-[var(--dk-muted)]">
             MP4, WebM, or MOV, max {Math.round(VIDEO_MAX_SIZE_BYTES / (1024 * 1024))}MB. Shown on
             the full listing page. You can also add or replace this later from the edit page.
           </small>
@@ -392,20 +422,22 @@ export default function PropertyForm({
       </div>
 
       {canRequestIdentityVerification(identityVerificationStatus) && (
-        <div>
-          <label>
+        <div className="rounded-[var(--radius-md)] border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-3">
+          <label className={checkboxRowClass}>
             <input
               type="checkbox"
               checked={requestIdentityVerification}
               onChange={(e) => setRequestIdentityVerification(e.target.checked)}
+              className={checkboxInputClass}
             />
-            {" "}
-            {identityVerificationStatus === "REJECTED"
-              ? "Also resubmit my identity verification request"
-              : "Also request identity verification for my account"}
+            <span>
+              {identityVerificationStatus === "REJECTED"
+                ? "Also resubmit my identity verification request"
+                : "Also request identity verification for my account"}
+            </span>
           </label>
-          <small>
-            {" "}An admin will review this alongside your listing. Once approved, it'll show on
+          <small className="mt-1.5 block text-xs text-[var(--dk-muted)]">
+            An admin will review this alongside your listing. Once approved, it'll show on
             your listings as a trust signal. You can also request this any time from your
             dashboard.
           </small>
@@ -415,54 +447,60 @@ export default function PropertyForm({
       {isAgent && (
         <>
           <div>
-            <label>
+            <label className={fieldLabelClass}>
               Representing (owner&apos;s name)
               <input
                 value={representingName}
                 onChange={(e) => setRepresentingName(e.target.value)}
                 placeholder="Who you're selling this on behalf of"
                 required
+                className={fieldInputClass}
               />
             </label>
           </div>
           <div>
-            <label>
+            <label className={fieldLabelClass}>
               Owner&apos;s contact (optional)
               <input
                 value={representingContact}
                 onChange={(e) => setRepresentingContact(e.target.value)}
                 placeholder="Phone or email"
+                className={fieldInputClass}
               />
             </label>
           </div>
         </>
       )}
 
-      <div>
-        <p>
-          <small>{commissionAgreementText(DEFAULT_COMMISSION_RATE)}</small>
+      <div className="flex flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-3.5">
+        <p className="m-0">
+          <small className="text-xs text-[var(--dk-muted)]">{commissionAgreementText(DEFAULT_COMMISSION_RATE)}</small>
         </p>
-        <label>
+        <label className={fieldLabelClass}>
           Type your full legal name to sign
           <input
             value={signedName}
             onChange={(e) => setSignedName(e.target.value)}
             placeholder="Full legal name"
+            className={fieldInputClass}
           />
         </label>
-        <label>
+        <label className={checkboxRowClass}>
           <input
             type="checkbox"
             checked={commissionAgreed}
             onChange={(e) => setCommissionAgreed(e.target.checked)}
+            className={checkboxInputClass}
           />
-          {" "}I, the person named above, have read and agree to the commission terms above. This
-          serves as my electronic signature.
+          <span>
+            I, the person named above, have read and agree to the commission terms above. This
+            serves as my electronic signature.
+          </span>
         </label>
       </div>
 
       {error && (
-        <p>
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-3.5 py-2 text-sm text-[var(--dk-danger-ink)]">
           {error}
         </p>
       )}
@@ -470,6 +508,7 @@ export default function PropertyForm({
       <button
         type="submit"
         disabled={loading}
+        className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Submitting..." : "Submit for review"}
       </button>

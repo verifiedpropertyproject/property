@@ -47,28 +47,33 @@ export default function ProfileNameForm({ currentName }: { currentName: string |
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label htmlFor="profile-name">Full name</label>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
+      <label htmlFor="profile-name" className="text-sm font-medium text-[var(--dk-ink)]">
+        Full name
+      </label>
 
-      <p>
-        <input
-          id="profile-name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={100}
-          placeholder="Your full name"
-        />
-      </p>
+      <input
+        id="profile-name"
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        maxLength={100}
+        placeholder="Your full name"
+        className="w-full max-w-xs rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2 text-sm text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]"
+      />
 
-      <p>
-        <button type="submit" disabled={loading}>
+      <div className="mt-1">
+        <button
+          type="submit"
+          disabled={loading}
+          className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+        >
           {loading ? "Saving..." : "Save"}
         </button>
-      </p>
+      </div>
 
-      {error && <p>{error}</p>}
-      {success && <p>{success}</p>}
+      {error && <p className="m-0 text-sm text-[var(--dk-danger-ink)]">{error}</p>}
+      {success && <p className="m-0 text-sm text-[var(--dk-primary)]">{success}</p>}
     </form>
   );
 }

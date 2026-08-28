@@ -59,11 +59,15 @@ export default function LocationView({
   const openMapUrl = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=17/${latitude}/${longitude}`;
 
   return (
-    <div>
-      <div ref={containerRef} style={{ height: 260, width: "100%" }} />
-      <p>
+    <div className="flex flex-col gap-2.5">
+      <div
+        ref={containerRef}
+        style={{ height: 260, width: "100%" }}
+        className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--dk-border)]"
+      />
+      <p className="m-0 text-sm text-[var(--dk-muted)]">
         {address && <>{address} — </>}
-        <a href={openMapUrl} target="_blank" rel="noopener noreferrer">
+        <a href={openMapUrl} target="_blank" rel="noopener noreferrer" className="dk-auth-link">
           Open in map
         </a>
       </p>

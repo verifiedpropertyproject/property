@@ -41,12 +41,16 @@ export default function DocumentVerifyButton({
   }
 
   return (
-    <span>
-      <button onClick={handleToggle} disabled={loading}>
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <button
+        onClick={handleToggle}
+        disabled={loading}
+        className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3.5 py-1.5 text-sm font-semibold text-[var(--dk-heading)] transition-colors duration-150 hover:border-[var(--dk-border-hover)] hover:bg-[var(--dk-ivory)] disabled:cursor-not-allowed disabled:opacity-60"
+      >
         {loading ? "Saving..." : verified ? "Mark as pending" : "Mark as received"}
       </button>
 
-      {error && <span> {error}</span>}
+      {error && <span className="text-sm text-[var(--dk-danger-ink)]"> {error}</span>}
     </span>
   );
 }

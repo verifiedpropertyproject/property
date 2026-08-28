@@ -47,6 +47,11 @@ type EditableProperty = {
   commissionAgreementText: string | null;
 };
 
+const fieldInputClass =
+  "w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2 text-sm font-normal text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]";
+
+const fieldLabelClass = "flex flex-col gap-1.5 text-sm font-medium text-[var(--dk-ink)]";
+
 export default function PropertyEditForm({ property, isAgent }: { property: EditableProperty; isAgent: boolean }) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -173,10 +178,16 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <p role="note">{PRIME_PROPERTY_NOTICE}</p>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <p
+        role="note"
+        className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-gold)] bg-[var(--dk-gold-bg)] px-3.5 py-2.5 text-sm text-[var(--dk-gold-deep)]"
+      >
+        {PRIME_PROPERTY_NOTICE}
+      </p>
+
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Title
           <input
             value={title}
@@ -184,12 +195,13 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
             minLength={TITLE_MIN_LENGTH}
             maxLength={TITLE_MAX_LENGTH}
             required
+            className={fieldInputClass}
           />
         </label>
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Description
           <textarea
             value={description}
@@ -198,18 +210,20 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
             minLength={DESCRIPTION_MIN_LENGTH}
             maxLength={DESCRIPTION_MAX_LENGTH}
             required
+            className={`${fieldInputClass} resize-y`}
           />
         </label>
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Location
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             minLength={LOCATION_MIN_LENGTH}
             required
+            className={fieldInputClass}
           />
         </label>
       </div>
@@ -218,9 +232,9 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
         <LocationPicker value={pin} onChange={setPin} />
       </div>
 
-      <div>
-        <p>
-          <strong>Commission agreement:</strong>{" "}
+      <div className="rounded-[var(--radius-md)] border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-3">
+        <p className="m-0 text-sm text-[var(--dk-ink)]">
+          <strong className="text-[var(--dk-heading)]">Commission agreement:</strong>{" "}
           {property.commissionAgreedAt
             ? `${(property.commissionRate * 100).toFixed(
                 (property.commissionRate * 100) % 1 === 0 ? 0 : 2
@@ -228,13 +242,16 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
             : "Not yet on record for this listing."}
         </p>
         {property.commissionAgreementText && (
-          <p>
-            <small>{property.commissionAgreementText}</small>
+          <p className="m-0 mt-1.5">
+            <small className="text-xs text-[var(--dk-muted)]">{property.commissionAgreementText}</small>
           </p>
         )}
         {property.commissionAgreedAt && (
-          <p>
-            <a href={`/api/properties/${property.id}/commission-agreement`}>
+          <p className="m-0 mt-1.5">
+            <a
+              href={`/api/properties/${property.id}/commission-agreement`}
+              className="text-sm font-semibold text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)]"
+            >
               Download signed certificate (PDF)
             </a>
           </p>
@@ -242,11 +259,12 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Property type
           <select
             value={propertyType}
             onChange={(e) => handlePropertyTypeChange(e.target.value)}
+            className={fieldInputClass}
           >
             {PROPERTY_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -259,7 +277,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
 
       {propertyType === "OTHER" && (
         <div>
-          <label>
+          <label className={fieldLabelClass}>
             Please specify property type
             <input
               value={propertyTypeOther}
@@ -267,6 +285,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
               placeholder="e.g. Boathouse, Warehouse, Farm"
               list="property-type-suggestions"
               required
+              className={fieldInputClass}
             />
             <datalist id="property-type-suggestions">
               {PROPERTY_TYPE_SUGGESTIONS.map((suggestion) => (
@@ -278,11 +297,12 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       )}
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Listing type
           <select
             value={listingType}
             onChange={(e) => setListingType(e.target.value)}
+            className={fieldInputClass}
           >
             <option value="SALE">For sale</option>
             <option value="RENT">For rent</option>
@@ -291,7 +311,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       </div>
 
       <div>
-        <label>
+        <label className={fieldLabelClass}>
           Price (KSh)
           <input
             type="number"
@@ -301,8 +321,9 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             required
+            className={fieldInputClass}
           />
-          <small>
+          <small className="text-xs font-normal text-[var(--dk-muted)]">
             {listingType === "SALE"
               ? `Minimum KSh ${SALE_PRICE_MIN.toLocaleString()} for properties for sale — maximum KSh ${PRICE_MAX.toLocaleString()}`
               : `Minimum KSh ${PRICE_MIN.toLocaleString()} — maximum KSh ${PRICE_MAX.toLocaleString()}`}
@@ -311,10 +332,10 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       </div>
 
       {(fields.bedrooms || fields.bathrooms || fields.acreage) && (
-        <div>
+        <div className="flex flex-wrap gap-4">
           {fields.bedrooms && (
-            <div>
-              <label>
+            <div className="min-w-[140px] flex-1">
+              <label className={fieldLabelClass}>
                 Bedrooms (optional)
                 <input
                   type="number"
@@ -322,14 +343,15 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
                   max={BEDROOMS_MAX}
                   value={bedrooms}
                   onChange={(e) => setBedrooms(e.target.value)}
+                  className={fieldInputClass}
                 />
               </label>
             </div>
           )}
 
           {fields.bathrooms && (
-            <div>
-              <label>
+            <div className="min-w-[140px] flex-1">
+              <label className={fieldLabelClass}>
                 Bathrooms (optional)
                 <input
                   type="number"
@@ -337,14 +359,15 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
                   max={BATHROOMS_MAX}
                   value={bathrooms}
                   onChange={(e) => setBathrooms(e.target.value)}
+                  className={fieldInputClass}
                 />
               </label>
             </div>
           )}
 
           {fields.acreage && (
-            <div>
-              <label>
+            <div className="min-w-[140px] flex-1">
+              <label className={fieldLabelClass}>
                 {fields.acreageLabel}
                 {!fields.acreageRequired && " (optional)"}
                 <input
@@ -355,6 +378,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
                   value={acreage}
                   onChange={(e) => setAcreage(e.target.value)}
                   required={fields.acreageRequired}
+                  className={fieldInputClass}
                 />
               </label>
             </div>
@@ -362,27 +386,29 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
         </div>
       )}
 
-      <div>
+      <div className="flex flex-col gap-2.5">
         {property.imageUrl && (
-          <div>
-            <span>Current photo:</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-[var(--dk-ink)]">Current photo:</span>
             <img
               src={property.imageUrl}
               alt="Current listing photo"
               width={240}
+              className="rounded-[var(--radius-md)] border border-[var(--dk-border)] object-cover"
             />
           </div>
         )}
-        <label>
+        <label className={fieldLabelClass}>
           {property.imageUrl ? "Replace photo (optional)" : "Photo"}
           <input
             ref={imageInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             required={!property.imageUrl}
+            className={`${fieldInputClass} file:mr-3 file:rounded-[var(--radius-sm)] file:border-0 file:bg-[var(--dk-ivory)] file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-[var(--dk-primary)]`}
           />
           {!property.imageUrl && (
-            <small>
+            <small className="text-xs font-normal text-[var(--dk-muted)]">
               Required — JPEG, PNG, or WEBP, max 5MB.
             </small>
           )}
@@ -392,23 +418,25 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       {isAgent && (
         <>
           <div>
-            <label>
+            <label className={fieldLabelClass}>
               Representing (owner&apos;s name)
               <input
                 value={representingName}
                 onChange={(e) => setRepresentingName(e.target.value)}
                 placeholder="Who you're selling this on behalf of"
                 required
+                className={fieldInputClass}
               />
             </label>
           </div>
           <div>
-            <label>
+            <label className={fieldLabelClass}>
               Owner&apos;s contact (optional)
               <input
                 value={representingContact}
                 onChange={(e) => setRepresentingContact(e.target.value)}
                 placeholder="Phone or email"
+                className={fieldInputClass}
               />
             </label>
           </div>
@@ -416,13 +444,13 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       )}
 
       {error && (
-        <p>
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-3.5 py-2 text-sm text-[var(--dk-danger-ink)]">
           {error}
         </p>
       )}
 
       {success && (
-        <p>
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-primary)]/30 bg-[var(--dk-success-bg)] px-3.5 py-2 text-sm text-[var(--dk-primary)]">
           {success}
         </p>
       )}
@@ -430,6 +458,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       <button
         type="submit"
         disabled={loading}
+        className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Saving..." : "Save and resubmit for review"}
       </button>

@@ -208,45 +208,64 @@ export default function LocationPicker({
   }
 
   return (
-    <div>
-      <label>
+    <div className="flex flex-col gap-3">
+      <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--dk-ink)]">
         Pin this property on the map (optional)
-        <input
-          value={query}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder="Search for an address or place name"
-        />
+        <div className="relative">
+          <input
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            placeholder="Search for an address or place name"
+            className="w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2 text-sm font-normal text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]"
+          />
+
+          {results.length > 0 && (
+            <ul className="dk-select-panel dk-select-open absolute m-0 list-none p-1.5" role="listbox">
+              {results.map((r) => (
+                <li key={r.placeId} className="dk-select-option">
+                  <button
+                    type="button"
+                    onClick={() => pickResult(r)}
+                    className="w-full text-left"
+                  >
+                    {r.address}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </label>
 
-      {searching && <p>Searching...</p>}
+      {searching && <p className="m-0 text-sm text-[var(--dk-muted)]">Searching...</p>}
 
-      {results.length > 0 && (
-        <ul>
-          {results.map((r) => (
-            <li key={r.placeId}>
-              <button type="button" onClick={() => pickResult(r)}>
-                {r.address}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div>
-        <button type="button" onClick={useMyLocation}>
+      <div className="flex flex-wrap gap-2.5">
+        <button
+          type="button"
+          onClick={useMyLocation}
+          className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3.5 py-1.5 text-sm font-semibold text-[var(--dk-heading)] transition-colors duration-150 hover:border-[var(--dk-border-hover)] hover:bg-[var(--dk-ivory)]"
+        >
           Use my current location
         </button>
         {value && (
-          <button type="button" onClick={clearPin}>
+          <button
+            type="button"
+            onClick={clearPin}
+            className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-3.5 py-1.5 text-sm font-semibold text-[var(--dk-danger-ink)] transition-colors duration-150 hover:bg-[var(--dk-danger-ink)] hover:text-white"
+          >
             Clear pin
           </button>
         )}
       </div>
 
-      <div ref={mapContainerRef} style={{ height: 320, width: "100%" }} />
+      <div
+        ref={mapContainerRef}
+        style={{ height: 320, width: "100%" }}
+        className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--dk-border)]"
+      />
 
-      <p>
-        <small>
+      <p className="m-0">
+        <small className="text-[12.5px] text-[var(--dk-muted)]">
           {reverseLoading
             ? "Looking up the address for this pin..."
             : value
@@ -257,7 +276,7 @@ export default function LocationPicker({
         </small>
       </p>
 
-      {error && <p>{error}</p>}
+      {error && <p className="m-0 text-sm text-[var(--dk-danger-ink)]">{error}</p>}
     </div>
   );
 }

@@ -36,31 +36,32 @@ export default function ResendVerificationButton() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-2.5">
       <button
         onClick={handleClick}
         disabled={loading}
+        className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Sending..." : "Resend verification link"}
       </button>
 
       {error && (
-        <p>
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-3.5 py-2 text-sm text-[var(--dk-danger-ink)]">
           {error}
         </p>
       )}
 
       {emailSent && (
-        <p>
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-primary)]/30 bg-[var(--dk-success-bg)] px-3.5 py-2 text-sm text-[var(--dk-primary)]">
           A new verification email is on its way — check your inbox.
         </p>
       )}
 
       {verifyUrl && (
-        <p>
+        <p className="m-0 rounded-[var(--radius-md)] border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-2 text-sm text-[var(--dk-ink)] break-words">
           Real email sending isn&apos;t configured, so here&apos;s your link directly:
           <br />
-          <a href={verifyUrl}>
+          <a href={verifyUrl} className="text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] break-all">
             {verifyUrl}
           </a>
         </p>

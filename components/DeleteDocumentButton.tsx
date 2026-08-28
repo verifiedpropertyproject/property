@@ -32,16 +32,17 @@ export default function DeleteDocumentButton({ documentId, fileName }: { documen
   }
 
   return (
-    <span>
+    <span className="inline-flex flex-wrap items-center gap-2">
       <button
         onClick={handleDelete}
         disabled={loading}
+        className="inline-flex items-center justify-center rounded-[var(--radius-sm)] border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-3.5 py-1.5 text-sm font-semibold text-[var(--dk-danger-ink)] transition-colors duration-150 hover:bg-[var(--dk-danger-ink)] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Deleting..." : "Delete"}
       </button>
 
       {error && (
-        <span>{error}</span>
+        <span className="text-sm text-[var(--dk-danger-ink)]">{error}</span>
       )}
     </span>
   );
