@@ -30,7 +30,13 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/dashboard");
+      // Use a full page navigation instead of router.push here. If /dashboard was
+      // ever visited/prefetched before this login (e.g. redirected to /login by the
+      // middleware while unauthenticated), Next.js's router cache can serve that
+      // stale "redirect to /login" result instead of re-checking the now-valid
+      // session, which makes the login button look like it's doing nothing.
+      window.location.href = "/dashboard";
+      return;
     } catch (err) {
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
