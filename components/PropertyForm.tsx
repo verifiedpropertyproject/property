@@ -27,6 +27,7 @@ import {
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
 import { canRequestIdentityVerification } from "@/lib/identityVerification";
+import { RESALE_CATEGORIES, getResaleCategoryLabel } from "@/lib/resaleCategory";
 
 const fieldInputClass =
   "w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3 py-2 text-sm font-normal text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]";
@@ -40,6 +41,7 @@ export default function PropertyForm({
   isAgent,
   identityVerificationStatus,
   hideIdentityVerificationOption = false,
+  isAdminListing = false,
   submitLabel = "Submit for review",
   submittingLabel = "Submitting...",
 }: {
@@ -49,6 +51,10 @@ export default function PropertyForm({
   // so hide the "also request identity verification" checkbox rather than show it against an
   // admin's own (irrelevant) status.
   hideIdentityVerificationOption?: boolean;
+  // Set when an admin/super admin is listing directly — surfaces the optional resale category
+  // field (Auction / Standard Resale / Distressed Sale / Foreclosure), which never applies to an
+  // Owner/Agent's own listing. See Property.resaleCategory in prisma/schema.prisma.
+  isAdminListing?: boolean;
   // A super admin's listing skips the review queue (see app/api/properties/route.ts), so the
   // button copy shouldn't promise a review that never happens.
   submitLabel?: string;
@@ -65,6 +71,7 @@ export default function PropertyForm({
   const [propertyType, setPropertyType] = useState("HOUSE");
   const [propertyTypeOther, setPropertyTypeOther] = useState("");
   const [listingType, setListingType] = useState("SALE");
+  const [resaleCategory, setResaleCategory] = useState("");
   const [price, setPrice] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
@@ -144,6 +151,9 @@ export default function PropertyForm({
       formData.append("propertyType", propertyType);
       formData.append("propertyTypeOther", propertyTypeOther);
       formData.append("listingType", listingType);
+      if (isAdminListing && resaleCategory) {
+        formData.append("resaleCategory", resaleCategory);
+      }
       formData.append("price", price);
       formData.append("bedrooms", bedrooms);
       formData.append("bathrooms", bathrooms);
@@ -304,6 +314,30 @@ export default function PropertyForm({
           </select>
         </label>
       </div>
+
+      {isAdminListing && (
+        <div>
+          <label className={fieldLabelClass}>
+            Resale category (optional)
+            <select
+              value={resaleCategory}
+              onChange={(e) => setResaleCategory(e.target.value)}
+              className={fieldInputClass}
+            >
+              <option value="">— Not a resale property —</option>
+              {RESALE_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {getResaleCategoryLabel(category)}
+                </option>
+              ))}
+            </select>
+            <small className="text-xs font-normal text-[var(--dk-muted)]">
+              Only applies to a resale property you&apos;re listing on the platform&apos;s behalf — leave
+              this as-is if you&apos;re just onboarding an owner&apos;s own listing.
+            </small>
+          </label>
+        </div>
+      )}
 
       <div>
         <label className={fieldLabelClass}>

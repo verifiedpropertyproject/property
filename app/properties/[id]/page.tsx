@@ -18,6 +18,7 @@ import {
   getAvailabilityBadgeClass,
   isClosedAvailability,
 } from "@/lib/availabilityStatus";
+import { getResaleCategoryLabel, getResaleCategoryBadgeClass } from "@/lib/resaleCategory";
 import { isAdminRole } from "@/lib/roles";
 
 function Badge({ label, className }: { label: string; className?: string }) {
@@ -161,6 +162,15 @@ export default async function PropertyDetailPage({
             <div className="dk-badge-row">
               {property.featured && <span className="dk-badge dk-badge-featured">Featured</span>}
               {property.daktopVerified && <VerifiedSeal />}
+              {property.resaleCategory && (
+                <span
+                  className={`dk-badge inline-block rounded-full ${getResaleCategoryBadgeClass(
+                    property.resaleCategory
+                  )}`}
+                >
+                  {getResaleCategoryLabel(property.resaleCategory)}
+                </span>
+              )}
             </div>
 
             <div className="dk-badge-row">

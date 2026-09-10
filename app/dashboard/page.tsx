@@ -8,6 +8,8 @@ import PropertyForm from "@/components/PropertyForm";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import PropertyApprovalList from "@/components/PropertyApprovalList";
 import AdminPropertyList from "@/components/AdminPropertyList";
+import ResaleCategoryForm from "@/components/ResaleCategoryForm";
+import { getResaleCategoryLabel } from "@/lib/resaleCategory";
 import EnquiryApprovalList from "@/components/EnquiryApprovalList";
 import ViewingRequestApprovalList from "@/components/ViewingRequestApprovalList";
 import AdminUserList from "@/components/AdminUserList";
@@ -611,6 +613,7 @@ export default async function DashboardPage({
                 isAgent={role === "AGENT" || isAdminRole(role)}
                 identityVerificationStatus={currentUser.identityVerificationStatus}
                 hideIdentityVerificationOption={isAdminRole(role)}
+                isAdminListing={isAdminRole(role)}
                 submitLabel={isAdminRole(role) ? "List property" : "Submit for review"}
                 submittingLabel={isAdminRole(role) ? "Listing..." : "Submitting..."}
               />
@@ -634,10 +637,22 @@ export default async function DashboardPage({
                             <Badge label="Not verified" tone="neutral" />
                           )}
                           {p.featured && <Badge label="Featured" tone="accent" />}
+                          {isAdminRole(role) && p.resaleCategory && (
+                            <Badge label={getResaleCategoryLabel(p.resaleCategory)} tone="warning" />
+                          )}
                           {p.paused && <Badge label="Paused — hidden from public" tone="warning" />}
                         </div>
 
                         <div className="mt-2 text-lg font-bold text-[var(--dk-heading)]">KSh {p.price.toLocaleString()}</div>
+
+                        {isAdminRole(role) && (
+                          <div className="mt-3">
+                            <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)]">
+                              Resale category (only applies if this is a resale property)
+                            </p>
+                            <ResaleCategoryForm propertyId={p.id} currentCategory={p.resaleCategory} />
+                          </div>
+                        )}
 
                         {p.representingName && (
                           <div className="mt-1.5 text-sm text-[var(--dk-muted)]">

@@ -27,6 +27,14 @@ datasource db {
 // propertyType: "HOUSE" | "APARTMENT" | "LAND" | "COMMERCIAL" | "OTHER"
 //   "OTHER" requires propertyTypeOther to be set (what it actually is).
 // listingType:  "SALE" | "RENT"
+// resaleCategory: "AUCTION" | "STANDARD_RESALE" | "DISTRESSED_SALE" | "FORECLOSURE" | null
+//   Only meaningful for a property listed directly by an admin (isAdminRole) — i.e. a resale
+//   property the platform itself is listing on the market's behalf, as opposed to an
+//   Owner/Agent's own listing. Left null for every Owner/Agent listing (never shown or settable
+//   there) and optional even on an admin's own listing, since an admin listing directly can
+//   still just be onboarding a regular owner rather than listing a resale property. See
+//   lib/resaleCategory.ts for the authoritative list and display labels, and
+//   app/api/properties/[id]/resale-category/route.ts for how it's set after creation.
 // status:       "PENDING" | "APPROVED" | "REJECTED" | "CHANGES_REQUESTED"
 //   This is the admin review workflow status — separate from availabilityStatus below.
 // availabilityStatus: "AVAILABLE" | "RESERVED" | "SOLD" | "RENTED"
@@ -125,6 +133,8 @@ model Property {
   // Only set (and required) when propertyType is "OTHER" — what it actually is.
   propertyTypeOther String?
   listingType  String
+  // See the resaleCategory comment block near the top of this file.
+  resaleCategory String?
   price        Float
   bedrooms     Int?
   bathrooms    Int?

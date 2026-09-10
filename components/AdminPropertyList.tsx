@@ -7,9 +7,12 @@ import AvailabilityForm from "@/components/AvailabilityForm";
 import CommissionRateForm from "@/components/CommissionRateForm";
 import DocumentVerifyButton from "@/components/DocumentVerifyButton";
 import VerificationStatusForm from "@/components/VerificationStatusForm";
+import ResaleCategoryForm from "@/components/ResaleCategoryForm";
 import { getRoleLabel } from "@/lib/propertyConstants";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/documentTypes";
 import { getAvailabilityLabel, getAvailabilityBadgeClass } from "@/lib/availabilityStatus";
+import { getResaleCategoryLabel } from "@/lib/resaleCategory";
+import { isAdminRole } from "@/lib/roles";
 
 type ManagedProperty = {
   id: string;
@@ -27,6 +30,7 @@ type ManagedProperty = {
   paused: boolean;
   pausedAt: string | Date | null;
   availabilityStatus: string;
+  resaleCategory: string | null;
   price: number;
   views: number;
   representingName: string | null;
@@ -202,6 +206,7 @@ export default function AdminPropertyList({
               <Badge label={p.verified ? "Verified" : "Not Verified"} tone={p.verified ? "success" : "neutral"} />
               {p.daktopVerified && <Badge label="DAKTOP VERIFIED" tone="accent" />}
               {p.featured && <Badge label="FEATURED" tone="role" />}
+              {p.resaleCategory && <Badge label={getResaleCategoryLabel(p.resaleCategory)} tone="warning" />}
               <Badge
                 label={p.showContact ? "Contact shown publicly" : "Contact hidden from public"}
                 tone={p.showContact ? "success" : "neutral"}
@@ -217,6 +222,15 @@ export default function AdminPropertyList({
             <div className="mt-3">
               <AvailabilityForm propertyId={p.id} currentStatus={p.availabilityStatus} />
             </div>
+
+            {isAdminRole(p.seller.role) && (
+              <div className="mt-3.5 rounded-xl border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-3 text-sm text-[var(--dk-ink)]">
+                <p className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--dk-muted)]">
+                  Resale category (only applies to a resale property listed by an admin)
+                </p>
+                <ResaleCategoryForm propertyId={p.id} currentCategory={p.resaleCategory} />
+              </div>
+            )}
 
             <div className="mt-3.5 rounded-xl border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-3 text-sm text-[var(--dk-ink)]">
               <p className="m-0">

@@ -32,6 +32,7 @@ import {
   commissionAgreementText,
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
+import { RESALE_CATEGORIES } from "@/lib/resaleCategory";
 import type { User } from "@prisma/client";
 import { ADMIN_ROLES, isAdminRole } from "@/lib/roles";
 
@@ -67,6 +68,10 @@ export async function POST(req: Request) {
     const propertyType = str(formData, "propertyType");
     const propertyTypeOther = str(formData, "propertyTypeOther");
     const listingType = str(formData, "listingType");
+    // Only ever honored below when the actor is an admin — see the resaleCategory validation
+    // block further down. A non-admin submitting this (whether via a hand-crafted request or
+    // not) simply has it ignored, same as any other field that doesn't apply to their listing.
+    const resaleCategoryRaw = str(formData, "resaleCategory");
     const priceRaw = str(formData, "price");
     const bedroomsRaw = str(formData, "bedrooms");
     const bathroomsRaw = str(formData, "bathrooms");
@@ -126,6 +131,20 @@ export async function POST(req: Request) {
 
     if (!(LISTING_TYPES as readonly string[]).includes(listingType)) {
       return NextResponse.json({ error: "Invalid listing type." }, { status: 400 });
+    }
+
+    // The resale category badge (Auction / Standard Resale / Distressed Sale / Foreclosure) is
+    // only ever meaningful on a property listed directly by an admin — never on an Owner/Agent's
+    // own listing, and it's optional even then (not every admin-listed property is a resale
+    // one).
+    if (resaleCategoryRaw && !isAdminRole(session.user.role)) {
+      return NextResponse.json(
+        { error: "Resale category can only be set on a listing created by an admin." },
+        { status: 400 }
+      );
+    }
+    if (resaleCategoryRaw && !(RESALE_CATEGORIES as readonly string[]).includes(resaleCategoryRaw)) {
+      return NextResponse.json({ error: "Invalid resale category." }, { status: 400 });
     }
 
     // Agents (and a super admin listing directly) are selling on someone else's behalf, so
@@ -269,6 +288,7 @@ export async function POST(req: Request) {
         propertyType,
         propertyTypeOther: propertyType === "OTHER" ? propertyTypeOther : null,
         listingType,
+        resaleCategory: isAdminRole(session.user.role) && resaleCategoryRaw ? resaleCategoryRaw : null,
         price: parsedPrice,
         bedrooms: parsedBedrooms,
         bathrooms: parsedBathrooms,

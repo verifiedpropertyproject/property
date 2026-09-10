@@ -13,6 +13,7 @@ import {
   getAvailabilityBadgeClass,
   isClosedAvailability,
 } from "@/lib/availabilityStatus";
+import { getResaleCategoryLabel, getResaleCategoryBadgeClass } from "@/lib/resaleCategory";
 import BuySellCard from "@/components/BuySellCard";
 // import ThemeToggle from "@/components/ThemeToggle";
 import PremiumSelect from "./PremiumSelect";
@@ -335,6 +336,15 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                   <div className="dk-badge-row">
                     {p.featured && <span className="dk-badge dk-badge-featured">Featured</span>}
                     {p.daktopVerified && <VerifiedSeal />}
+                    {p.resaleCategory && (
+                      <span
+                        className={`dk-badge inline-block rounded-full ${getResaleCategoryBadgeClass(
+                          p.resaleCategory
+                        )}`}
+                      >
+                        {getResaleCategoryLabel(p.resaleCategory)}
+                      </span>
+                    )}
                     <span
                       className={`dk-badge dk-badge-availability inline-block rounded-full px-2 py-0.5 text-xs font-medium ${getAvailabilityBadgeClass(
                         p.availabilityStatus
