@@ -21,6 +21,7 @@ type NavSession = {
 const PRIMARY_LINKS = [
   { href: "/", label: "Home", exact: true },
   { href: "/?listingType=SALE", label: "Buy Property" },
+  { href: "/resale", label: "Resale" },
   { href: "/dashboard", label: "Sell Property" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
