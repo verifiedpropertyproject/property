@@ -6,6 +6,7 @@ import { handleApiError } from "@/lib/apiError";
 import { notifyUsers } from "@/lib/notify";
 import { isClosedAvailability } from "@/lib/availabilityStatus";
 import type { User } from "@prisma/client";
+import { ADMIN_ROLES } from "@/lib/roles";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -48,7 +49,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     // The seller isn't notified yet — an admin has to approve the enquiry first.
-    const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
+    const admins = await prisma.user.findMany({ where: { role: { in: [...ADMIN_ROLES] } } });
 
     if (admins.length > 0) {
       await notifyUsers(

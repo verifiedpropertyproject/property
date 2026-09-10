@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { deletePropertyImage } from "@/lib/propertyImageStorage";
+import { isAdminRole } from "@/lib/roles";
 
 const EDITABLE_STATUSES = ["PENDING", "CHANGES_REQUESTED", "REJECTED"];
 
@@ -24,7 +25,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string; i
     }
 
     const isOwner = image.property.sellerId === session.user.id;
-    const isAdmin = session.user.role === "ADMIN";
+    const isAdmin = isAdminRole(session.user.role);
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: "You don't have access to this photo." }, { status: 403 });
     }

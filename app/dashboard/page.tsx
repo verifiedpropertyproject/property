@@ -18,6 +18,7 @@ import PhoneForm from "@/components/PhoneForm";
 import ProfileNameForm from "@/components/ProfileNameForm";
 import IdentityVerificationRequestForm from "@/components/IdentityVerificationRequestForm";
 import { ROLE_LABELS, getRoleLabel, getPropertyTypeLabel } from "@/lib/propertyConstants";
+import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
 import { getAvailabilityLabel } from "@/lib/availabilityStatus";
 import SaveButton from "@/components/SaveButton";
 import Nav from "@/components/Nav";
@@ -65,7 +66,7 @@ type PendingViewingRequest = ViewingRequest & {
 };
 
 const STATUS_OPTIONS = ["PENDING", "APPROVED", "CHANGES_REQUESTED", "REJECTED"];
-const ROLE_OPTIONS = ["BUYER", "OWNER", "AGENT", "ADMIN"];
+const ROLE_OPTIONS = ["BUYER", "OWNER", "AGENT", "ADMIN", "SUPER_ADMIN"];
 
 type Tone = "role" | "success" | "warning" | "danger" | "accent" | "neutral";
 
@@ -326,7 +327,7 @@ export default async function DashboardPage({
   });
 
   const myProperties: MyPropertyWithEnquiries[] =
-    role === "OWNER" || role === "AGENT"
+    role === "OWNER" || role === "AGENT" || isSuperAdminRole(role)
       ? await prisma.property.findMany({
           where: { sellerId: currentUserId },
           include: {
@@ -346,7 +347,7 @@ export default async function DashboardPage({
       : [];
 
   const pendingProperties: PendingProperty[] =
-    role === "ADMIN"
+    isAdminRole(role)
       ? await prisma.property.findMany({
           where: { status: "PENDING" },
           include: { seller: { select: { name: true, email: true, role: true, verified: true } } },
@@ -355,7 +356,7 @@ export default async function DashboardPage({
       : [];
 
   const pendingEnquiries: PendingEnquiry[] =
-    role === "ADMIN"
+    isAdminRole(role)
       ? await prisma.enquiry.findMany({
           where: { status: "PENDING" },
           include: {
@@ -367,7 +368,7 @@ export default async function DashboardPage({
       : [];
 
   const pendingViewingRequests: PendingViewingRequest[] =
-    role === "ADMIN"
+    isAdminRole(role)
       ? await prisma.viewingRequest.findMany({
           where: { status: "PENDING" },
           include: {
@@ -392,7 +393,7 @@ export default async function DashboardPage({
       : {};
 
   const allProperties: ManagedProperty[] =
-    role === "ADMIN"
+    isAdminRole(role)
       ? await prisma.property.findMany({
           where: allPropertiesWhere,
           include: {
@@ -423,7 +424,7 @@ export default async function DashboardPage({
       : {};
 
   const allUsers =
-    role === "ADMIN"
+    isAdminRole(role)
       ? await prisma.user.findMany({
           where: allUsersWhere,
           select: {
@@ -523,7 +524,7 @@ export default async function DashboardPage({
             <StatCard href="#notifications" chip="amber" icon={<IconMail />} label="Notifications" value={receivedNotifications.length} />
           </div>
         )}
-        {role === "ADMIN" && (
+        {isAdminRole(role) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <StatCard href="#pending-listings" chip="amber" icon={<IconHouse />} label="Pending Listings" value={pendingProperties.length} />
             <StatCard href="#pending-enquiries" chip="blue" icon={<IconMail />} label="Pending Enquiries" value={pendingEnquiries.length} />
@@ -594,10 +595,25 @@ export default async function DashboardPage({
           </Section>
         )}
 
-        {(role === "OWNER" || role === "AGENT") && (
+        {(role === "OWNER" || role === "AGENT" || isSuperAdminRole(role)) && (
           <>
-            <Section eyebrow="New listing" title="List a property">
-              <PropertyForm isAgent={role === "AGENT"} identityVerificationStatus={currentUser.identityVerificationStatus} />
+            <Section
+              eyebrow={isSuperAdminRole(role) ? "Super admin" : "New listing"}
+              title="List a property"
+            >
+              {isSuperAdminRole(role) && (
+                <p className="mb-4 text-sm text-[var(--dk-muted)]">
+                  As a super admin, a listing you create here goes live immediately — no review
+                  queue, since you&apos;re the reviewer.
+                </p>
+              )}
+              <PropertyForm
+                isAgent={role === "AGENT" || isSuperAdminRole(role)}
+                identityVerificationStatus={currentUser.identityVerificationStatus}
+                hideIdentityVerificationOption={isSuperAdminRole(role)}
+                submitLabel={isSuperAdminRole(role) ? "List property" : "Submit for review"}
+                submittingLabel={isSuperAdminRole(role) ? "Listing..." : "Submitting..."}
+              />
             </Section>
 
             <Section id="my-listings" eyebrow={`${myProperties.length} total`} title="Your listings">
@@ -618,6 +634,7 @@ export default async function DashboardPage({
                             <Badge label="Not verified" tone="neutral" />
                           )}
                           {p.featured && <Badge label="Featured" tone="accent" />}
+                          {p.paused && <Badge label="Paused — hidden from public" tone="warning" />}
                         </div>
 
                         <div className="mt-2 text-lg font-bold text-[var(--dk-heading)]">KSh {p.price.toLocaleString()}</div>
@@ -692,7 +709,7 @@ export default async function DashboardPage({
           </>
         )}
 
-        {role === "ADMIN" && (
+        {isAdminRole(role) && (
           <>
             <Section id="pending-listings" eyebrow={`${pendingProperties.length} pending`} title="Listings awaiting review">
               <PropertyApprovalList properties={pendingProperties} />
@@ -746,7 +763,7 @@ export default async function DashboardPage({
               </div>
 
               <div className="mt-1">
-                <AdminPropertyList properties={allProperties} />
+                <AdminPropertyList properties={allProperties} isSuperAdmin={isSuperAdminRole(role)} />
               </div>
             </Section>
 
@@ -761,6 +778,7 @@ export default async function DashboardPage({
                       <option value="OWNER">{ROLE_LABELS.OWNER}</option>
                       <option value="AGENT">{ROLE_LABELS.AGENT}</option>
                       <option value="ADMIN">{ROLE_LABELS.ADMIN}</option>
+                      <option value="SUPER_ADMIN">{ROLE_LABELS.SUPER_ADMIN}</option>
                     </select>
                   </div>
                   <button type="submit" className="inline-flex items-center justify-center font-sans text-sm font-semibold text-white bg-[var(--dk-primary)] border border-[var(--dk-primary)] rounded-xl px-4.5 py-2 cursor-pointer no-underline transition-colors duration-150 hover:bg-[var(--dk-primary-hover)]">
@@ -790,7 +808,7 @@ export default async function DashboardPage({
               </div>
 
               <div className="mt-1">
-                <AdminUserList users={allUsers} currentUserId={currentUserId} />
+                <AdminUserList users={allUsers} currentUserId={currentUserId} isSuperAdmin={isSuperAdminRole(role)} />
               </div>
             </Section>
           </>

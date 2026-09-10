@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { isAdminRole } from "@/lib/roles";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN") {
+    if (!isAdminRole(session.user.role)) {
       return NextResponse.json({ error: "Only admins can change a user's role." }, { status: 403 });
     }
 
@@ -30,7 +31,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    if (targetUser.role === "ADMIN") {
+    // Promoting/demoting into or out of ADMIN or SUPER_ADMIN isn't done through this endpoint
+    // at all (see scripts/create-admin.js) — this only ever moves someone between the three
+    // ordinary roles, so an existing admin account is never a valid target here.
+    if (isAdminRole(targetUser.role)) {
       return NextResponse.json({ error: "Admin accounts can't be changed from here." }, { status: 400 });
     }
 

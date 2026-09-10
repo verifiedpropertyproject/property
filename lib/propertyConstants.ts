@@ -1,14 +1,15 @@
 export const PROPERTY_TYPES = ["HOUSE", "APARTMENT", "LAND", "COMMERCIAL", "OTHER"] as const;
 
-// Display labels for role values. The underlying role strings (BUYER/OWNER/AGENT/ADMIN) stay
-// the same everywhere in the DB and logic (no migration needed) — this is only what's shown
-// to people, kept in one place so it's never out of sync across the admin panel, registration,
-// dashboard, and listing pages.
+// Display labels for role values. The underlying role strings (BUYER/OWNER/AGENT/ADMIN/
+// SUPER_ADMIN) stay the same everywhere in the DB and logic (no migration needed) — this is
+// only what's shown to people, kept in one place so it's never out of sync across the admin
+// panel, registration, dashboard, and listing pages.
 export const ROLE_LABELS: Record<string, string> = {
   BUYER: "Buyer",
   OWNER: "Seller (As Owner)",
   AGENT: "Seller (As Agent)",
   ADMIN: "Admin",
+  SUPER_ADMIN: "Super Admin",
 };
 
 export function getRoleLabel(role: string | null | undefined): string {

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -12,7 +13,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN") {
+    if (!isAdminRole(session.user.role)) {
       return NextResponse.json({ error: "Only admins can delete users." }, { status: 403 });
     }
 
@@ -25,8 +26,14 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    if (targetUser.role === "ADMIN") {
-      return NextResponse.json({ error: "Admin accounts can't be deleted from here." }, { status: 400 });
+    // Same rule as suspend: only a super admin can remove a regular admin, and super admin
+    // accounts can't be removed through this endpoint at all.
+    if (targetUser.role === "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Super admin accounts can't be deleted from here." }, { status: 400 });
+    }
+
+    if (targetUser.role === "ADMIN" && !isSuperAdminRole(session.user.role)) {
+      return NextResponse.json({ error: "Only a super admin can delete an admin account." }, { status: 403 });
     }
 
     // Cascades to their listings, enquiries, saved properties, and notifications

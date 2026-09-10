@@ -1,7 +1,10 @@
 import "next-auth";
 import "next-auth/jwt";
 
-export type Role = "ADMIN" | "BUYER" | "OWNER" | "AGENT";
+// SUPER_ADMIN has every ADMIN capability plus the ability to manage other admin accounts
+// (suspend/unsuspend, delete, promote/demote) — see lib/roles.ts for the shared helpers that
+// treat ADMIN and SUPER_ADMIN as "admin" throughout the app.
+export type Role = "ADMIN" | "SUPER_ADMIN" | "BUYER" | "OWNER" | "AGENT";
 
 declare module "next-auth" {
   interface Session {

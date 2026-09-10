@@ -39,9 +39,20 @@ const checkboxInputClass = "mt-0.5 h-4 w-4 shrink-0 accent-[var(--dk-primary)]";
 export default function PropertyForm({
   isAgent,
   identityVerificationStatus,
+  hideIdentityVerificationOption = false,
+  submitLabel = "Submit for review",
+  submittingLabel = "Submitting...",
 }: {
   isAgent: boolean;
   identityVerificationStatus: string;
+  // Set for admin usage of this form: identity verification is an OWNER/AGENT-only concept,
+  // so hide the "also request identity verification" checkbox rather than show it against an
+  // admin's own (irrelevant) status.
+  hideIdentityVerificationOption?: boolean;
+  // A super admin's listing skips the review queue (see app/api/properties/route.ts), so the
+  // button copy shouldn't promise a review that never happens.
+  submitLabel?: string;
+  submittingLabel?: string;
 }) {
   const router = useRouter();
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +95,7 @@ export default function PropertyForm({
     setError("");
 
     if (isAgent && !representingName.trim()) {
-      setError("As an agent, you must state who you're representing (the property owner's name).");
+      setError("You must state who you're representing (the property owner's name).");
       return;
     }
 
@@ -421,7 +432,7 @@ export default function PropertyForm({
         </label>
       </div>
 
-      {canRequestIdentityVerification(identityVerificationStatus) && (
+      {!hideIdentityVerificationOption && canRequestIdentityVerification(identityVerificationStatus) && (
         <div className="rounded-[var(--radius-md)] border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-3">
           <label className={checkboxRowClass}>
             <input
@@ -510,7 +521,7 @@ export default function PropertyForm({
         disabled={loading}
         className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Submitting..." : "Submit for review"}
+        {loading ? submittingLabel : submitLabel}
       </button>
     </form>
   );

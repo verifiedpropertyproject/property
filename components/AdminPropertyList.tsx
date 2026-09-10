@@ -24,6 +24,8 @@ type ManagedProperty = {
   daktopDecision: string;
   featured: boolean;
   showContact: boolean;
+  paused: boolean;
+  pausedAt: string | Date | null;
   availabilityStatus: string;
   price: number;
   views: number;
@@ -81,7 +83,13 @@ const actionButtonClass =
 const dangerButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-4 py-2 text-sm font-semibold text-[var(--dk-danger-ink)] transition-colors duration-150 hover:bg-[var(--dk-danger-ink)] hover:text-white disabled:cursor-not-allowed disabled:opacity-60";
 
-export default function AdminPropertyList({ properties }: { properties: ManagedProperty[] }) {
+export default function AdminPropertyList({
+  properties,
+  isSuperAdmin,
+}: {
+  properties: ManagedProperty[];
+  isSuperAdmin: boolean;
+}) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -96,6 +104,11 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
 
   async function toggleShowContact(id: string, current: boolean) {
     await runAction(id, `/api/properties/${id}/show-contact`, { showContact: !current });
+  }
+
+  async function togglePaused(id: string, current: boolean, title: string) {
+    if (!current && !confirm(`Pause "${title}"? It'll be hidden from public view until you resume it.`)) return;
+    await runAction(id, `/api/properties/${id}/pause`, { paused: !current });
   }
 
   async function runAction(id: string, url: string, body: object) {
@@ -193,6 +206,12 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
                 label={p.showContact ? "Contact shown publicly" : "Contact hidden from public"}
                 tone={p.showContact ? "success" : "neutral"}
               />
+              {p.paused && (
+                <Badge
+                  label={`Paused${p.pausedAt ? ` since ${new Date(p.pausedAt).toLocaleDateString()}` : ""} — hidden from public`}
+                  tone="warning"
+                />
+              )}
             </div>
 
             <div className="mt-3">
@@ -300,6 +319,16 @@ export default function AdminPropertyList({ properties }: { properties: ManagedP
               >
                 {loadingId === p.id ? "Working..." : p.showContact ? "Hide contact from public" : "Show contact to public"}
               </button>
+              {isSuperAdmin && (
+                <button
+                  type="button"
+                  className={p.paused ? actionButtonClass : dangerButtonClass}
+                  disabled={loadingId === p.id}
+                  onClick={() => togglePaused(p.id, p.paused, p.title)}
+                >
+                  {loadingId === p.id ? "Working..." : p.paused ? "Resume listing" : "Pause listing"}
+                </button>
+              )}
               <button
                 type="button"
                 className={dangerButtonClass}

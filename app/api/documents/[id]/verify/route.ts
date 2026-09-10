@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { isAdminRole } from "@/lib/roles";
 import { recomputeDaktopVerified } from "@/lib/verificationStatus";
 import { notifyUser } from "@/lib/notify";
 
@@ -14,7 +15,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
     }
 
-    if (session.user.role !== "ADMIN") {
+    if (!isAdminRole(session.user.role)) {
       return NextResponse.json({ error: "Only admins can mark a document as received." }, { status: 403 });
     }
 

@@ -33,6 +33,7 @@ import {
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
+import { ADMIN_ROLES, isSuperAdminRole } from "@/lib/roles";
 
 function str(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -47,8 +48,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
     }
 
-    if (!["OWNER", "AGENT"].includes(session.user.role || "")) {
-      return NextResponse.json({ error: "Only property owners and agents can list properties." }, { status: 403 });
+    // Owners and agents list their own/represented properties; a super admin can also list a
+    // property directly (e.g. onboarding an owner who isn't using the platform themselves) —
+    // see the isSuperAdminRole branches below for how that listing differs (auto-approved,
+    // representing-party details required the same way an agent's are).
+    const actingAsRepresentative = session.user.role === "AGENT" || isSuperAdminRole(session.user.role);
+
+    if (!["OWNER", "AGENT"].includes(session.user.role || "") && !isSuperAdminRole(session.user.role)) {
+      return NextResponse.json({ error: "Only property owners, agents, and super admins can list properties." }, { status: 403 });
     }
 
     const formData = await req.formData();
@@ -120,10 +127,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid listing type." }, { status: 400 });
     }
 
-    // Agents are selling on someone else's behalf, so they must say who that is.
-    if (session.user.role === "AGENT" && !representingName) {
+    // Agents (and a super admin listing directly) are selling on someone else's behalf, so
+    // they must say who that is.
+    if (actingAsRepresentative && !representingName) {
       return NextResponse.json(
-        { error: "As an agent, you must state who you're representing (the property owner's name)." },
+        { error: "You must state who you're representing (the property owner's name)." },
         { status: 400 }
       );
     }
@@ -264,11 +272,15 @@ export async function POST(req: Request) {
         bedrooms: parsedBedrooms,
         bathrooms: parsedBathrooms,
         acreage: parsedAcreage,
-        status: "PENDING",
+        // A super admin lists directly and skips the review queue — they're the reviewer,
+        // so there's no one else to approve it. Owner/agent listings still start PENDING.
+        status: isSuperAdminRole(session.user.role) ? "APPROVED" : "PENDING",
+        verified: isSuperAdminRole(session.user.role),
         sellerId: session.user.id,
-        // Only meaningful for agent listings — left null for owner listings.
-        representingName: session.user.role === "AGENT" ? representingName : null,
-        representingContact: session.user.role === "AGENT" && representingContact ? representingContact : null,
+        // Meaningful for agent listings and super-admin-listed properties (both are listing on
+        // someone else's behalf) — left null for owner listings.
+        representingName: actingAsRepresentative ? representingName : null,
+        representingContact: actingAsRepresentative && representingContact ? representingContact : null,
         latitude: parsedLatitude,
         longitude: parsedLongitude,
         address: parsedLatitude !== null ? address || null : null,
@@ -300,7 +312,9 @@ export async function POST(req: Request) {
 
     // Optional "also request identity verification" checkbox — best-effort side effect, never
     // blocks or fails listing creation if the requester isn't currently eligible to request.
-    if (str(formData, "requestIdentityVerification") === "true") {
+    // (No-op for admin accounts either way — submitIdentityVerificationRequest only applies to
+    // OWNER/AGENT — but skip the lookup entirely for a slightly cleaner admin-listing path.)
+    if (!isSuperAdminRole(session.user.role) && str(formData, "requestIdentityVerification") === "true") {
       const requestingUser = await prisma.user.findUnique({ where: { id: session.user.id } });
       if (requestingUser) {
         await submitIdentityVerificationRequest(requestingUser);
@@ -347,19 +361,22 @@ export async function POST(req: Request) {
       console.error("Failed to generate/store commission certificate:", certErr);
     }
 
-    // Notify every admin that a new property needs review
-    const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
+    // Notify every admin that a new property needs review — skipped for a super admin's own
+    // listing, since it's already approved and there's nothing for another admin to review.
+    if (!isSuperAdminRole(session.user.role)) {
+      const admins = await prisma.user.findMany({ where: { role: { in: [...ADMIN_ROLES] } } });
 
-    if (admins.length > 0) {
-      await notifyUsers(
-        admins.map((admin: User) => ({
-          senderId: session.user.id,
-          receiverId: admin.id,
-          message: `${session.user.name || session.user.email} listed a new property for review: "${title}"`,
-          propertyId: property.id,
-          emailSubject: "New listing needs review",
-        }))
-      );
+      if (admins.length > 0) {
+        await notifyUsers(
+          admins.map((admin: User) => ({
+            senderId: session.user.id,
+            receiverId: admin.id,
+            message: `${session.user.name || session.user.email} listed a new property for review: "${title}"`,
+            propertyId: property.id,
+            emailSubject: "New listing needs review",
+          }))
+        );
+      }
     }
 
     return NextResponse.json(property, { status: 201 });

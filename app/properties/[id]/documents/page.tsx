@@ -9,6 +9,7 @@ import DocumentUploadForm from "@/components/DocumentUploadForm";
 import DeleteDocumentButton from "@/components/DeleteDocumentButton";
 import DocumentVerifyButton from "@/components/DocumentVerifyButton";
 import VerificationStatusForm from "@/components/VerificationStatusForm";
+import { isAdminRole } from "@/lib/roles";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pending review",
@@ -37,7 +38,7 @@ export default async function PropertyDocumentsPage({ params }: { params: { id: 
   }
 
   const isOwner = property.sellerId === session.user.id;
-  const isAdmin = session.user.role === "ADMIN";
+  const isAdmin = isAdminRole(session.user.role);
 
   if (!isOwner && !isAdmin) {
     return (

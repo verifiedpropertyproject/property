@@ -69,7 +69,15 @@ const primaryButtonClass =
 const dangerButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-[var(--dk-danger-ink)]/30 bg-[var(--dk-danger-bg)] px-4 py-2 text-sm font-semibold text-[var(--dk-danger-ink)] transition-colors duration-150 hover:bg-[var(--dk-danger-ink)] hover:text-white disabled:cursor-not-allowed disabled:opacity-60";
 
-export default function AdminUserList({ users, currentUserId }: { users: ManagedUser[]; currentUserId: string }) {
+export default function AdminUserList({
+  users,
+  currentUserId,
+  isSuperAdmin,
+}: {
+  users: ManagedUser[];
+  currentUserId: string;
+  isSuperAdmin: boolean;
+}) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -223,7 +231,11 @@ export default function AdminUserList({ users, currentUserId }: { users: Managed
         {users.map((u) => {
           const label = u.name || u.email;
           const isSelf = u.id === currentUserId;
-          const isAdmin = u.role === "ADMIN";
+          const isSuperAdminTarget = u.role === "SUPER_ADMIN";
+          const isAdmin = u.role === "ADMIN" || isSuperAdminTarget;
+          // A super admin can suspend/delete a regular ADMIN account (but never another
+          // SUPER_ADMIN, and never themselves) — everyone else's admin accounts stay locked.
+          const canManageAsAdmin = isSuperAdmin && u.role === "ADMIN" && !isSelf;
           const canBeVerified = u.role === "OWNER" || u.role === "AGENT";
 
           return (
@@ -293,14 +305,38 @@ export default function AdminUserList({ users, currentUserId }: { users: Managed
                 </div>
               )}
 
-              {isAdmin ? (
-                <small className="mt-3 block text-sm text-[var(--dk-muted)]">
-                  Admin accounts can&apos;t be suspended, deleted, or changed here.
-                </small>
-              ) : isSelf ? (
+              {isSelf ? (
                 <small className="mt-3 block text-sm text-[var(--dk-muted)]">
                   You can&apos;t suspend, delete, or change the role of your own account.
                 </small>
+              ) : isSuperAdminTarget ? (
+                <small className="mt-3 block text-sm text-[var(--dk-muted)]">
+                  Super admin accounts can&apos;t be suspended, deleted, or changed here.
+                </small>
+              ) : isAdmin && !canManageAsAdmin ? (
+                <small className="mt-3 block text-sm text-[var(--dk-muted)]">
+                  Only a super admin can suspend or delete an admin account.
+                </small>
+              ) : canManageAsAdmin ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2.5 border-t border-[var(--dk-border)] pt-4">
+                  <button
+                    type="button"
+                    className={actionButtonClass}
+                    disabled={loadingId === u.id}
+                    onClick={() => toggleSuspended(u.id, u.suspended)}
+                  >
+                    {loadingId === u.id ? "Working..." : u.suspended ? "Unsuspend" : "Suspend"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={dangerButtonClass}
+                    disabled={loadingId === u.id}
+                    onClick={() => handleDelete(u.id, label)}
+                  >
+                    {loadingId === u.id ? "Working..." : "Delete"}
+                  </button>
+                </div>
               ) : (
                 <div className="mt-4 flex flex-wrap items-center gap-2.5 border-t border-[var(--dk-border)] pt-4">
                   <button

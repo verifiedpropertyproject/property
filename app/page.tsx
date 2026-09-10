@@ -78,7 +78,7 @@ function VerifiedSeal() {
 export default async function Home({ searchParams }: { searchParams: SearchParams }) {
   const session = await getServerSession(authOptions);
 
-  const where: Prisma.PropertyWhereInput = { status: "APPROVED", seller: { suspended: false } };
+  const where: Prisma.PropertyWhereInput = { status: "APPROVED", paused: false, seller: { suspended: false } };
 
   if (searchParams.q) {
     const q = searchParams.q.trim();
@@ -143,7 +143,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   // name — one grouped query for the whole page rather than one count query per listing.
   const sellerListingCounts = await prisma.property.groupBy({
     by: ["sellerId"],
-    where: { status: "APPROVED", seller: { suspended: false } },
+    where: { status: "APPROVED", paused: false, seller: { suspended: false } },
     _count: { _all: true },
   });
   const listingCountBySellerId = new Map(sellerListingCounts.map((row) => [row.sellerId, row._count._all]));

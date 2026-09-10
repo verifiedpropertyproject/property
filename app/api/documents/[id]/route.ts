@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { isAdminRole } from "@/lib/roles";
 import { readDocument, deleteDocument } from "@/lib/documentStorage";
 import { recomputeDaktopVerified } from "@/lib/verificationStatus";
 
@@ -22,7 +23,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ error: "Document not found." }, { status: 404 });
     }
 
-    const allowed = doc.property.sellerId === session.user.id || session.user.role === "ADMIN";
+    const allowed = doc.property.sellerId === session.user.id || isAdminRole(session.user.role);
     if (!allowed) {
       return NextResponse.json({ error: "You don't have access to this document." }, { status: 403 });
     }
@@ -56,7 +57,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ error: "Document not found." }, { status: 404 });
     }
 
-    const allowed = doc.property.sellerId === session.user.id || session.user.role === "ADMIN";
+    const allowed = doc.property.sellerId === session.user.id || isAdminRole(session.user.role);
     if (!allowed) {
       return NextResponse.json({ error: "You don't have access to this document." }, { status: 403 });
     }

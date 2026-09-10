@@ -18,6 +18,7 @@ import {
   getAvailabilityBadgeClass,
   isClosedAvailability,
 } from "@/lib/availabilityStatus";
+import { isAdminRole } from "@/lib/roles";
 
 function Badge({ label, className }: { label: string; className?: string }) {
   return (
@@ -86,11 +87,11 @@ export default async function PropertyDetailPage({
   // the platform and how many other properties they currently have publicly listed. Distinct
   // from the phone/email contact info above, which stays admin-gated via showContact.
   const sellerListingCount = await prisma.property.count({
-    where: { sellerId: property.sellerId, status: "APPROVED" },
+    where: { sellerId: property.sellerId, status: "APPROVED", paused: false },
   });
 
   const isOwner = session?.user?.id === property.sellerId;
-  const isAdmin = session?.user?.role === "ADMIN";
+  const isAdmin = isAdminRole(session?.user?.role);
   const whatsappNumber =
     property.showContact && property.seller.phone ? toWhatsAppNumber(property.seller.phone) : null;
   const whatsappHref = whatsappNumber
@@ -108,6 +109,12 @@ export default async function PropertyDetailPage({
   const adminWhatsAppHref = getAdminWhatsAppHref(adminEnquiryMessage);
 
   if (property.status !== "APPROVED" && !isOwner && !isAdmin) {
+    notFound();
+  }
+
+  // Paused listings are otherwise-approved but temporarily pulled from public view by a
+  // super admin — treat them like a non-approved listing for anyone but the owner/an admin.
+  if (property.paused && !isOwner && !isAdmin) {
     notFound();
   }
 
@@ -175,6 +182,11 @@ export default async function PropertyDetailPage({
               {property.status !== "APPROVED" && (
                 <span className="dk-badge bg-[var(--dk-gold-bg)] text-[var(--dk-gold-deep)]">
                   {property.status} — not yet public
+                </span>
+              )}
+              {property.paused && (
+                <span className="dk-badge bg-[var(--dk-gold-bg)] text-[var(--dk-gold-deep)]">
+                  Paused — hidden from public
                 </span>
               )}
             </div>

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { readCommissionCertificate } from "@/lib/commissionCertificateStorage";
+import { isAdminRole } from "@/lib/roles";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
@@ -19,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     }
 
     const isOwner = property.sellerId === session.user.id;
-    const isAdmin = session.user.role === "ADMIN";
+    const isAdmin = isAdminRole(session.user.role);
     if (!isOwner && !isAdmin) {
       return NextResponse.json({ error: "You don't have access to this certificate." }, { status: 403 });
     }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { canRequestIdentityVerification } from "@/lib/identityVerification";
 import { notifyUsers } from "@/lib/notify";
 import type { User } from "@prisma/client";
+import { ADMIN_ROLES } from "@/lib/roles";
 
 // Shared by app/api/profile/identity-verification (dashboard request) and app/api/properties
 // (the "also request identity verification" checkbox at listing creation) so both paths behave
@@ -23,7 +24,7 @@ export async function submitIdentityVerificationRequest(user: User): Promise<boo
     },
   });
 
-  const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
+  const admins = await prisma.user.findMany({ where: { role: { in: [...ADMIN_ROLES] } } });
   if (admins.length > 0) {
     await notifyUsers(
       admins.map((admin: User) => ({

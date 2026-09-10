@@ -1,8 +1,13 @@
 /**
- * Creates or promotes an admin account. This is the ONLY way to get an ADMIN
- * role in this app — it's intentionally not available through the public
- * registration form or the Google sign-in role picker, since letting anyone
- * self-register as admin would be a serious security hole.
+ * Creates or promotes an admin (or super admin) account. This is the ONLY way
+ * to get an ADMIN or SUPER_ADMIN role in this app — it's intentionally not
+ * available through the public registration form or the Google sign-in role
+ * picker, since letting anyone self-register as admin would be a serious
+ * security hole.
+ *
+ * A SUPER_ADMIN has every ADMIN capability, plus it's the only role that can
+ * suspend or delete another ADMIN account from the dashboard's user list
+ * (regular admins can't act on other admins at all).
  *
  * Only run this yourself, locally or on the server, with access to the
  * database (.env). Never expose this as a web-accessible endpoint.
@@ -13,6 +18,11 @@
  *
  *   Create a brand new admin account from scratch:
  *     node scripts/create-admin.js someone@example.com "Full Name" "a-strong-password"
+ *
+ *   Either form also accepts a trailing --super flag to grant SUPER_ADMIN
+ *   instead of ADMIN:
+ *     node scripts/create-admin.js someone@example.com --super
+ *     node scripts/create-admin.js someone@example.com "Full Name" "a-strong-password" --super
  */
 
 // Minimal .env loader so this works as a plain `node` script without adding
@@ -57,12 +67,18 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
-  const [, , email, name, password] = process.argv;
+  const rawArgs = process.argv.slice(2);
+  const superFlagIndex = rawArgs.indexOf("--super");
+  const isSuper = superFlagIndex !== -1;
+  if (isSuper) rawArgs.splice(superFlagIndex, 1);
+
+  const [email, name, password] = rawArgs;
+  const targetRole = isSuper ? "SUPER_ADMIN" : "ADMIN";
 
   if (!email) {
     console.error("Usage:");
-    console.error("  node scripts/create-admin.js <email>                       (promote existing user)");
-    console.error("  node scripts/create-admin.js <email> <name> <password>     (create new admin)");
+    console.error("  node scripts/create-admin.js <email> [--super]                       (promote existing user)");
+    console.error("  node scripts/create-admin.js <email> <name> <password> [--super]     (create new admin)");
     process.exitCode = 1;
     return;
   }
@@ -70,17 +86,17 @@ async function main() {
   const existing = await prisma.user.findUnique({ where: { email } });
 
   if (existing) {
-    if (existing.role === "ADMIN") {
-      console.log(`${email} is already an admin.`);
+    if (existing.role === targetRole) {
+      console.log(`${email} is already ${targetRole === "SUPER_ADMIN" ? "a super admin" : "an admin"}.`);
       return;
     }
 
     await prisma.user.update({
       where: { email },
-      data: { role: "ADMIN" },
+      data: { role: targetRole },
     });
 
-    console.log(`Promoted existing user ${email} (was ${existing.role || "no role"}) to ADMIN.`);
+    console.log(`Promoted existing user ${email} (was ${existing.role || "no role"}) to ${targetRole}.`);
     return;
   }
 
@@ -105,14 +121,14 @@ async function main() {
       email,
       name,
       password: hashed,
-      role: "ADMIN",
+      role: targetRole,
       // Created directly by an operator, so treat it as already verified —
       // no need to route this through the normal email verification flow.
       emailVerified: new Date(),
     },
   });
 
-  console.log(`Created new admin account for ${user.email}. They can log in immediately.`);
+  console.log(`Created new ${targetRole === "SUPER_ADMIN" ? "super admin" : "admin"} account for ${user.email}. They can log in immediately.`);
 }
 
 main()

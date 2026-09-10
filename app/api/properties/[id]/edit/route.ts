@@ -24,6 +24,7 @@ import {
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
+import { ADMIN_ROLES } from "@/lib/roles";
 
 const EDITABLE_STATUSES = ["PENDING", "CHANGES_REQUESTED", "REJECTED"];
 
@@ -241,7 +242,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     if (isResubmission) {
-      const admins = await prisma.user.findMany({ where: { role: "ADMIN" } });
+      const admins = await prisma.user.findMany({ where: { role: { in: [...ADMIN_ROLES] } } });
       if (admins.length > 0) {
         await notifyUsers(
           admins.map((admin: User) => ({

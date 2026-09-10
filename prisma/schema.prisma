@@ -18,9 +18,12 @@ datasource db {
 // application code. This was originally a SQLite constraint (no enum support there); kept as
 // strings after the Postgres switch too, since the whole app already treats them this way and
 // converting now would touch a lot of code for no functional benefit.
-// role:         "ADMIN" | "BUYER" | "OWNER" | "AGENT"
+// role:         "ADMIN" | "SUPER_ADMIN" | "BUYER" | "OWNER" | "AGENT"
 //   OWNER lists their own property directly. AGENT lists on behalf of someone else
 //   and must record who they're representing (see Property.representingName below).
+//   SUPER_ADMIN has every ADMIN capability, plus it's the only role that can suspend or
+//   delete another ADMIN account (regular admins can't act on other admins at all — see
+//   lib/roles.ts and app/api/admin/users/[id]/{suspend,route}.ts).
 // propertyType: "HOUSE" | "APARTMENT" | "LAND" | "COMMERCIAL" | "OTHER"
 //   "OTHER" requires propertyTypeOther to be set (what it actually is).
 // listingType:  "SALE" | "RENT"
@@ -156,6 +159,13 @@ model Property {
   daktopVerified    Boolean @default(false)
   featured     Boolean  @default(false)
   views        Int      @default(0)
+  // Super-admin-only control (see app/api/properties/[id]/pause/route.ts): temporarily pulls
+  // an otherwise-approved listing from public view without deleting it or touching its review
+  // `status` — a paused listing still shows as APPROVED everywhere admin-side, it's just
+  // excluded from the public homepage/search and returns 404 to everyone except its
+  // owner/an admin. Resuming just flips this back off. Regular admins can't pause/resume.
+  paused       Boolean  @default(false)
+  pausedAt     DateTime?
   // Off by default — an admin must explicitly opt a listing in before the lister's contact
   // (phone) is shown to the public on that listing's page.
   showContact  Boolean  @default(false)

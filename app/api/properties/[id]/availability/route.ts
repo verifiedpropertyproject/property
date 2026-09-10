@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { notifyUser, notifyUsers } from "@/lib/notify";
 import { AVAILABILITY_STATUSES, getAvailabilityLabel, isClosedAvailability } from "@/lib/availabilityStatus";
+import { isAdminRole } from "@/lib/roles";
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
@@ -28,7 +29,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const isOwner = property.sellerId === session.user.id;
-    const isAdmin = session.user.role === "ADMIN";
+    const isAdmin = isAdminRole(session.user.role);
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json(
