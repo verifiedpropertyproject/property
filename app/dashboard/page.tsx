@@ -327,7 +327,7 @@ export default async function DashboardPage({
   });
 
   const myProperties: MyPropertyWithEnquiries[] =
-    role === "OWNER" || role === "AGENT" || isSuperAdminRole(role)
+    role === "OWNER" || role === "AGENT" || isAdminRole(role)
       ? await prisma.property.findMany({
           where: { sellerId: currentUserId },
           include: {
@@ -595,24 +595,24 @@ export default async function DashboardPage({
           </Section>
         )}
 
-        {(role === "OWNER" || role === "AGENT" || isSuperAdminRole(role)) && (
+        {(role === "OWNER" || role === "AGENT" || isAdminRole(role)) && (
           <>
             <Section
-              eyebrow={isSuperAdminRole(role) ? "Super admin" : "New listing"}
+              eyebrow={isAdminRole(role) ? "Admin" : "New listing"}
               title="List a property"
             >
-              {isSuperAdminRole(role) && (
+              {isAdminRole(role) && (
                 <p className="mb-4 text-sm text-[var(--dk-muted)]">
-                  As a super admin, a listing you create here goes live immediately — no review
-                  queue, since you&apos;re the reviewer.
+                  As an admin, a listing you create here — including a resale property — goes
+                  live immediately, no review queue, since you&apos;re a reviewer yourself.
                 </p>
               )}
               <PropertyForm
-                isAgent={role === "AGENT" || isSuperAdminRole(role)}
+                isAgent={role === "AGENT" || isAdminRole(role)}
                 identityVerificationStatus={currentUser.identityVerificationStatus}
-                hideIdentityVerificationOption={isSuperAdminRole(role)}
-                submitLabel={isSuperAdminRole(role) ? "List property" : "Submit for review"}
-                submittingLabel={isSuperAdminRole(role) ? "Listing..." : "Submitting..."}
+                hideIdentityVerificationOption={isAdminRole(role)}
+                submitLabel={isAdminRole(role) ? "List property" : "Submit for review"}
+                submittingLabel={isAdminRole(role) ? "Listing..." : "Submitting..."}
               />
             </Section>
 

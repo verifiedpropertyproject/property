@@ -33,7 +33,7 @@ import {
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
-import { ADMIN_ROLES, isSuperAdminRole } from "@/lib/roles";
+import { ADMIN_ROLES, isAdminRole } from "@/lib/roles";
 
 function str(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -48,14 +48,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
     }
 
-    // Owners and agents list their own/represented properties; a super admin can also list a
-    // property directly (e.g. onboarding an owner who isn't using the platform themselves) —
-    // see the isSuperAdminRole branches below for how that listing differs (auto-approved,
-    // representing-party details required the same way an agent's are).
-    const actingAsRepresentative = session.user.role === "AGENT" || isSuperAdminRole(session.user.role);
+    // Owners and agents list their own/represented properties; an admin (or super admin) can
+    // also list a property directly — e.g. onboarding an owner who isn't using the platform
+    // themselves, or listing a resale property on the platform's behalf — see the isAdminRole
+    // branches below for how that listing differs (auto-approved, representing-party details
+    // required the same way an agent's are).
+    const actingAsRepresentative = session.user.role === "AGENT" || isAdminRole(session.user.role);
 
-    if (!["OWNER", "AGENT"].includes(session.user.role || "") && !isSuperAdminRole(session.user.role)) {
-      return NextResponse.json({ error: "Only property owners, agents, and super admins can list properties." }, { status: 403 });
+    if (!["OWNER", "AGENT"].includes(session.user.role || "") && !isAdminRole(session.user.role)) {
+      return NextResponse.json({ error: "Only property owners, agents, and admins can list properties." }, { status: 403 });
     }
 
     const formData = await req.formData();
@@ -272,10 +273,11 @@ export async function POST(req: Request) {
         bedrooms: parsedBedrooms,
         bathrooms: parsedBathrooms,
         acreage: parsedAcreage,
-        // A super admin lists directly and skips the review queue — they're the reviewer,
-        // so there's no one else to approve it. Owner/agent listings still start PENDING.
-        status: isSuperAdminRole(session.user.role) ? "APPROVED" : "PENDING",
-        verified: isSuperAdminRole(session.user.role),
+        // An admin (or super admin) lists directly and skips the review queue — they're a
+        // reviewer themselves, so there's no one else to approve it. Owner/agent listings
+        // still start PENDING.
+        status: isAdminRole(session.user.role) ? "APPROVED" : "PENDING",
+        verified: isAdminRole(session.user.role),
         sellerId: session.user.id,
         // Meaningful for agent listings and super-admin-listed properties (both are listing on
         // someone else's behalf) — left null for owner listings.
@@ -314,7 +316,7 @@ export async function POST(req: Request) {
     // blocks or fails listing creation if the requester isn't currently eligible to request.
     // (No-op for admin accounts either way — submitIdentityVerificationRequest only applies to
     // OWNER/AGENT — but skip the lookup entirely for a slightly cleaner admin-listing path.)
-    if (!isSuperAdminRole(session.user.role) && str(formData, "requestIdentityVerification") === "true") {
+    if (!isAdminRole(session.user.role) && str(formData, "requestIdentityVerification") === "true") {
       const requestingUser = await prisma.user.findUnique({ where: { id: session.user.id } });
       if (requestingUser) {
         await submitIdentityVerificationRequest(requestingUser);
@@ -361,9 +363,9 @@ export async function POST(req: Request) {
       console.error("Failed to generate/store commission certificate:", certErr);
     }
 
-    // Notify every admin that a new property needs review — skipped for a super admin's own
+    // Notify every admin that a new property needs review — skipped for an admin's own
     // listing, since it's already approved and there's nothing for another admin to review.
-    if (!isSuperAdminRole(session.user.role)) {
+    if (!isAdminRole(session.user.role)) {
       const admins = await prisma.user.findMany({ where: { role: { in: [...ADMIN_ROLES] } } });
 
       if (admins.length > 0) {
