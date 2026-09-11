@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { issueVerificationLink } from "@/lib/emailVerification";
 import { isValidPhone, PHONE_FORMAT_HINT } from "@/lib/phoneValidation";
-import { REFERRAL_REWARD_AMOUNT, deriveReferralCode } from "@/lib/referral";
+import { REFERRAL_REWARD_AMOUNT, generateReferralCode } from "@/lib/referral";
 
 export async function POST(req: Request) {
   try {
@@ -52,15 +52,28 @@ export async function POST(req: Request) {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: { name, email, phone: phone || null, password: hashed, role },
-    });
-
-    // Give every new account its own referral code, derived from its own (already-unique) id —
-    // done as a follow-up update since the id doesn't exist until after create. See
-    // lib/referral.ts.
-    const referralCode = deriveReferralCode(user.id);
-    await prisma.user.update({ where: { id: user.id }, data: { referralCode } });
+    // referralCode is required + unique, but the id (which the old id-derived scheme needed)
+    // doesn't exist until this same create() call returns — so instead generate a random code
+    // up front and retry on the (rare) collision.
+    let user;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        user = await prisma.user.create({
+          data: { name, email, phone: phone || null, password: hashed, role, referralCode: generateReferralCode() },
+        });
+        break;
+      } catch (err: any) {
+        const isReferralCodeCollision = err?.code === "P2002" && err?.meta?.target?.includes?.("referralCode");
+        if (!isReferralCodeCollision) throw err;
+        // else: loop and try another random code
+      }
+    }
+    if (!user) {
+      return NextResponse.json(
+        { error: "Could not create your account right now. Please try again." },
+        { status: 500 }
+      );
+    }
 
     // If they signed up via someone else's referral link, credit that person. A missing/invalid
     // code is not an error — it just means no referral is recorded, same as signing up with no

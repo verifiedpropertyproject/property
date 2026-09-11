@@ -28,10 +28,23 @@ export function getPayoutStatusBadgeClass(status: string): string {
 }
 
 // Derives a short, unique, shareable code from a user's (already-unique) id — no separate
-// generation/collision-retry logic needed. Used both for backfilling pre-existing accounts (see
-// this feature's migration, which does the SQL equivalent) and for new signups.
+// generation/collision-retry logic needed. Used for backfilling pre-existing accounts (see this
+// feature's migration, which does the SQL equivalent: upper(right(id, 8))).
 export function deriveReferralCode(userId: string): string {
   return userId.slice(-8).toUpperCase();
+}
+
+// For a brand-new signup, the id doesn't exist yet at the point Prisma needs referralCode (it's
+// a required, unique column, so `user.create` needs it up front — the id isn't assigned until
+// that same call returns). So new accounts instead get a short random code, generated here and
+// retried on the rare collision — see app/api/register/route.ts.
+const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I — easy to read/type aloud
+export function generateReferralCode(): string {
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+  }
+  return code;
 }
 
 // Relative path is enough for an in-app copy button (built into an absolute URL client-side with
