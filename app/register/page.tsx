@@ -95,8 +95,9 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function RegisterPage() {
+export default function RegisterPage({ searchParams }: { searchParams?: { ref?: string; role?: string } }) {
   const router = useRouter();
+  const referralCode = searchParams?.ref?.trim() || "";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -133,7 +134,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, password, confirmPassword, role }),
+        body: JSON.stringify({ name, email, phone, password, confirmPassword, role, ref: referralCode || undefined }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -239,6 +240,13 @@ export default function RegisterPage() {
       <p className="mt-2 text-sm text-[var(--dk-muted)]">
         Join Daktop360 to browse, list, or manage properties.
       </p>
+
+      {referralCode && (
+        <p className="mt-4 rounded-xl border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-4 py-2.5 text-sm text-[var(--dk-ink)]">
+          You were referred with code <span className="font-semibold">{referralCode}</span> — they&apos;ll earn a
+          referral reward once you sign up.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-5">
         <div>

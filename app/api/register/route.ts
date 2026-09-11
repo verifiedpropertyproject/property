@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { issueVerificationLink } from "@/lib/emailVerification";
 import { isValidPhone, PHONE_FORMAT_HINT } from "@/lib/phoneValidation";
+import { REFERRAL_REWARD_AMOUNT, deriveReferralCode } from "@/lib/referral";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, password, confirmPassword, role } = await req.json();
+    const { name, email, phone, password, confirmPassword, role, ref } = await req.json();
 
     if (!name || !email || !password || !confirmPassword || !role) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
@@ -54,6 +55,28 @@ export async function POST(req: Request) {
     const user = await prisma.user.create({
       data: { name, email, phone: phone || null, password: hashed, role },
     });
+
+    // Give every new account its own referral code, derived from its own (already-unique) id —
+    // done as a follow-up update since the id doesn't exist until after create. See
+    // lib/referral.ts.
+    const referralCode = deriveReferralCode(user.id);
+    await prisma.user.update({ where: { id: user.id }, data: { referralCode } });
+
+    // If they signed up via someone else's referral link, credit that person. A missing/invalid
+    // code is not an error — it just means no referral is recorded, same as signing up with no
+    // code at all.
+    if (typeof ref === "string" && ref.trim()) {
+      const referrer = await prisma.user.findUnique({ where: { referralCode: ref.trim().toUpperCase() } });
+      if (referrer && referrer.id !== user.id) {
+        await prisma.referral.create({
+          data: {
+            referrerId: referrer.id,
+            referredUserId: user.id,
+            rewardAmount: REFERRAL_REWARD_AMOUNT,
+          },
+        });
+      }
+    }
 
     const { verifyUrl, emailSent } = await issueVerificationLink(user.id, user.email);
 

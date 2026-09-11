@@ -41,6 +41,11 @@ datasource db {
 //   Set by the lister (Owner/Agent) or overridden by an admin. Changing this never affects
 //   the review `status` above — a listing can be re-marked Available/Sold/etc. freely without
 //   triggering re-review, unlike editing the listing's core details.
+// Referral.payoutStatus: "PENDING" | "PAID"
+//   The reward is tracked in-app so the referrer can see what they're owed; actually paying it
+//   out (e.g. M-Pesa) happens outside the app, with an admin flipping this to PAID afterward —
+//   see app/api/admin/referrals/[id]/payout/route.ts. See lib/referral.ts for the reward amount
+//   and every other constant/label for this feature.
 
 model User {
   id            String    @id @default(cuid())
@@ -70,6 +75,13 @@ model User {
   // to fix before resubmitting.
   identityVerificationNote        String?
   createdAt     DateTime  @default(now())
+
+  // Refer & earn — see the Referral model and lib/referral.ts. Every user gets a code (backfilled
+  // for pre-existing accounts by this feature's migration); referredByReferral is set only if
+  // *this* user signed up via someone else's code.
+  referralCode        String     @unique
+  referralsMade       Referral[] @relation("referralsMade")
+  referredByReferral  Referral?  @relation("referralsReceived")
 
   properties              Property[]
   documents               PropertyDocument[]
@@ -106,6 +118,25 @@ model PasswordResetToken {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// One row per successful referral: someone (referrer) signed up (referredUser) using the
+// referrer's referralCode — see app/api/register/route.ts. referredUserId is unique because a
+// user can only ever have been referred once (by whoever's code they used at signup).
+model Referral {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  // Snapshotted at creation from REFERRAL_REWARD_AMOUNT in lib/referral.ts, so a later change to
+  // that constant doesn't retroactively alter what earlier referrals show as owed.
+  rewardAmount Float
+  payoutStatus String    @default("PENDING")
+  paidAt       DateTime?
+
+  referrerId String
+  referrer   User   @relation("referralsMade", fields: [referrerId], references: [id], onDelete: Cascade)
+
+  referredUserId String @unique
+  referredUser   User   @relation("referralsReceived", fields: [referredUserId], references: [id], onDelete: Cascade)
 }
 
 model Property {

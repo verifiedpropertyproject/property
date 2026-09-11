@@ -19,6 +19,9 @@ import ResendVerificationButton from "@/components/ResendVerificationButton";
 import PhoneForm from "@/components/PhoneForm";
 import ProfileNameForm from "@/components/ProfileNameForm";
 import IdentityVerificationRequestForm from "@/components/IdentityVerificationRequestForm";
+import ReferAndEarn from "@/components/ReferAndEarn";
+import ReferralPayoutButton from "@/components/ReferralPayoutButton";
+import { getPayoutStatusLabel, getPayoutStatusBadgeClass } from "@/lib/referral";
 import { ROLE_LABELS, getRoleLabel, getPropertyTypeLabel } from "@/lib/propertyConstants";
 import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
 import { getAvailabilityLabel } from "@/lib/availabilityStatus";
@@ -280,6 +283,22 @@ export default async function DashboardPage({
   if (!currentUser) {
     redirect("/login");
   }
+
+  const myReferrals = await prisma.referral.findMany({
+    where: { referrerId: currentUserId },
+    include: { referredUser: { select: { name: true, email: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const allReferrals = isAdminRole(role)
+    ? await prisma.referral.findMany({
+        include: {
+          referrer: { select: { name: true, email: true } },
+          referredUser: { select: { name: true, email: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
 
   if (currentUser.suspended) {
     return (
@@ -588,6 +607,11 @@ export default async function DashboardPage({
           <PhoneForm currentPhone={currentUser.phone} />
         </Section>
 
+        {/* Refer & earn */}
+        <Section id="refer-and-earn" eyebrow="Refer & earn" title="Invite friends, earn rewards">
+          <ReferAndEarn referralCode={currentUser.referralCode} referrals={myReferrals} />
+        </Section>
+
         {(role === "OWNER" || role === "AGENT") && (
           <Section eyebrow="Trust & safety" title="Identity verification">
             <IdentityVerificationRequestForm
@@ -825,6 +849,39 @@ export default async function DashboardPage({
               <div className="mt-1">
                 <AdminUserList users={allUsers} currentUserId={currentUserId} isSuperAdmin={isSuperAdminRole(role)} />
               </div>
+            </Section>
+
+            <Section id="all-referrals" eyebrow={`${allReferrals.length} total`} title="All referrals">
+              {allReferrals.length === 0 ? (
+                <p className="text-sm text-[var(--dk-muted)]">No referrals yet.</p>
+              ) : (
+                <ul className="flex flex-col gap-2.5">
+                  {allReferrals.map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--dk-border)] px-4 py-3 text-sm"
+                    >
+                      <div>
+                        <p className="m-0 text-[var(--dk-ink)]">
+                          <span className="font-medium">{r.referrer.name || r.referrer.email}</span> referred{" "}
+                          <span className="font-medium">{r.referredUser.name || r.referredUser.email}</span>
+                        </p>
+                        <p className="m-0 mt-0.5 text-xs text-[var(--dk-muted)]">
+                          {new Date(r.createdAt).toLocaleDateString()} — KSh {r.rewardAmount.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <span
+                          className={`dk-badge inline-block rounded-full ${getPayoutStatusBadgeClass(r.payoutStatus)}`}
+                        >
+                          {getPayoutStatusLabel(r.payoutStatus)}
+                        </span>
+                        <ReferralPayoutButton referralId={r.id} currentStatus={r.payoutStatus} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </Section>
           </>
         )}
