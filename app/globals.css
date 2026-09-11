@@ -640,7 +640,7 @@ button:focus-visible,
 .dk-auth-divider { color: var(--dk-border); }
 
 .dk-search-panel {
-  flex: 2 1 560px;
+  flex: 1 1 100%;
   min-width: 0;
   width: 100%;
   background-color: var(--dk-ivory);
@@ -670,6 +670,7 @@ button:focus-visible,
 .dk-field-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; }
 
 .dk-field { flex: 1 1 160px; min-width: 140px; display: flex; flex-direction: column; }
+.dk-field--grow { flex: 1 1 auto; }
 
 .dk-field-label {
   color: var(--dk-ink);
@@ -783,6 +784,60 @@ button:focus-visible,
 
 .dk-search-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
 
+/* ---------- Quick search row: keyword field + submit, always visible ---------- */
+.dk-quick-search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.dk-submit-btn--quick { flex: 0 0 auto; white-space: nowrap; }
+
+/* ---------- Detailed search: collapsed by default, native <details> ---------- */
+.dk-adv-search {
+  border-top: 1px solid var(--dk-border);
+  padding-top: 14px;
+  margin-bottom: 4px;
+}
+
+.dk-adv-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--dk-ink);
+  font-weight: 600;
+  font-size: 13.5px;
+  user-select: none;
+}
+.dk-adv-summary::-webkit-details-marker { display: none; }
+.dk-adv-summary::before {
+  content: "+";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--dk-gold);
+  color: var(--dk-gold-deep);
+  font-size: 13px;
+  font-weight: 700;
+  flex: none;
+  transition: transform 0.2s ease;
+}
+.dk-adv-search[open] > .dk-adv-summary::before { content: "\2212"; }
+
+.dk-adv-summary-hint {
+  color: var(--dk-muted);
+  font-weight: 400;
+  font-size: 12.5px;
+}
+
+.dk-adv-search .dk-field-grid { margin-top: 18px; }
+
 .dk-submit-btn {
   background-color: var(--dk-primary);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
@@ -818,7 +873,11 @@ button:focus-visible,
 @media (max-width: 640px) {
   .dk-search-actions { flex-direction: column; align-items: stretch; }
   .dk-search-actions button, .dk-search-actions a { width: 100%; text-align: center; }
+
+  .dk-quick-search-row { flex-direction: column; align-items: stretch; }
+  .dk-submit-btn--quick { width: 100%; text-align: center; }
 }
+
 
 .dk-divider { border: none; border-top: 1px solid var(--dk-border); margin: 38px 0 32px; }
 
@@ -973,9 +1032,12 @@ button:focus-visible,
 
 /* ==========================================================================
    Featured properties — looping 3-card stacked carousel.
-   Sits between the hero intro and the "Find a property" search panel
-   (both live inside .dk-hero, a wrapping flex row) — giving this section a
-   100% flex-basis forces it onto its own full-width row right between them.
+   Lives inside .dk-hero (a wrapping flex row) alongside .dk-hero-intro:
+   the intro flexes to fill the left side, this section holds a capped
+   basis so it settles into the top-right, and .dk-search-panel carries
+   its own 100% flex-basis so it always drops to a full-width row below
+   both. On narrow screens (see the max-width: 860px block further down)
+   all three stack full-width in source order instead.
 
    Which listings show up here is entirely admin-controlled: the page passes
    in whichever (up to three) listings currently have `Property.featured`
@@ -999,8 +1061,8 @@ button:focus-visible,
    ========================================================================== */
 
 .dk-fc-section {
-  flex: 1 1 100%;
-  min-width: 0;
+  flex: 0 1 400px;
+  min-width: 280px;
   padding: 6px 4px 10px;
 }
 
@@ -1178,6 +1240,11 @@ button:focus-visible,
   font-weight: 600;
   font-size: 17px;
   margin-top: 2px;
+}
+
+@media (max-width: 860px) {
+  .dk-hero-intro,
+  .dk-fc-section { flex: 1 1 100%; }
 }
 
 @media (max-width: 640px) {

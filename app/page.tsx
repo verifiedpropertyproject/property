@@ -107,6 +107,19 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
   const sort = searchParams.sort && SORT_ORDER_BY[searchParams.sort] ? searchParams.sort : "newest";
 
+  // Only auto-expand the detailed search section when the visitor actually
+  // came in with one of those filters set — a plain keyword search (or no
+  // search at all) should land with it collapsed.
+  const hasAdvancedFilters = Boolean(
+    searchParams.location ||
+      searchParams.propertyType ||
+      searchParams.listingType ||
+      searchParams.availabilityStatus ||
+      searchParams.minPrice ||
+      searchParams.maxPrice ||
+      (searchParams.sort && searchParams.sort !== "newest")
+  );
+
   // Homepage carousel: which listings appear here is entirely up to a super
   // admin, via the same `featured` flag they already toggle from the admin
   // property list (POST /api/properties/[id]/feature, isAdminRole-gated).
@@ -228,8 +241,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
             <hr className="dk-search-rule" />
 
             <form method="get">
-              <div className="dk-field-grid">
-                <div className="dk-field" style={{ flexBasis: "100%" }}>
+              <div className="dk-quick-search-row">
+                <div className="dk-field dk-field--grow">
                   <label className="dk-field-label">Keyword search</label>
                   <input
                     type="text"
@@ -239,79 +252,88 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                     className="dk-input"
                   />
                 </div>
-
-                <div className="dk-field">
-                  <label className="dk-field-label">Location</label>
-                  <input
-                    type="text"
-                    name="location"
-                    defaultValue={searchParams.location}
-                    placeholder="e.g. Karen, Runda, Kiambu Road"
-                    className="dk-input"
-                  />
-                </div>
-
-                <PremiumSelect
-                  name="propertyType"
-                  label="Property type"
-                  options={PROPERTY_TYPE_OPTIONS}
-                  defaultValue={searchParams.propertyType}
-                  placeholder="Any type"
-                />
-
-                <PremiumSelect
-                  name="listingType"
-                  label="Buy or rent"
-                  options={LISTING_TYPE_OPTIONS}
-                  defaultValue={searchParams.listingType}
-                  placeholder="Any"
-                />
-
-                <PremiumSelect
-                  name="availabilityStatus"
-                  label="Availability"
-                  options={AVAILABILITY_OPTIONS}
-                  defaultValue={searchParams.availabilityStatus}
-                  placeholder="Any"
-                />
-
-                <div className="dk-field">
-                  <label className="dk-field-label">Min price (KSh)</label>
-                  <input
-                    type="number"
-                    name="minPrice"
-                    defaultValue={searchParams.minPrice}
-                    min="0"
-                    placeholder="Any"
-                    className="dk-input"
-                  />
-                </div>
-
-                <div className="dk-field">
-                  <label className="dk-field-label">Max price (KSh)</label>
-                  <input
-                    type="number"
-                    name="maxPrice"
-                    defaultValue={searchParams.maxPrice}
-                    min="0"
-                    placeholder="Any"
-                    className="dk-input"
-                  />
-                </div>
-
-                <PremiumSelect
-                  name="sort"
-                  label="Sort by"
-                  options={SORT_OPTIONS}
-                  defaultValue={sort}
-                  placeholder="Newest first"
-                />
-              </div>
-
-              <div className="dk-search-actions">
-                <button type="submit" className="dk-submit-btn">
+                <button type="submit" className="dk-submit-btn dk-submit-btn--quick">
                   Search properties
                 </button>
+              </div>
+
+              <details className="dk-adv-search" open={hasAdvancedFilters}>
+                <summary className="dk-adv-summary">
+                  <span className="dk-adv-summary-title">Detailed search</span>
+                  <span className="dk-adv-summary-hint">Location, price, type &amp; more</span>
+                </summary>
+
+                <div className="dk-field-grid">
+                  <div className="dk-field">
+                    <label className="dk-field-label">Location</label>
+                    <input
+                      type="text"
+                      name="location"
+                      defaultValue={searchParams.location}
+                      placeholder="e.g. Karen, Runda, Kiambu Road"
+                      className="dk-input"
+                    />
+                  </div>
+
+                  <PremiumSelect
+                    name="propertyType"
+                    label="Property type"
+                    options={PROPERTY_TYPE_OPTIONS}
+                    defaultValue={searchParams.propertyType}
+                    placeholder="Any type"
+                  />
+
+                  <PremiumSelect
+                    name="listingType"
+                    label="Buy or rent"
+                    options={LISTING_TYPE_OPTIONS}
+                    defaultValue={searchParams.listingType}
+                    placeholder="Any"
+                  />
+
+                  <PremiumSelect
+                    name="availabilityStatus"
+                    label="Availability"
+                    options={AVAILABILITY_OPTIONS}
+                    defaultValue={searchParams.availabilityStatus}
+                    placeholder="Any"
+                  />
+
+                  <div className="dk-field">
+                    <label className="dk-field-label">Min price (KSh)</label>
+                    <input
+                      type="number"
+                      name="minPrice"
+                      defaultValue={searchParams.minPrice}
+                      min="0"
+                      placeholder="Any"
+                      className="dk-input"
+                    />
+                  </div>
+
+                  <div className="dk-field">
+                    <label className="dk-field-label">Max price (KSh)</label>
+                    <input
+                      type="number"
+                      name="maxPrice"
+                      defaultValue={searchParams.maxPrice}
+                      min="0"
+                      placeholder="Any"
+                      className="dk-input"
+                    />
+                  </div>
+
+                  <PremiumSelect
+                    name="sort"
+                    label="Sort by"
+                    options={SORT_OPTIONS}
+                    defaultValue={sort}
+                    placeholder="Newest first"
+                  />
+                </div>
+              </details>
+
+              <div className="dk-search-actions">
                 <a href="/" className="dk-clear-link">
                   Clear filters
                 </a>
