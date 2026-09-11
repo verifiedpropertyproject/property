@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import type { Role } from "@/types/next-auth";
+import { generateReferralCode } from "@/lib/referral";
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -56,15 +57,28 @@ export const authOptions: NextAuthOptions = {
           where: { email: user.email },
         });
         if (!existing) {
-          await prisma.user.create({
-            data: {
-              email: user.email,
-              name: user.name || user.email,
-              image: user.image || undefined,
-              // Google has already verified this address, so it's verified on our side too.
-              emailVerified: new Date(),
-            },
-          });
+          // referralCode is required + unique; generate one and retry on the rare collision,
+          // same as the email/password signup flow in app/api/register/route.ts.
+          for (let attempt = 0; attempt < 5; attempt++) {
+            try {
+              await prisma.user.create({
+                data: {
+                  email: user.email,
+                  name: user.name || user.email,
+                  image: user.image || undefined,
+                  // Google has already verified this address, so it's verified on our side too.
+                  emailVerified: new Date(),
+                  referralCode: generateReferralCode(),
+                },
+              });
+              break;
+            } catch (err: any) {
+              const isReferralCodeCollision =
+                err?.code === "P2002" && err?.meta?.target?.includes?.("referralCode");
+              if (!isReferralCodeCollision) throw err;
+              // else: loop and try another random code
+            }
+          }
         } else if (existing.suspended) {
           // Block sign-in for an existing, suspended Google-linked account.
           return false;

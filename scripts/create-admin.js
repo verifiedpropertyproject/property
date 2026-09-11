@@ -66,6 +66,17 @@ const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
+// Mirrors lib/referral.ts's generateReferralCode — duplicated here (rather than imported) since
+// this is a plain Node script, not run through the TypeScript/Next.js build.
+const REFERRAL_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
+function generateReferralCode() {
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += REFERRAL_CODE_CHARS[Math.floor(Math.random() * REFERRAL_CODE_CHARS.length)];
+  }
+  return code;
+}
+
 async function main() {
   const rawArgs = process.argv.slice(2);
   const superFlagIndex = rawArgs.indexOf("--super");
@@ -116,17 +127,34 @@ async function main() {
 
   const hashed = await bcrypt.hash(password, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name,
-      password: hashed,
-      role: targetRole,
-      // Created directly by an operator, so treat it as already verified —
-      // no need to route this through the normal email verification flow.
-      emailVerified: new Date(),
-    },
-  });
+  // referralCode is required + unique; generate one and retry on the rare collision.
+  let user;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: hashed,
+          role: targetRole,
+          // Created directly by an operator, so treat it as already verified —
+          // no need to route this through the normal email verification flow.
+          emailVerified: new Date(),
+          referralCode: generateReferralCode(),
+        },
+      });
+      break;
+    } catch (err) {
+      const isReferralCodeCollision = err?.code === "P2002" && err?.meta?.target?.includes?.("referralCode");
+      if (!isReferralCodeCollision) throw err;
+      // else: loop and try another random code
+    }
+  }
+  if (!user) {
+    console.error("Could not create the account after several attempts. Please try again.");
+    process.exitCode = 1;
+    return;
+  }
 
   console.log(`Created new ${targetRole === "SUPER_ADMIN" ? "super admin" : "admin"} account for ${user.email}. They can log in immediately.`);
 }
