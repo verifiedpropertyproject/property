@@ -207,55 +207,57 @@ function ChevronIcon() {
       </div>
 
       <div id="dk-mobile-menu" className={`dk-nav-mobile${mobileOpen ? " dk-nav-mobile-open" : ""}`}>
-        <nav aria-label="Primary mobile" className="dk-nav-mobile-links">
-          {PRIMARY_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`dk-nav-mobile-link${isLinkActive(link.href) ? " dk-nav-mobile-link-active" : ""}`}
-              aria-current={isLinkActive(link.href) ? "page" : undefined}
-              onClick={() => setMobileOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
-          {user?.role === "BUYER" && (
-            <Link href="/dashboard/saved" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
-              Saved
-            </Link>
-          )}
-        </nav>
-
-        <hr className="dk-nav-mobile-rule" />
-
-        <div className="dk-nav-mobile-foot">
-          {user ? (
-            <>
-              <div className="dk-nav-mobile-user">
-                <span className="dk-nav-avatar">{initialsFor(user.name, user.email)}</span>
-                <span className="dk-nav-mobile-user-name">{user.name || user.email}</span>
-              </div>
-              <Link href="/dashboard" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
-                Dashboard
-              </Link>
-              <button
-                type="button"
-                className="dk-nav-mobile-link dk-nav-mobile-link-danger"
-                onClick={() => signOut({ callbackUrl: "/" })}
+        <div className="dk-nav-mobile-inner">
+          <nav aria-label="Primary mobile" className="dk-nav-mobile-links">
+            {PRIMARY_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`dk-nav-mobile-link${isLinkActive(link.href) ? " dk-nav-mobile-link-active" : ""}`}
+                aria-current={isLinkActive(link.href) ? "page" : undefined}
+                onClick={() => setMobileOpen(false)}
               >
-                Sign out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
-                Log in
+                {link.label}
               </Link>
-              <Link href="/register" className="dk-nav-mobile-cta" onClick={() => setMobileOpen(false)}>
-                Create account
+            ))}
+            {user?.role === "BUYER" && (
+              <Link href="/dashboard/saved" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
+                Saved
               </Link>
-            </>
-          )}
+            )}
+          </nav>
+
+          <hr className="dk-nav-mobile-rule" />
+
+          <div className="dk-nav-mobile-foot">
+            {user ? (
+              <>
+                <div className="dk-nav-mobile-user">
+                  <span className="dk-nav-avatar">{initialsFor(user.name, user.email)}</span>
+                  <span className="dk-nav-mobile-user-name">{user.name || user.email}</span>
+                </div>
+                <Link href="/dashboard" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
+                  Dashboard
+                </Link>
+                <button
+                  type="button"
+                  className="dk-nav-mobile-link dk-nav-mobile-link-danger"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
+                  Log in
+                </Link>
+                <Link href="/register" className="dk-nav-mobile-cta" onClick={() => setMobileOpen(false)}>
+                  Create account
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

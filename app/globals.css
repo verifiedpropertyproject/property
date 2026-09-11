@@ -354,7 +354,7 @@ button:focus-visible,
   border-top: 1px solid transparent;
   transition: grid-template-rows 0.28s ease, border-color 0.28s ease;
 }
-.dk-nav-mobile > * { min-height: 0; }
+.dk-nav-mobile-inner { min-height: 0; overflow: hidden; }
 .dk-nav-mobile-open {
   grid-template-rows: 1fr;
   border-top-color: var(--dk-border);
