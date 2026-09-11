@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import Marquee from "@/components/Marquee";
 import ContactForm from "./ContactForm";
 
 export const metadata = {
@@ -75,6 +76,7 @@ export default async function ContactPage() {
         </div>
       </div>
 
+      <Marquee />
       <Footer />
     </div>
   );

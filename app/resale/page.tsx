@@ -6,6 +6,7 @@ import PropertyCard, { type PropertyWithSeller } from "@/components/PropertyCard
 import PremiumSelect from "../PremiumSelect";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import Marquee from "@/components/Marquee";
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS } from "@/lib/propertyConstants";
 import { AVAILABILITY_LABELS } from "@/lib/availabilityStatus";
 import { RESALE_CATEGORIES, getResaleCategoryLabel } from "@/lib/resaleCategory";
@@ -126,7 +127,7 @@ export default async function ResalePage({ searchParams }: { searchParams: Searc
   }
 
   return (
-    <div className="dk-page">
+    <div className="dk-page dk-page--resale">
       <Nav session={session} />
 
       <div className="dk-container">
@@ -264,6 +265,7 @@ export default async function ResalePage({ searchParams }: { searchParams: Searc
         </section>
       </div>
 
+      <Marquee />
       <Footer />
     </div>
   );

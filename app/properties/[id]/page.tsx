@@ -9,6 +9,7 @@ import SaveButton from "@/components/SaveButton";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import LocationView from "@/components/LocationView";
 import VerificationPanel from "@/components/VerificationPanel";
+import PropertyGallery from "@/components/PropertyGallery";
 import Nav from "@/components/Nav";
 import { getPropertyTypeLabel, getRoleLabel } from "@/lib/propertyConstants";
 import { toWhatsAppNumber } from "@/lib/phoneValidation";
@@ -252,36 +253,15 @@ export default async function PropertyDetailPage({
             </div>
 
             {property.imageUrl && (
-              <div className="mb-6">
-                <div className="relative inline-block overflow-hidden rounded-[var(--radius-lg)] border border-[var(--dk-border)] bg-[var(--dk-ivory)]">
-                  <img
-                    src={property.imageUrl}
-                    alt={property.title}
-                    width={480}
-                    className="block h-auto max-w-full"
-                  />
-                  {isClosedAvailability(property.availabilityStatus) && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/40 dark:bg-black/60">
-                      <span className="rounded-md bg-white/95 px-4 py-1.5 text-base font-semibold uppercase tracking-wide text-gray-900 dark:bg-neutral-900/95 dark:text-neutral-50">
-                        {AVAILABILITY_LABELS[property.availabilityStatus] || property.availabilityStatus}
-                      </span>
-                    </span>
-                  )}
-                </div>
-                {property.images.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {property.images.map((img) => (
-                      <img
-                        key={img.id}
-                        src={img.url}
-                        alt={property.title}
-                        width={160}
-                        className="h-[100px] w-[100px] rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-ivory)] object-cover"
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              <PropertyGallery
+                images={[property.imageUrl, ...property.images.map((img: { url: string }) => img.url)]}
+                alt={property.title}
+                closedLabel={
+                  isClosedAvailability(property.availabilityStatus)
+                    ? AVAILABILITY_LABELS[property.availabilityStatus] || property.availabilityStatus
+                    : null
+                }
+              />
             )}
 
             {property.videoUrl && (

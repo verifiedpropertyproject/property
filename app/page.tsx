@@ -16,6 +16,7 @@ import FeaturedCarousel from "@/components/FeaturedCarousel";
 import PremiumSelect from "./PremiumSelect";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import Marquee from "@/components/Marquee";
 import PropertyBackground from "@/components/PropertyBackground";
 
 
@@ -369,7 +370,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
         <BuySellCard session={session} />
       </div>
-        <Footer/>
+      <Marquee />
+      <Footer/>
 
     </div>
   );

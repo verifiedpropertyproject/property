@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import Marquee from "@/components/Marquee";
 
 export const metadata = {
   title: "About Us | Daktop",
@@ -162,6 +163,7 @@ export default async function AboutPage() {
         </section>
       </div>
 
+      <Marquee />
       <Footer />
     </div>
   );

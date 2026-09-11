@@ -112,6 +112,36 @@ button:focus-visible,
   from { opacity: 0; }
   to { opacity: 1; }
 }
+@keyframes dkMarqueeLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes dkMarqueeRight {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-marquee-left {
+  animation: dkMarqueeLeft linear infinite;
+}
+.animate-marquee-right {
+  animation: dkMarqueeRight linear infinite;
+}
+
+/* ---------- FloatingContact (WhatsApp / Call bubble) ---------- */
+@keyframes dkFabRing {
+  0% { transform: scale(1); opacity: 0.45; }
+  100% { transform: scale(1.85); opacity: 0; }
+}
+.dk-fab-ring {
+  animation: dkFabRing 2.2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+@keyframes dkFabPop {
+  from { opacity: 0; transform: translateY(10px) scale(0.85); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.dk-fab-pop {
+  animation: dkFabPop 0.22s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
@@ -1297,4 +1327,89 @@ button:focus-visible,
   .dk-fc-stage { padding: 0 46px; height: clamp(280px, 70vw, 320px); }
   .dk-fc-card { width: clamp(190px, 62vw, 240px); }
   .dk-fc-img, .dk-fc-img-fallback { height: 140px; }
+}
+
+/* ==========================================================================
+   Resale page theme — a deliberately distinct "auction house" palette so the
+   resale marketplace (auctions, distressed sales, foreclosures) reads as its
+   own space rather than a re-skin of the main site. Every .dk-* component
+   already draws its colors from these custom properties, so re-declaring
+   them scoped to .dk-page--resale re-themes the whole page — hero, search
+   panel, cards, badges, marquee, footer — for free, in both light and dark
+   mode, with no per-component duplication.
+   ========================================================================== */
+
+.dk-page--resale {
+  --dk-dark: #241a12;
+  --dk-heading: var(--dk-dark);
+  --dk-primary: #b3491f;
+  --dk-primary-hover: #93390f;
+  --dk-primary-ring: rgba(179, 73, 31, 0.18);
+  --dk-ivory: #f6efe4;
+  --dk-card: #fffaf2;
+  --dk-border: #e4d4bd;
+  --dk-ink: #2a2118;
+  --dk-muted: #7a6a57;
+  --dk-gold: #9c7a3d;
+  --dk-gold-deep: #6e551f;
+  --dk-gold-bg: #f1e6cf;
+  --dk-shadow: rgba(36, 26, 18, 0.1);
+  --dk-shadow-strong: rgba(36, 26, 18, 0.22);
+  --dk-border-hover: #d8c2a0;
+  --dk-placeholder: #ab9a83;
+
+  /* Sharper corners than the main site's soft rounded look — reads more like
+     a formal listing sheet than the marketing-forward homepage. */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+}
+
+.dark .dk-page--resale {
+  --dk-dark: #1c130d;
+  --dk-heading: #f3e9da;
+  --dk-primary: #e07a3f;
+  --dk-primary-hover: #f08f52;
+  --dk-primary-ring: rgba(224, 122, 63, 0.25);
+  --dk-ivory: #241a12;
+  --dk-card: #17110b;
+  --dk-border: #382a1c;
+  --dk-ink: #f1e6d8;
+  --dk-muted: #a89478;
+  --dk-gold: #d9a94a;
+  --dk-gold-deep: #f0c479;
+  --dk-gold-bg: rgba(217, 169, 74, 0.14);
+  --dk-shadow: rgba(0, 0, 0, 0.35);
+  --dk-shadow-strong: rgba(0, 0, 0, 0.6);
+  --dk-border-hover: #4a3625;
+  --dk-placeholder: #6b5b46;
+}
+
+/* A lot-tag pill instead of the homepage's dash-underline kicker. */
+.dk-page--resale .dk-kicker {
+  background-color: var(--dk-gold-bg);
+  color: var(--dk-gold-deep);
+  border: 1px solid var(--dk-gold);
+  border-radius: 999px;
+  padding: 5px 12px 5px 10px;
+}
+.dk-page--resale .dk-kicker::before { display: none; }
+
+/* Heavier panel border — feels like a printed listing sheet, not a soft card. */
+.dk-page--resale .dk-search-panel { border-width: 1.5px; }
+
+/* A copper accent bar next to the listings heading. */
+.dk-page--resale .dk-listings-heading {
+  position: relative;
+  padding-left: 15px;
+}
+.dk-page--resale .dk-listings-heading::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
+  background: var(--dk-primary);
+  border-radius: 2px;
 }
