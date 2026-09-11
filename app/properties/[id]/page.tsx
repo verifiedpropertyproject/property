@@ -350,7 +350,10 @@ export default async function PropertyDetailPage({
             {property.representingName && (
               <p className="dk-seller-info mt-1">
                 Representing: {property.representingName}
-                {property.representingContact && <> — {property.representingContact}</>}
+                {/* Same public/admin gating as the phone number above — representingContact is
+                    just as much a real phone number and must not leak to the public before an
+                    admin has explicitly chosen to show contact info for this listing. */}
+                {property.representingContact && property.showContact && <> — {property.representingContact}</>}
               </p>
             )}
           </section>
