@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { Notification, Property, Enquiry, ViewingRequest, SavedProperty, User, Prisma } from "@prisma/client";
+import type { Notification, Property, Enquiry, ViewingRequest, SavedProperty, User, Prisma, Referral } from "@prisma/client";
 import PropertyForm from "@/components/PropertyForm";
 import AvailabilityForm from "@/components/AvailabilityForm";
 import PropertyApprovalList from "@/components/PropertyApprovalList";
@@ -40,6 +40,15 @@ type MyPropertyWithEnquiries = Property & {
   enquiries: (Enquiry & { buyer: Pick<User, "name" | "email"> })[];
   viewingRequests: (ViewingRequest & { buyer: Pick<User, "name" | "email"> })[];
   _count: { savedBy: number };
+};
+
+type MyReferral = Referral & {
+  referredUser: Pick<User, "name" | "email">;
+};
+
+type AnyReferral = Referral & {
+  referrer: Pick<User, "name" | "email">;
+  referredUser: Pick<User, "name" | "email">;
 };
 
 type ManagedProperty = Property & {
@@ -284,21 +293,30 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const myReferrals = await prisma.referral.findMany({
-    where: { referrerId: currentUserId },
-    include: { referredUser: { select: { name: true, email: true } } },
-    orderBy: { createdAt: "desc" },
-  });
+  // Referral queries are wrapped defensively: if the migration adding this feature's table
+  // hasn't been applied to this database yet (or any other transient issue hits it), the rest
+  // of the dashboard should still render instead of crashing the whole page for every user.
+  let myReferrals: MyReferral[] = [];
+  let allReferrals: AnyReferral[] = [];
+  try {
+    myReferrals = await prisma.referral.findMany({
+      where: { referrerId: currentUserId },
+      include: { referredUser: { select: { name: true, email: true } } },
+      orderBy: { createdAt: "desc" },
+    });
 
-  const allReferrals = isAdminRole(role)
-    ? await prisma.referral.findMany({
+    if (isAdminRole(role)) {
+      allReferrals = await prisma.referral.findMany({
         include: {
           referrer: { select: { name: true, email: true } },
           referredUser: { select: { name: true, email: true } },
         },
         orderBy: { createdAt: "desc" },
-      })
-    : [];
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load referrals (has the referrals migration been applied?):", err);
+  }
 
   if (currentUser.suspended) {
     return (
