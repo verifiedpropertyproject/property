@@ -236,7 +236,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
           <FeaturedCarousel properties={featuredProperties} />
 
-          <section className="dk-search-panel">
+          <section id="find-a-property" className="dk-search-panel">
             <h2 className="dk-search-title">Find a property</h2>
             <hr className="dk-search-rule" />
 

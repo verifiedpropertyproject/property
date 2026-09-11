@@ -10,7 +10,7 @@ export default function BuySellCards({ session }: Props) {
 
   const sellHref =
     role === "AGENT" ? "/dashboard/properties/new" : "/register?role=SELLER";
-  const buyHref = role === "BUYER" ? "#find-a-property" : "/register?role=BUYER";
+  const buyHref = "/#find-a-property";
 
   return (
     <section aria-labelledby="dk-buy-sell-heading" className="mt-2 border-t border-[var(--dk-border)] pt-10">

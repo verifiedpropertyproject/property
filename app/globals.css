@@ -234,6 +234,23 @@ button:focus-visible,
 }
 .dk-nav-cta:hover { background-color: var(--dk-primary-hover); }
 
+/* Outlined counterpart to .dk-nav-cta — same shape/weight, transparent fill.
+   Used for "Log in" so it reads as a button rather than a plain nav link. */
+.dk-nav-cta-outline {
+  display: inline-flex;
+  align-items: center;
+  background-color: transparent;
+  color: var(--dk-primary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 15px;
+  border: 1px solid var(--dk-primary);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.dk-nav-cta-outline:hover { background-color: var(--dk-primary-ring); }
+
 .dk-theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -326,6 +343,17 @@ button:focus-visible,
 .dk-nav-account-item:hover { background-color: var(--dk-ivory); }
 .dk-nav-account-item-danger { color: #b23b3b; }
 
+/* Primary action inside the account menu (Dashboard) — filled like a button
+   instead of blending in with the plain-text "Sign out" row below it. */
+.dk-nav-account-item-primary {
+  background-color: var(--dk-primary);
+  color: #ffffff;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.dk-nav-account-item-primary:hover { background-color: var(--dk-primary-hover); }
+
 /* hamburger (mobile/tablet only) */
 .dk-nav-burger {
   display: none;
@@ -417,6 +445,24 @@ button:focus-visible,
   transition: background-color 0.2s ease;
 }
 .dk-nav-mobile-cta:hover { background-color: var(--dk-primary-hover); }
+
+/* Outlined counterpart to .dk-nav-mobile-cta, for "Log in" on mobile. */
+.dk-nav-mobile-cta-outline {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--dk-primary);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 11px 16px;
+  border: 1px solid var(--dk-primary);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+.dk-nav-mobile-cta-outline:hover { background-color: var(--dk-primary-ring); }
 
 @media (max-width: 1023px) {
   .dk-nav-links,

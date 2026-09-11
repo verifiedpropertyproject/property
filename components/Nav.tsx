@@ -168,7 +168,7 @@ function ChevronIcon() {
 
               {accountOpen && (
                 <div className="dk-nav-account-menu" role="menu">
-                  <Link href="/dashboard" className="dk-nav-account-item" role="menuitem" onClick={() => setAccountOpen(false)}>
+                  <Link href="/dashboard" className="dk-nav-account-item dk-nav-account-item-primary" role="menuitem" onClick={() => setAccountOpen(false)}>
                     Dashboard
                   </Link>
                   <button
@@ -184,7 +184,7 @@ function ChevronIcon() {
             </div>
           ) : (
             <div className="dk-nav-auth">
-              <Link href="/login" className="dk-nav-link">
+              <Link href="/login" className="dk-nav-cta-outline">
                 Log in
               </Link>
               <Link href="/register" className="dk-nav-cta">
@@ -236,7 +236,7 @@ function ChevronIcon() {
                   <span className="dk-nav-avatar">{initialsFor(user.name, user.email)}</span>
                   <span className="dk-nav-mobile-user-name">{user.name || user.email}</span>
                 </div>
-                <Link href="/dashboard" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
+                <Link href="/dashboard" className="dk-nav-mobile-cta" onClick={() => setMobileOpen(false)}>
                   Dashboard
                 </Link>
                 <button
@@ -249,7 +249,7 @@ function ChevronIcon() {
               </>
             ) : (
               <>
-                <Link href="/login" className="dk-nav-mobile-link" onClick={() => setMobileOpen(false)}>
+                <Link href="/login" className="dk-nav-mobile-cta-outline" onClick={() => setMobileOpen(false)}>
                   Log in
                 </Link>
                 <Link href="/register" className="dk-nav-mobile-cta" onClick={() => setMobileOpen(false)}>

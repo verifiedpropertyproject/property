@@ -51,6 +51,10 @@ export default function Footer() {
               Daktop
             </Link>
 
+            <p className="mt-2 text-xs font-medium uppercase tracking-wide text-[var(--dk-gold)]">
+              Trusted Properties. Lasting Relationships.
+            </p>
+
             <p className="mt-3.5 text-sm leading-relaxed text-white/60">
               A trusted marketplace for verified land, homes and commercial property across Kenya —
               every listing is reviewed before it goes live.
