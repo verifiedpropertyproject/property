@@ -970,3 +970,218 @@ button:focus-visible,
 .dk-verification-link { font-size: 12.5px; font-weight: 600; color: var(--dk-primary); text-decoration: underline; }
 
 .dk-save-wrap { margin-top: auto; padding-top: 12px; }
+
+/* ==========================================================================
+   Featured properties — looping 3-card stacked carousel.
+   Sits between the hero intro and the "Find a property" search panel
+   (both live inside .dk-hero, a wrapping flex row) — giving this section a
+   100% flex-basis forces it onto its own full-width row right between them.
+
+   Which listings show up here is entirely admin-controlled: the page passes
+   in whichever (up to three) listings currently have `Property.featured`
+   set, the same flag already toggled from <AdminPropertyList /> via
+   POST /api/properties/[id]/feature (admin-only, see isAdminRole check).
+
+   The rotation is pure CSS: each card loops through three depth "slots" —
+   center (active), left-back and right-back (background) — via one 24s
+   keyframe animation per card, phase-offset by animation-delay so that at
+   any moment exactly one card occupies each slot:
+     · 7s   cards hold their slot, perfectly still
+     · 1s   all three cards glide to their next slot at once
+     · 7s   hold the new arrangement
+     · 1s   transition
+     · 7s   hold
+     · 1s   transition back to the start — then the 24s cycle repeats
+   Card 0 starts centered, card 1 starts left-back (delay -8s), card 2
+   starts right-back (delay -16s), so the rotation is continuous and never
+   jumps. prefers-reduced-motion (see rule near the top of this file)
+   freezes the animation entirely for anyone who has that preference set.
+   ========================================================================== */
+
+.dk-fc-section {
+  flex: 1 1 100%;
+  min-width: 0;
+  padding: 6px 4px 10px;
+}
+
+.dk-fc-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.dk-fc-kicker {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dk-gold-deep);
+}
+
+.dk-fc-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--dk-heading);
+  font-size: clamp(20px, 2.4vw, 26px);
+  margin: 0;
+}
+
+.dk-fc-stage {
+  position: relative;
+  height: clamp(300px, 40vw, 360px);
+  margin: 0 auto;
+  max-width: 900px;
+  /* space either side for the offset background cards */
+  padding: 0 clamp(10px, 12vw, 140px);
+}
+
+.dk-fc-card {
+  position: absolute;
+  inset: 0 auto auto 50%;
+  width: clamp(230px, 30vw, 300px);
+  background-color: var(--dk-ivory);
+  border: 1px solid var(--dk-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 28px var(--dk-shadow-strong);
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+  will-change: transform, opacity;
+  animation-duration: 24s;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-name: dkFcRotate3;
+}
+
+.dk-fc-card--slot-0 { animation-delay: 0s; }
+.dk-fc-card--slot-1 { animation-delay: -8s; }
+.dk-fc-card--slot-2 { animation-delay: -16s; }
+
+/* Fewer than 3 featured listings: fall back to a simpler loop (or none). */
+.dk-fc-stage--1 .dk-fc-card {
+  animation: none;
+  transform: translate(-50%, 0) translateX(0) scale(1);
+  opacity: 1;
+  z-index: 3;
+}
+
+.dk-fc-stage--2 .dk-fc-card {
+  animation-duration: 16s;
+  animation-name: dkFcRotate2;
+}
+.dk-fc-stage--2 .dk-fc-card--slot-1 { animation-delay: -8s; }
+
+@keyframes dkFcRotate3 {
+  /* hold: centered, active */
+  0%,
+  29.1667% {
+    transform: translate(-50%, 0) translateX(0) scale(1);
+    opacity: 1;
+    z-index: 3;
+  }
+  /* transition into left-back */
+  33.3333%,
+  62.5% {
+    transform: translate(-50%, 0) translateX(-58%) scale(0.82);
+    opacity: 0.55;
+    z-index: 1;
+  }
+  /* transition into right-back */
+  66.6667%,
+  95.8333% {
+    transform: translate(-50%, 0) translateX(58%) scale(0.82);
+    opacity: 0.55;
+    z-index: 2;
+  }
+  /* transition back into center, loop point */
+  100% {
+    transform: translate(-50%, 0) translateX(0) scale(1);
+    opacity: 1;
+    z-index: 3;
+  }
+}
+
+@keyframes dkFcRotate2 {
+  0%,
+  43.75% {
+    transform: translate(-50%, 0) translateX(0) scale(1);
+    opacity: 1;
+    z-index: 3;
+  }
+  50%,
+  93.75% {
+    transform: translate(-50%, 0) translateX(46%) scale(0.86);
+    opacity: 0.55;
+    z-index: 1;
+  }
+  100% {
+    transform: translate(-50%, 0) translateX(0) scale(1);
+    opacity: 1;
+    z-index: 3;
+  }
+}
+
+.dk-fc-img-wrap { position: relative; }
+.dk-fc-img { width: 100%; height: 168px; object-fit: cover; display: block; }
+.dk-fc-img-fallback {
+  width: 100%;
+  height: 168px;
+  background: linear-gradient(135deg, var(--dk-border), var(--dk-ivory));
+}
+
+.dk-fc-ribbon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background-color: var(--dk-dark);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.dk-fc-body {
+  padding: 16px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dk-fc-card-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--dk-ink);
+  font-size: 16.5px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dk-fc-card-meta {
+  color: var(--dk-muted);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dk-fc-card-price {
+  color: var(--dk-heading);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .dk-fc-stage { padding: 0 46px; height: clamp(280px, 70vw, 320px); }
+  .dk-fc-card { width: clamp(190px, 62vw, 240px); }
+  .dk-fc-img, .dk-fc-img-fallback { height: 140px; }
+}

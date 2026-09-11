@@ -11,6 +11,7 @@ import {
   AVAILABILITY_LABELS,
 } from "@/lib/availabilityStatus";
 import BuySellCard from "@/components/BuySellCard";
+import FeaturedCarousel from "@/components/FeaturedCarousel";
 // import ThemeToggle from "@/components/ThemeToggle";
 import PremiumSelect from "./PremiumSelect";
 import Nav from "@/components/Nav";
@@ -106,6 +107,32 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
   const sort = searchParams.sort && SORT_ORDER_BY[searchParams.sort] ? searchParams.sort : "newest";
 
+  // Homepage carousel: which listings appear here is entirely up to a super
+  // admin, via the same `featured` flag they already toggle from the admin
+  // property list (POST /api/properties/[id]/feature, isAdminRole-gated).
+  // We simply take up to the three most recently created listings among
+  // those an admin has featured (that are also approved and not paused) —
+  // no separate admin UI needed.
+  const featuredProperties = await prisma.property.findMany({
+    where: {
+      featured: true,
+      status: "APPROVED",
+      paused: false,
+      seller: { suspended: false },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    select: {
+      id: true,
+      title: true,
+      imageUrl: true,
+      location: true,
+      propertyType: true,
+      propertyTypeOther: true,
+      price: true,
+    },
+  });
+
   const properties = await prisma.property.findMany({
     where,
     include: {
@@ -193,6 +220,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               </p>
             )}
           </header>
+
+          <FeaturedCarousel properties={featuredProperties} />
 
           <section className="dk-search-panel">
             <h2 className="dk-search-title">Find a property</h2>
