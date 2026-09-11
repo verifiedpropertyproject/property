@@ -244,7 +244,7 @@ export default function RegisterPage({ searchParams }: { searchParams?: { ref?: 
       {referralCode && (
         <p className="mt-4 rounded-xl border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-4 py-2.5 text-sm text-[var(--dk-ink)]">
           You were referred with code <span className="font-semibold">{referralCode}</span> — they&apos;ll earn a
-          referral reward once you sign up.
+          referral reward once you make a successful purchase.
         </p>
       )}
 

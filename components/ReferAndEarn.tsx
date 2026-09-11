@@ -40,7 +40,8 @@ export default function ReferAndEarn({
   return (
     <div>
       <p className="mb-4 text-sm text-[var(--dk-muted)]">
-        Share your link. When someone signs up with it, you earn KSh {REFERRAL_REWARD_AMOUNT.toLocaleString()}.
+        Share your link. When someone you referred makes a successful purchase, you earn KSh{" "}
+        {REFERRAL_REWARD_AMOUNT.toLocaleString()}.
       </p>
 
       <div className="flex flex-col gap-2.5 sm:flex-row">

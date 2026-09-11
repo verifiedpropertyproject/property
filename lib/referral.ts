@@ -1,13 +1,14 @@
 // Refer & earn — a user shares their referralCode (or the link built from it below), and when
-// someone signs up using it, the referrer earns a flat reward (see REFERRAL_REWARD_AMOUNT). Kept
-// deliberately simple: one flat reward per successful signup, no tiers or ongoing commissions.
+// someone they referred completes a successful purchase, the referrer earns a flat reward (see
+// REFERRAL_REWARD_AMOUNT). Kept deliberately simple: one flat reward per successful purchase, no
+// tiers or ongoing commissions.
 // See prisma/schema.prisma's Referral model and User.referralCode, app/api/register/route.ts for
 // how a referral is created, and app/api/admin/referrals/[id]/payout/route.ts for how an admin
 // marks one as paid out (the actual payout itself — e.g. M-Pesa — happens outside the app).
 
-// KSh, flat, per successful referral signup. Snapshotted onto each Referral row at creation, so
-// changing this later only affects new referrals, not ones already earned.
-export const REFERRAL_REWARD_AMOUNT = 1000;
+// KSh, flat, per successful purchase by the referred user. Snapshotted onto each Referral row at
+// creation, so changing this later only affects new referrals, not ones already earned.
+export const REFERRAL_REWARD_AMOUNT = 10000;
 
 export const PAYOUT_STATUSES = ["PENDING", "PAID"] as const;
 export type PayoutStatus = (typeof PAYOUT_STATUSES)[number];

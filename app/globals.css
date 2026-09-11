@@ -238,6 +238,22 @@ button:focus-visible,
   background-color: var(--dk-primary);
 }
 
+/* Small "New"-style pill shown next to a nav item's label (currently Resale). */
+.dk-nav-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background-color: var(--dk-gold-bg);
+  color: var(--dk-gold-deep);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .dk-nav-actions {
   display: flex;
   align-items: center;

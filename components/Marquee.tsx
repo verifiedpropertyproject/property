@@ -20,6 +20,14 @@ const ROW_TWO = [
   "Daktop360 Realtors",
 ];
 
+function MarqueeItem({ label }: { label: string }) {
+  return (
+    <span className="mx-2.5 inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-5 py-2 font-[family-name:var(--font-display)] text-[clamp(0.95rem,1.6vw,1.15rem)] font-medium text-[var(--dk-ink)] sm:px-6 sm:py-2.5">
+      {label}
+    </span>
+  );
+}
+
 function MarqueeRow({
   items,
   direction,
@@ -41,14 +49,7 @@ function MarqueeRow({
         style={{ animationDuration: duration }}
       >
         {content.map((item, i) => (
-          <span key={i} className="flex items-center">
-            <span className="whitespace-nowrap px-6 font-[family-name:var(--font-display)] text-[clamp(1.1rem,2.2vw,1.65rem)] font-medium text-white/85 sm:px-8">
-              {item}
-            </span>
-            <span aria-hidden="true" className="text-[var(--dk-gold)] text-sm opacity-60">
-              ✦
-            </span>
-          </span>
+          <MarqueeItem key={i} label={item} />
         ))}
       </div>
       <div
@@ -59,14 +60,7 @@ function MarqueeRow({
         aria-hidden="true"
       >
         {content.map((item, i) => (
-          <span key={i} className="flex items-center">
-            <span className="whitespace-nowrap px-6 font-[family-name:var(--font-display)] text-[clamp(1.1rem,2.2vw,1.65rem)] font-medium text-white/85 sm:px-8">
-              {item}
-            </span>
-            <span aria-hidden="true" className="text-[var(--dk-gold)] text-sm opacity-60">
-              ✦
-            </span>
-          </span>
+          <MarqueeItem key={i} label={item} />
         ))}
       </div>
     </div>
@@ -77,11 +71,11 @@ export default function Marquee() {
   return (
     <section
       aria-label="What we offer"
-      className="border-t border-white/10 bg-[var(--dk-dark)] py-10 sm:py-12"
+      className="border-t border-[var(--dk-border)] bg-[var(--dk-card)] py-10 sm:py-12"
     >
       <div className="flex flex-col gap-5 sm:gap-6">
-        <MarqueeRow items={ROW_ONE} direction="left" duration="70s" />
-        <MarqueeRow items={ROW_TWO} direction="right" duration="80s" />
+        <MarqueeRow items={ROW_ONE} direction="left" duration="350s" />
+        <MarqueeRow items={ROW_TWO} direction="right" duration="400s" />
       </div>
     </section>
   );
