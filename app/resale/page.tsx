@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import PropertyCard, { type PropertyWithSeller } from "@/components/PropertyCard";
+import FeaturedCarousel from "@/components/FeaturedCarousel";
 import PremiumSelect from "../PremiumSelect";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
@@ -92,6 +93,30 @@ export default async function ResalePage({ searchParams }: { searchParams: Searc
 
   const sort = searchParams.sort && SORT_ORDER_BY[searchParams.sort] ? searchParams.sort : "newest";
 
+  // Same rotating "featured" carousel as the homepage (see FeaturedCarousel /
+  // app/page.tsx), but scoped to resale-only listings so a property featured
+  // here never shows up mixed in with the regular marketplace carousel.
+  const featuredResaleProperties = await prisma.property.findMany({
+    where: {
+      featured: true,
+      status: "APPROVED",
+      paused: false,
+      seller: { suspended: false },
+      resaleCategory: { not: null },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    select: {
+      id: true,
+      title: true,
+      imageUrl: true,
+      location: true,
+      propertyType: true,
+      propertyTypeOther: true,
+      price: true,
+    },
+  });
+
   const properties = await prisma.property.findMany({
     where,
     include: {
@@ -142,6 +167,12 @@ export default async function ResalePage({ searchParams }: { searchParams: Searc
                 listings.
               </p>
             </header>
+
+            <FeaturedCarousel
+              properties={featuredResaleProperties}
+              kicker="Handpicked resale opportunities"
+              title="Featured resale properties"
+            />
 
             <section className="dk-search-panel">
               <h2 className="dk-search-title">Find a resale property</h2>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -115,17 +116,14 @@ function ChevronIcon() {
     <header className="dk-nav">
       <div className="dk-nav-inner">
         <Link href="/" className="dk-nav-brand" onClick={() => setMobileOpen(false)}>
-          <span className="dk-nav-brand-mark">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M9 12.5l2 2 4-4.5M12 3l2.2 1.3 2.5-.2 1 2.3 2.1 1.4-.6 2.5.6 2.5-2.1 1.4-1 2.3-2.5-.2L12 18l-2.2-1.3-2.5.2-1-2.3-2.1-1.4.6-2.5-.6-2.5 2.1-1.4 1-2.3 2.5.2L12 3z"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-          Daktop
+          <Image
+            src="/images/logo.jpeg"
+            alt="Daktop 360 Realtors Limited"
+            width={160}
+            height={130}
+            className="dk-nav-logo"
+            priority
+          />
         </Link>
 
         <nav className="dk-nav-links" aria-label="Primary">

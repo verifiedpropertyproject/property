@@ -17,6 +17,7 @@ import PremiumSelect from "./PremiumSelect";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import Marquee from "@/components/Marquee";
+import HomepageGallery from "@/components/HomepageGallery";
 import PropertyBackground from "@/components/PropertyBackground";
 
 
@@ -145,6 +146,14 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
       propertyTypeOther: true,
       price: true,
     },
+  });
+
+  // Admin-managed homepage gallery (see components/GalleryManager.tsx in the dashboard and
+  // app/api/gallery) — a simple slow-scrolling strip of infographics/promo images, entirely
+  // independent of any property listing.
+  const galleryImages = await prisma.galleryImage.findMany({
+    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+    select: { id: true, imageUrl: true, caption: true },
   });
 
   const properties = await prisma.property.findMany({
@@ -371,6 +380,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         <BuySellCard session={session} />
       </div>
       <Marquee />
+      <HomepageGallery images={galleryImages} />
       <Footer/>
 
     </div>

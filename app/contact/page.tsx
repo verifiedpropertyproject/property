@@ -20,8 +20,8 @@ const CHANNELS = [
   },
   {
     label: "Phone",
-    value: "+254 700 000 000",
-    href: "tel:+254700000000",
+    value: "+254 746 114 967",
+    href: "tel:+254746114967",
     hint: "Mon–Fri, 8:00–18:00 EAT",
   },
   {

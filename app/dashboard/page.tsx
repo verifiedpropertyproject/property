@@ -27,6 +27,7 @@ import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
 import { getAvailabilityLabel } from "@/lib/availabilityStatus";
 import SaveButton from "@/components/SaveButton";
 import Nav from "@/components/Nav";
+import GalleryManager from "@/components/GalleryManager";
 
 type NotificationWithSender = Notification & {
   sender: Pick<User, "name" | "email" | "role">;
@@ -418,6 +419,14 @@ export default async function DashboardPage({
         })
       : [];
 
+  const galleryImages =
+    isAdminRole(role)
+      ? await prisma.galleryImage.findMany({
+          orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+          select: { id: true, imageUrl: true, caption: true },
+        })
+      : [];
+
   const statusFilter = searchParams.status && STATUS_OPTIONS.includes(searchParams.status) ? searchParams.status : undefined;
   const searchQuery = searchParams.q?.trim();
 
@@ -778,6 +787,10 @@ export default async function DashboardPage({
 
             <Section id="pending-viewing-requests" eyebrow={`${pendingViewingRequests.length} pending`} title="Viewing requests awaiting review">
               <ViewingRequestApprovalList viewingRequests={pendingViewingRequests} />
+            </Section>
+
+            <Section id="homepage-gallery" eyebrow="Homepage" title="Gallery carousel">
+              <GalleryManager images={galleryImages} />
             </Section>
 
             <Section id="all-listings" eyebrow={`${allProperties.length} total`} title="All listings">

@@ -29,8 +29,14 @@ export type FeaturedCarouselProperty = Pick<
  */
 export default function FeaturedCarousel({
   properties,
+  kicker = "Handpicked by our team",
+  title = "Featured properties",
 }: {
   properties: FeaturedCarouselProperty[];
+  /** Small label above the heading — override per page (e.g. resale). */
+  kicker?: string;
+  /** Section heading — override per page (e.g. resale). */
+  title?: string;
 }) {
   const items = properties.slice(0, 3);
 
@@ -39,10 +45,10 @@ export default function FeaturedCarousel({
   }
 
   return (
-    <section className="dk-fc-section" aria-label="Featured properties, chosen by our team">
+    <section className="dk-fc-section" aria-label={`${title}, chosen by our team`}>
       <div className="dk-fc-header">
-        <span className="dk-fc-kicker">Handpicked by our team</span>
-        <h2 className="dk-fc-title">Featured properties</h2>
+        <span className="dk-fc-kicker">{kicker}</span>
+        <h2 className="dk-fc-title">{title}</h2>
       </div>
 
       <div className={`dk-fc-stage dk-fc-stage--${items.length}`}>

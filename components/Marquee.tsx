@@ -20,10 +20,29 @@ const ROW_TWO = [
   "Daktop360 Realtors",
 ];
 
-function MarqueeItem({ label }: { label: string }) {
+function MarqueeItem({
+  label,
+  accent,
+}: {
+  label: string;
+  accent: "gold" | "primary";
+}) {
   return (
-    <span className="mx-2.5 inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-5 py-2 font-[family-name:var(--font-display)] text-[clamp(0.95rem,1.6vw,1.15rem)] font-medium text-[var(--dk-ink)] sm:px-6 sm:py-2.5">
-      {label}
+    <span className="mx-4 inline-flex shrink-0 items-center whitespace-nowrap sm:mx-6">
+      <span
+        className={`font-[family-name:var(--font-display)] text-[clamp(1.05rem,1.9vw,1.5rem)] font-medium tracking-tight ${
+          accent === "gold" ? "text-[var(--dk-ink)]" : "text-[var(--dk-primary)]"
+        }`}
+        style={accent === "primary" ? { fontStyle: "italic" } : undefined}
+      >
+        {label}
+      </span>
+      <span
+        aria-hidden="true"
+        className={`mx-4 inline-block h-1 w-1 rounded-full sm:mx-6 ${
+          accent === "gold" ? "bg-[var(--dk-gold)]" : "bg-[var(--dk-primary)]"
+        }`}
+      />
     </span>
   );
 }
@@ -32,35 +51,37 @@ function MarqueeRow({
   items,
   direction,
   duration,
+  accent,
 }: {
   items: string[];
   direction: "left" | "right";
   duration: string;
+  accent: "gold" | "primary";
 }) {
   // Duplicate the list so the strip can loop seamlessly at -50%.
   const content = [...items, ...items];
 
   return (
-    <div className="relative flex overflow-hidden">
+    <div className="dk-marquee-fade group relative flex overflow-hidden">
       <div
-        className={`flex shrink-0 items-center ${
+        className={`flex shrink-0 items-center group-hover:[animation-play-state:paused] ${
           direction === "left" ? "animate-marquee-left" : "animate-marquee-right"
         }`}
         style={{ animationDuration: duration }}
       >
         {content.map((item, i) => (
-          <MarqueeItem key={i} label={item} />
+          <MarqueeItem key={i} label={item} accent={accent} />
         ))}
       </div>
       <div
-        className={`flex shrink-0 items-center ${
+        className={`flex shrink-0 items-center group-hover:[animation-play-state:paused] ${
           direction === "left" ? "animate-marquee-left" : "animate-marquee-right"
         }`}
         style={{ animationDuration: duration }}
         aria-hidden="true"
       >
         {content.map((item, i) => (
-          <MarqueeItem key={i} label={item} />
+          <MarqueeItem key={i} label={item} accent={accent} />
         ))}
       </div>
     </div>
@@ -71,11 +92,12 @@ export default function Marquee() {
   return (
     <section
       aria-label="What we offer"
-      className="border-t border-[var(--dk-border)] bg-[var(--dk-card)] py-10 sm:py-12"
+      className="relative border-y border-[var(--dk-border)] bg-[var(--dk-ivory)] py-9 sm:py-11"
     >
-      <div className="flex flex-col gap-5 sm:gap-6">
-        <MarqueeRow items={ROW_ONE} direction="left" duration="350s" />
-        <MarqueeRow items={ROW_TWO} direction="right" duration="400s" />
+      <div className="flex flex-col gap-4 sm:gap-5">
+        <MarqueeRow items={ROW_ONE} direction="left" duration="340s" accent="gold" />
+        <div className="mx-auto h-px w-[min(90%,1100px)] bg-[var(--dk-border)]" />
+        <MarqueeRow items={ROW_TWO} direction="right" duration="380s" accent="primary" />
       </div>
     </section>
   );

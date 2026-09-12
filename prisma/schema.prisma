@@ -93,6 +93,7 @@ model User {
   verificationTokens      EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   commissionAgreements    CommissionAgreement[]
+  galleryImages           GalleryImage[]
 }
 
 // MVP note: there's no real email service wired up. A token is generated and
@@ -309,6 +310,21 @@ model PropertyImage {
 
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+// Site-wide homepage gallery — admin-uploaded infographics/promo images shown in a slow
+// auto-scrolling carousel on the homepage (see components/HomepageGallery.tsx). Entirely
+// separate from any single listing's photos above; `order` lets an admin control display
+// order (lower first), with createdAt as the tiebreaker for images added in the same batch.
+model GalleryImage {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  caption   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  uploadedById String?
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
 }
 
 // status: "PENDING" | "APPROVED" | "REJECTED" — an admin must approve an enquiry

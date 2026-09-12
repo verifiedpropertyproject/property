@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const EXPLORE_LINKS = [
@@ -14,12 +15,12 @@ const ACCOUNT_LINKS = [
 
 const SOCIAL_LINKS = [
   {
-    href: "https://facebook.com",
+    href: "https://www.facebook.com/share/1EywjKYYZB/",
     label: "Facebook",
     path: "M14 9h3V6h-3c-1.66 0-3 1.34-3 3v2H9v3h2v6h3v-6h3l1-3h-4v-2c0-.55.45-1 1-1z",
   },
   {
-    href: "https://instagram.com",
+    href: "https://www.instagram.com/daktop360_realtors?stkn=MXBzY2V4NmF5cGtncA==",
     label: "Instagram",
     path: "M12 8.2a3.8 3.8 0 100 7.6 3.8 3.8 0 000-7.6zm0 6.27a2.47 2.47 0 110-4.94 2.47 2.47 0 010 4.94zM16.2 4H7.8A3.8 3.8 0 004 7.8v8.4A3.8 3.8 0 007.8 20h8.4a3.8 3.8 0 003.8-3.8V7.8A3.8 3.8 0 0016.2 4zm2.47 12.2a2.47 2.47 0 01-2.47 2.47H7.8a2.47 2.47 0 01-2.47-2.47V7.8A2.47 2.47 0 017.8 5.33h8.4a2.47 2.47 0 012.47 2.47v8.4zM16.53 6.2a.9.9 0 100 1.8.9.9 0 000-1.8z",
   },
@@ -37,18 +38,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           {/* Brand */}
           <div className="max-w-xs">
-            <Link href="/" className="inline-flex items-center gap-2 font-[family-name:var(--font-display)] text-lg font-semibold text-white no-underline">
-              <span className="inline-flex text-[var(--dk-gold)]">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M9 12.5l2 2 4-4.5M12 3l2.2 1.3 2.5-.2 1 2.3 2.1 1.4-.6 2.5.6 2.5-2.1 1.4-1 2.3-2.5-.2L12 18l-2.2-1.3-2.5.2-1-2.3-2.1-1.4.6-2.5-.6-2.5 2.1-1.4 1-2.3 2.5.2L12 3z"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              Daktop
+            <Link href="/" className="inline-flex items-center rounded-lg bg-white px-4 py-3 no-underline">
+              <Image
+                src="/images/logo.jpeg"
+                alt="Daktop 360 Realtors Limited"
+                width={160}
+                height={130}
+                className="h-16 w-auto object-contain"
+              />
             </Link>
 
             <p className="mt-2 text-xs font-medium uppercase tracking-wide text-[var(--dk-gold)]">
@@ -128,8 +125,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="tel:+254700000000" className="no-underline transition-colors duration-150 hover:text-white">
-                  +254 700 000 000
+                <a href="tel:+254746114967" className="no-underline transition-colors duration-150 hover:text-white">
+                  +254 746 114 967
                 </a>
               </li>
               <li className="text-white/50">Nairobi, Kenya</li>
