@@ -170,6 +170,44 @@ function Section({
   );
 }
 
+// Groups a run of related <Section>s under a shared label, so the dashboard reads as a
+// handful of named zones (Account, Listings, Admin review, ...) instead of one undifferentiated
+// scroll of identical cards. Purely visual — sits above a group's <Section>s, outside their cards.
+function GroupHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div className="flex items-center gap-4 pt-2 first:pt-0">
+      <div className="flex-shrink-0">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dk-primary)] m-0">{eyebrow}</p>
+        <h2 className="[font-family:var(--font-display)] text-xl font-semibold mt-0.5 text-[var(--dk-heading)]">{title}</h2>
+      </div>
+      <div className="h-px flex-1 bg-[var(--dk-border)]" aria-hidden="true" />
+    </div>
+  );
+}
+
+// A horizontally-scrollable strip of anchor pills to every section on the page, built per role
+// in DashboardPage below. Lets people jump straight to "Manage users" or "Your listings" instead
+// of scrolling past sections meant for a different role.
+function QuickNav({ links }: { links: { href: string; label: string }[] }) {
+  if (links.length === 0) return null;
+  return (
+    <nav
+      aria-label="Jump to section"
+      className="flex gap-2 overflow-x-auto rounded-2xl border border-[var(--dk-border)] bg-[var(--dk-card)] p-2.5 shadow-[0_1px_3px_var(--dk-shadow)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {links.map((link) => (
+        <a
+          key={link.href}
+          href={link.href}
+          className="inline-flex flex-shrink-0 items-center rounded-full border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-3.5 py-1.5 text-sm font-medium text-[var(--dk-ink)] no-underline transition-colors duration-150 hover:border-[var(--dk-primary)] hover:text-[var(--dk-primary)]"
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 function FilterForm({ children }: { children: React.ReactNode }) {
   return (
     <form method="get" className="flex items-end gap-2.5 flex-wrap">
@@ -537,9 +575,40 @@ export default async function DashboardPage({
   const totalViewsOnMyListings = myProperties.reduce((sum, p) => sum + p.views, 0);
   const totalSavedOnMyListings = myProperties.reduce((sum, p) => sum + p._count.savedBy, 0);
 
+  // Same anchors used by the group Sections below, just listed once here so the quick-nav strip
+  // and the page content can never drift out of sync with each other.
+  const quickLinks: { href: string; label: string }[] = [{ href: "#profile", label: "Profile" }];
+  if (role === "OWNER" || role === "AGENT") {
+    quickLinks.push({ href: "#identity-verification", label: "Identity verification" });
+  }
+  quickLinks.push({ href: "#refer-and-earn", label: "Refer & earn" });
+  if (role === "OWNER" || role === "AGENT" || isAdminRole(role)) {
+    quickLinks.push({ href: "#list-property", label: "List a property" }, { href: "#my-listings", label: "Your listings" });
+  }
+  if (isAdminRole(role)) {
+    quickLinks.push(
+      { href: "#pending-listings", label: "Pending listings" },
+      { href: "#pending-enquiries", label: "Pending enquiries" },
+      { href: "#pending-viewing-requests", label: "Pending viewings" },
+      { href: "#homepage-gallery", label: "Homepage gallery" },
+      { href: "#all-listings", label: "All listings" },
+      { href: "#manage-users", label: "Manage users" },
+      { href: "#all-referrals", label: "All referrals" },
+    );
+  }
+  if (role === "BUYER") {
+    quickLinks.push(
+      { href: "#browse-properties", label: "Browse" },
+      { href: "#saved-properties", label: "Favorites" },
+      { href: "#my-enquiries", label: "Your enquiries" },
+      { href: "#my-viewing-requests", label: "Your viewings" },
+    );
+  }
+  quickLinks.push({ href: "#notifications", label: "Notifications" });
+
   return (
     <div className="min-h-screen bg-[var(--dk-ivory)] font-sans text-[var(--dk-ink)]">
-      <div className="max-w-[1120px] mx-auto px-5 py-8 pb-16 flex flex-col gap-6">
+      <div className="max-w-[1120px] mx-auto px-5 py-8 pb-16 flex flex-col gap-8">
          <Nav />
         <header className="bg-[var(--dk-card)] border border-[var(--dk-border)] rounded-2xl p-6 md:p-7 md:flex-row flex flex-col gap-4 shadow-[0_1px_3px_var(--dk-shadow)] md:items-center md:justify-between">
           <div>
@@ -560,6 +629,8 @@ export default async function DashboardPage({
             <SignOutButton />
           </div>
         </header>
+
+        <QuickNav links={quickLinks} />
 
         {/* Stat row */}
         {(role === "OWNER" || role === "AGENT") && (
@@ -591,8 +662,10 @@ export default async function DashboardPage({
           </div>
         )}
 
-        {/* Account profile */}
-        <Section eyebrow="Account" title="Profile">
+        {/* Account */}
+        <div className="flex flex-col gap-6">
+        <GroupHeader eyebrow="Account" title="Your profile" />
+        <Section id="profile" eyebrow="Account" title="Profile">
           <div className="flex flex-col md:flex-row gap-6 md:gap-8">
             <div className="flex items-start gap-4 md:w-64 flex-shrink-0">
               <div className="w-14 h-14 rounded-full bg-[var(--dk-dark)] text-white flex items-center justify-center text-xl font-bold flex-shrink-0">
@@ -630,7 +703,7 @@ export default async function DashboardPage({
         </Section>
 
         {/* Phone number */}
-        <Section eyebrow="Contact" title="Phone number">
+        <Section id="phone" eyebrow="Contact" title="Phone number">
           <PhoneForm currentPhone={currentUser.phone} />
         </Section>
 
@@ -640,17 +713,20 @@ export default async function DashboardPage({
         </Section>
 
         {(role === "OWNER" || role === "AGENT") && (
-          <Section eyebrow="Trust & safety" title="Identity verification">
+          <Section id="identity-verification" eyebrow="Trust & safety" title="Identity verification">
             <IdentityVerificationRequestForm
               status={currentUser.identityVerificationStatus}
               note={currentUser.identityVerificationNote}
             />
           </Section>
         )}
+        </div>
 
         {(role === "OWNER" || role === "AGENT" || isAdminRole(role)) && (
-          <>
+          <div className="flex flex-col gap-6">
+            <GroupHeader eyebrow={isAdminRole(role) ? "Admin" : "Your business"} title="Listings" />
             <Section
+              id="list-property"
               eyebrow={isAdminRole(role) ? "Admin" : "New listing"}
               title="List a property"
             >
@@ -772,11 +848,12 @@ export default async function DashboardPage({
                 </ul>
               )}
             </Section>
-          </>
+          </div>
         )}
 
         {isAdminRole(role) && (
-          <>
+          <div className="flex flex-col gap-6">
+            <GroupHeader eyebrow="Admin" title="Review queue" />
             <Section id="pending-listings" eyebrow={`${pendingProperties.length} pending`} title="Listings awaiting review">
               <PropertyApprovalList properties={pendingProperties} />
             </Section>
@@ -789,6 +866,12 @@ export default async function DashboardPage({
               <ViewingRequestApprovalList viewingRequests={pendingViewingRequests} />
             </Section>
 
+          </div>
+        )}
+
+        {isAdminRole(role) && (
+          <div className="flex flex-col gap-6">
+            <GroupHeader eyebrow="Admin" title="Platform management" />
             <Section id="homepage-gallery" eyebrow="Homepage" title="Gallery carousel">
               <GalleryManager images={galleryImages} />
             </Section>
@@ -914,12 +997,13 @@ export default async function DashboardPage({
                 </ul>
               )}
             </Section>
-          </>
+          </div>
         )}
 
         {role === "BUYER" && (
-          <>
-            <Section eyebrow="Explore" title="Browse properties">
+          <div className="flex flex-col gap-6">
+            <GroupHeader eyebrow="Explore" title="Your activity" />
+            <Section id="browse-properties" eyebrow="Explore" title="Browse properties">
               <p className="text-sm leading-6 text-[var(--dk-muted)] mt-3">
                 Browse properties on the{" "}
                 <Link href="/" className="text-sm font-semibold text-[var(--dk-primary)] hover:text-[var(--dk-primary-hover)] hover:underline no-underline">
@@ -1105,10 +1189,12 @@ export default async function DashboardPage({
                 </ul>
               )}
             </Section>
-          </>
+          </div>
         )}
 
         {/* Notifications */}
+        <div className="flex flex-col gap-6">
+        <GroupHeader eyebrow="Updates" title="Notifications" />
         <Section id="notifications" eyebrow={`${receivedNotifications.length} total`} title="Notifications">
           {receivedNotifications.length === 0 ? (
             <p className="text-sm text-[var(--dk-muted)] m-0">No notifications yet.</p>
@@ -1131,6 +1217,7 @@ export default async function DashboardPage({
             </ul>
           )}
         </Section>
+        </div>
       </div>
     </div>
   );

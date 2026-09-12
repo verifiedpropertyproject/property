@@ -807,6 +807,68 @@ button:focus-visible,
 
 .dk-auth-divider { color: var(--dk-border); }
 
+/* ---------- Hero auth row: "Log in / Create account" or "Go to dashboard" ----------
+   Distinct from .dk-auth-link (plain inline text links used elsewhere, e.g. contact
+   details on a listing page) — these are the primary calls to action in the hero, so
+   they need to actually read as buttons, not text. */
+.dk-hero-auth-row {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dk-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: var(--dk-primary);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+  color: #ffffff;
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  padding: 13px 24px;
+  border-radius: 999px;
+  border: 1px solid var(--dk-primary);
+  box-shadow: 0 4px 14px rgba(31, 122, 76, 0.28);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.dk-hero-cta:hover {
+  background-color: var(--dk-primary-hover);
+  box-shadow: 0 6px 18px rgba(31, 122, 76, 0.36);
+  transform: translateY(-1px);
+}
+.dk-hero-cta:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(31, 122, 76, 0.28); }
+
+.dk-hero-cta-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--dk-card);
+  color: var(--dk-heading);
+  text-decoration: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  padding: 12px 23px;
+  border-radius: 999px;
+  border: 1px solid var(--dk-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.dk-hero-cta-outline:hover {
+  border-color: var(--dk-primary);
+  color: var(--dk-primary);
+  background-color: var(--dk-primary-ring);
+  transform: translateY(-1px);
+}
+.dk-hero-cta-outline:active { transform: translateY(0); }
+
 .dk-search-panel {
   flex: 1 1 100%;
   min-width: 0;

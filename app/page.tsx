@@ -128,12 +128,19 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   // We simply take up to the three most recently created listings among
   // those an admin has featured (that are also approved and not paused) —
   // no separate admin UI needed.
+  //
+  // `resaleCategory: null` mirrors the `where` filter above: a resale listing
+  // can be featured too, but that only feeds the resale page's own featured
+  // carousel (see app/resale/page.tsx). Without this filter here, an admin
+  // featuring a resale listing would make it leak into this normal-listings
+  // slider as well.
   const featuredProperties = await prisma.property.findMany({
     where: {
       featured: true,
       status: "APPROVED",
       paused: false,
       seller: { suspended: false },
+      resaleCategory: null,
     },
     orderBy: { createdAt: "desc" },
     take: 3,
@@ -225,22 +232,21 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
             </p>
 
             {session?.user ? (
-              <p className="dk-auth-row">
+              <div className="dk-hero-auth-row">
                 <NotificationBell />
-                <Link href="/dashboard" className="dk-auth-link">
+                <Link href="/dashboard" className="dk-hero-cta">
                   Go to your dashboard
                 </Link>
-              </p>
+              </div>
             ) : (
-              <p className="dk-auth-row">
-                <Link href="/login" className="dk-auth-link">
+              <div className="dk-hero-auth-row">
+                <Link href="/login" className="dk-hero-cta-outline">
                   Log in
                 </Link>
-                <span className="dk-auth-divider">|</span>
-                <Link href="/register" className="dk-auth-link">
+                <Link href="/register" className="dk-hero-cta">
                   Create an account
                 </Link>
-              </p>
+              </div>
             )}
           </header>
 

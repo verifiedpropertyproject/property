@@ -323,7 +323,15 @@ export default function AdminPropertyList({
                 disabled={loadingId === p.id}
                 onClick={() => toggleFeatured(p.id, p.featured)}
               >
-                {loadingId === p.id ? "Working..." : p.featured ? "Unfeature" : "Feature"}
+                {loadingId === p.id
+                  ? "Working..."
+                  : p.featured
+                  ? p.resaleCategory
+                    ? "Unfeature (resale slider)"
+                    : "Unfeature (homepage slider)"
+                  : p.resaleCategory
+                  ? "Feature on resale slider"
+                  : "Feature on homepage slider"}
               </button>
               <button
                 type="button"

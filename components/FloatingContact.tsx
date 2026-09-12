@@ -59,6 +59,15 @@ export default function FloatingContact({ whatsappHref, callHref }: FloatingCont
     <div
       ref={rootRef}
       className="fixed bottom-[max(20px,env(safe-area-inset-bottom))] right-[max(20px,env(safe-area-inset-right))] z-50 flex flex-col items-end gap-3"
+      style={{
+        // Force this fixed element onto its own GPU-composited layer. Without this,
+        // the always-on `dk-fab-ring` animation inside a `position: fixed` ancestor
+        // can make mobile Safari/Chrome mis-paint it mid-scroll — it visually
+        // detaches and drifts toward the bottom of the screen until the scroll
+        // settles. Promoting the layer keeps it pinned to the viewport throughout.
+        transform: "translateZ(0)",
+        willChange: "transform",
+      }}
     >
       {open && (
         <div className="flex flex-col items-end gap-3">
