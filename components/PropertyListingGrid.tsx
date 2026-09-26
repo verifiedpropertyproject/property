@@ -77,7 +77,7 @@ export default function PropertyListingGrid({
 
   // Fall back to "everything on one page" for the very first render, before
   // the layout effect above has had a chance to measure the grid.
-  const effectivePerPage = itemsPerPage ?? properties.length || 1;
+  const effectivePerPage = itemsPerPage ?? (properties.length || 1);
   const totalPages = Math.max(1, Math.ceil(properties.length / effectivePerPage));
   const currentPage = Math.min(page, totalPages);
   const start = (currentPage - 1) * effectivePerPage;
