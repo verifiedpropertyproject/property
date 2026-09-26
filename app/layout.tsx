@@ -11,7 +11,7 @@ import "./globals.css";
 
 
 export const metadata = {
-  title: "Daktop 360",
+  title: "Daktop360 Realtors Limited",
   description: "Buy and Sell premium properties across Nairobi and Kiambu",
 };
 

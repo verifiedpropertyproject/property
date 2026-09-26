@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import NotificationBell from "@/components/NotificationBell";
-import PropertyCard, { type PropertyWithSeller } from "@/components/PropertyCard";
+import PropertyListingGrid from "@/components/PropertyListingGrid";
 
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS } from "@/lib/propertyConstants";
 import {
@@ -225,7 +225,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               <span className="dk-kicker">Premium property, Nairobi &amp; Kiambu</span>
               
             </div>
-            <h1 className="dk-heading">Nairobi and Kiambu's trusted marketplace for high-end properties</h1>
+            <h1 className="dk-heading">Premium, company-verified properties in Nairobi and Kiambu</h1>
             <p className="dk-lede">
               Buy and sell premium homes, land and commercial property across Nairobi and Kiambu, with verified
               ownership and professional due diligence on every listing.
@@ -368,18 +368,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           {properties.length === 0 ? (
             <p className="dk-empty-state">No premium properties match your search. Try adjusting your filters.</p>
           ) : (
-            <ul className="dk-grid">
-              {properties.map((p: PropertyWithSeller, index: number) => (
-                <PropertyCard
-                  key={p.id}
-                  p={p}
-                  index={index}
-                  showSaveButton={session?.user?.role === "BUYER"}
-                  isSaved={savedPropertyIds.has(p.id)}
-                  listingCount={listingCountBySellerId.get(p.sellerId) ?? 0}
-                />
-              ))}
-            </ul>
+            <PropertyListingGrid
+              properties={properties}
+              showSaveButton={session?.user?.role === "BUYER"}
+              savedPropertyIds={Array.from(savedPropertyIds)}
+              listingCountBySellerId={Object.fromEntries(listingCountBySellerId)}
+            />
           )}
         </section>
 

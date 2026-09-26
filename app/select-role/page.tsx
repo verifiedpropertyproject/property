@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 import { isValidPhone, PHONE_FORMAT_HINT, PHONE_INPUT_PATTERN } from "@/lib/phoneValidation";
 import { ROLE_LABELS } from "@/lib/propertyConstants";
 
@@ -64,18 +65,15 @@ export default function SelectRolePage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-[var(--dk-ivory)] p-6 font-sans">
       <div className="w-full max-w-md rounded-2xl border border-[var(--dk-border)] bg-[var(--dk-card)] p-8 shadow-[0_1px_3px_var(--dk-shadow)] sm:p-10">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--dk-dark)] text-base font-bold text-[var(--dk-gold)]">
-            360
-          </div>
-          <div>
-            <div className="text-sm font-semibold tracking-wide text-[var(--dk-heading)]">
-              DAKTOP360
-            </div>
-            <div className="text-[10px] uppercase tracking-[0.25em] text-[var(--dk-gold-deep)]">
-              Realtors Limited
-            </div>
-          </div>
+        <div className="mb-6 flex items-center">
+          <Image
+            src="/images/logo.jpeg"
+            alt="Daktop 360 Realtors Limited"
+            width={160}
+            height={130}
+            className="h-12 w-auto object-contain"
+            priority
+          />
         </div>
 
         <h1 className="[font-family:var(--font-display)] text-2xl font-semibold text-[var(--dk-heading)] sm:text-3xl">

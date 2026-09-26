@@ -14,8 +14,8 @@ export const metadata = {
 const CHANNELS = [
   {
     label: "Email",
-    value: "hello@daktop360.co.ke",
-    href: "mailto:hello@daktop360.co.ke",
+    value: "info@daktop360realtors.co.ke",
+    href: "mailto:info@daktop360realtors.co.ke",
     hint: "We reply within one business day",
   },
   {

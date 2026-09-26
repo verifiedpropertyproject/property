@@ -120,8 +120,8 @@ export default function Footer() {
             </h3>
             <ul className="m-0 mt-4 flex list-none flex-col gap-2.5 p-0 text-sm text-white/65">
               <li>
-                <a href="mailto:hello@daktop360.co.ke" className="no-underline transition-colors duration-150 hover:text-white">
-                  hello@daktop360.co.ke
+                <a href="mailto:info@daktop360realtors.co.ke" className="no-underline transition-colors duration-150 hover:text-white">
+                  info@daktop360realtors.co.ke
                 </a>
               </li>
               <li>

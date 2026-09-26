@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const CONTACT_EMAIL = "hello@daktop360.co.ke";
+const CONTACT_EMAIL = "info@daktop360realtors.co.ke";
 
 export default function ContactForm() {
   const [name, setName] = useState("");

@@ -1137,6 +1137,76 @@ button:focus-visible,
   gap: 22px;
 }
 
+/* ---------- Listings pagination ---------- */
+.dk-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 34px;
+}
+
+.dk-pagination-arrow,
+.dk-pagination-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--dk-border);
+  background-color: var(--dk-card);
+  color: var(--dk-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.dk-pagination-arrow {
+  color: var(--dk-heading);
+}
+
+.dk-pagination-arrow:hover:not(:disabled),
+.dk-pagination-page:hover:not(.dk-pagination-page-active) {
+  border-color: var(--dk-border-hover);
+  background-color: var(--dk-ivory);
+}
+
+.dk-pagination-arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dk-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dk-pagination-page-active {
+  background-color: var(--dk-primary);
+  border-color: var(--dk-primary);
+  color: #ffffff;
+}
+
+.dk-pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  color: var(--dk-muted);
+  font-size: 13.5px;
+}
+
+@media (max-width: 480px) {
+  .dk-pagination { gap: 6px; }
+  .dk-pagination-pages { gap: 4px; }
+  .dk-pagination-arrow,
+  .dk-pagination-page { min-width: 34px; height: 34px; font-size: 13px; }
+}
+
 .dk-card {
   background-color: var(--dk-card);
   border: 1px solid var(--dk-border);
@@ -1299,17 +1369,32 @@ button:focus-visible,
 .dk-fc-header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 22px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 26px;
   text-align: center;
 }
 
 .dk-fc-kicker {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--dk-gold-deep);
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.dk-fc-kicker::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--dk-gold), transparent);
 }
 
 .dk-fc-title {
@@ -1317,6 +1402,7 @@ button:focus-visible,
   font-weight: 600;
   color: var(--dk-heading);
   font-size: clamp(20px, 2.4vw, 26px);
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
@@ -1333,18 +1419,43 @@ button:focus-visible,
   position: absolute;
   inset: 0 auto auto 50%;
   width: clamp(230px, 30vw, 300px);
-  background-color: var(--dk-ivory);
+  background-color: var(--dk-card);
   border: 1px solid var(--dk-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 10px 28px var(--dk-shadow-strong);
+  box-shadow:
+    0 1px 2px var(--dk-shadow),
+    0 18px 40px -12px var(--dk-shadow-strong);
   overflow: hidden;
   text-decoration: none;
   display: block;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter;
   animation-duration: 24s;
   animation-iteration-count: infinite;
   animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
   animation-name: dkFcRotate3;
+  transition: box-shadow 0.35s ease;
+}
+
+/* A calm, deliberate pause to actually look at a card beats an
+   auto-rotation that never lets you settle on one. */
+.dk-fc-stage:hover .dk-fc-card {
+  animation-play-state: paused;
+}
+
+.dk-fc-card:hover {
+  box-shadow:
+    0 2px 4px var(--dk-shadow),
+    0 24px 48px -14px var(--dk-shadow-strong);
+}
+
+.dk-fc-card:hover .dk-fc-img {
+  transform: scale(1.045);
+}
+
+.dk-fc-card:hover .dk-fc-card-arrow {
+  background-color: var(--dk-primary);
+  color: #ffffff;
+  transform: translateX(2px);
 }
 
 .dk-fc-card--slot-0 { animation-delay: 0s; }
@@ -1371,26 +1482,30 @@ button:focus-visible,
   29.1667% {
     transform: translate(-50%, 0) translateX(0) scale(1);
     opacity: 1;
+    filter: blur(0) saturate(1);
     z-index: 3;
   }
   /* transition into left-back */
   33.3333%,
   62.5% {
-    transform: translate(-50%, 0) translateX(-58%) scale(0.82);
-    opacity: 0.55;
+    transform: translate(-50%, 0) translateX(-58%) scale(0.84);
+    opacity: 0.5;
+    filter: blur(1px) saturate(0.85);
     z-index: 1;
   }
   /* transition into right-back */
   66.6667%,
   95.8333% {
-    transform: translate(-50%, 0) translateX(58%) scale(0.82);
-    opacity: 0.55;
+    transform: translate(-50%, 0) translateX(58%) scale(0.84);
+    opacity: 0.5;
+    filter: blur(1px) saturate(0.85);
     z-index: 2;
   }
   /* transition back into center, loop point */
   100% {
     transform: translate(-50%, 0) translateX(0) scale(1);
     opacity: 1;
+    filter: blur(0) saturate(1);
     z-index: 3;
   }
 }
@@ -1400,48 +1515,69 @@ button:focus-visible,
   43.75% {
     transform: translate(-50%, 0) translateX(0) scale(1);
     opacity: 1;
+    filter: blur(0) saturate(1);
     z-index: 3;
   }
   50%,
   93.75% {
-    transform: translate(-50%, 0) translateX(46%) scale(0.86);
-    opacity: 0.55;
+    transform: translate(-50%, 0) translateX(46%) scale(0.88);
+    opacity: 0.5;
+    filter: blur(1px) saturate(0.85);
     z-index: 1;
   }
   100% {
     transform: translate(-50%, 0) translateX(0) scale(1);
     opacity: 1;
+    filter: blur(0) saturate(1);
     z-index: 3;
   }
 }
 
-.dk-fc-img-wrap { position: relative; }
-.dk-fc-img { width: 100%; height: 168px; object-fit: cover; display: block; }
+.dk-fc-img-wrap { position: relative; overflow: hidden; }
+.dk-fc-img {
+  width: 100%;
+  height: 168px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 .dk-fc-img-fallback {
   width: 100%;
   height: 168px;
   background: linear-gradient(135deg, var(--dk-border), var(--dk-ivory));
 }
 
+/* Subtle bottom-up gradient so the ribbon and, on any future overlay text,
+   stays legible over bright photos without flattening the image itself. */
+.dk-fc-img-scrim {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 56%;
+  background: linear-gradient(180deg, transparent, rgba(11, 46, 31, 0.22));
+  pointer-events: none;
+}
+
 .dk-fc-ribbon {
   position: absolute;
   top: 12px;
   left: 12px;
-  background-color: var(--dk-dark);
+  background-color: rgba(11, 46, 31, 0.82);
+  backdrop-filter: blur(4px);
   color: #ffffff;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  padding: 4px 10px;
+  padding: 5px 11px;
   border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(11, 46, 31, 0.25);
 }
 
 .dk-fc-body {
-  padding: 16px 18px 20px;
+  padding: 16px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 .dk-fc-card-title {
@@ -1450,6 +1586,7 @@ button:focus-visible,
   color: var(--dk-ink);
   font-size: 16.5px;
   line-height: 1.3;
+  letter-spacing: -0.005em;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -1457,11 +1594,36 @@ button:focus-visible,
 }
 
 .dk-fc-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--dk-muted);
   font-size: 12.5px;
   overflow: hidden;
+}
+
+.dk-fc-card-meta-loc {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dk-fc-card-meta-dot {
+  flex: none;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background-color: var(--dk-muted);
+  opacity: 0.6;
+}
+
+.dk-fc-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--dk-border);
 }
 
 .dk-fc-card-price {
@@ -1469,7 +1631,18 @@ button:focus-visible,
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 17px;
-  margin-top: 2px;
+}
+
+.dk-fc-card-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background-color: var(--dk-ivory);
+  color: var(--dk-primary);
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 
 @media (max-width: 860px) {
@@ -1481,6 +1654,15 @@ button:focus-visible,
   .dk-fc-stage { padding: 0 46px; height: clamp(280px, 70vw, 320px); }
   .dk-fc-card { width: clamp(190px, 62vw, 240px); }
   .dk-fc-img, .dk-fc-img-fallback { height: 140px; }
+}
+
+/* Large screens have room to let these breathe a bit more — everything
+   below 1024px (tablets and phones) keeps the sizing set above untouched. */
+@media (min-width: 1024px) {
+  .dk-fc-section { flex-basis: 460px; min-width: 340px; }
+  .dk-fc-stage { height: clamp(340px, 34vw, 400px); padding: 0 clamp(20px, 11vw, 150px); }
+  .dk-fc-card { width: clamp(260px, 26vw, 330px); }
+  .dk-fc-img, .dk-fc-img-fallback { height: 190px; }
 }
 
 /* ==========================================================================

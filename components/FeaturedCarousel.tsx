@@ -60,19 +60,29 @@ export default function FeaturedCarousel({
           >
             <div className="dk-fc-img-wrap">
               {p.imageUrl ? (
-                <img src={p.imageUrl} alt={p.title} className="dk-fc-img" />
+                <img src={p.imageUrl} alt={p.title} className="dk-fc-img" loading="lazy" />
               ) : (
                 <div className="dk-fc-img-fallback" aria-hidden="true" />
               )}
+              <span className="dk-fc-img-scrim" aria-hidden="true" />
               <span className="dk-fc-ribbon">Featured</span>
             </div>
 
             <div className="dk-fc-body">
               <strong className="dk-fc-card-title">{p.title}</strong>
               <span className="dk-fc-card-meta">
-                {p.location} — {getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)}
+                <span className="dk-fc-card-meta-loc">{p.location}</span>
+                <span className="dk-fc-card-meta-dot" aria-hidden="true" />
+                <span>{getPropertyTypeLabel(p.propertyType, p.propertyTypeOther)}</span>
               </span>
-              <span className="dk-fc-card-price">KSh {p.price.toLocaleString()}</span>
+              <span className="dk-fc-card-footer">
+                <span className="dk-fc-card-price">KSh {p.price.toLocaleString()}</span>
+                <span className="dk-fc-card-arrow" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              </span>
             </div>
           </Link>
         ))}

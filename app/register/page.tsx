@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
 import { isValidPhone, PHONE_FORMAT_HINT, PHONE_INPUT_PATTERN } from "@/lib/phoneValidation";
 import { ROLE_LABELS } from "@/lib/propertyConstants";
@@ -45,16 +46,14 @@ function Shell({ children }: { children: React.ReactNode }) {
             </g>
           </svg>
 
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#C9A227] bg-[#0B3D2E] text-lg font-bold tracking-tight text-[#C9A227]">
-              360
-            </div>
-            <div>
-              <div className="text-lg font-semibold tracking-wide">DAKTOP360</div>
-              <div className="text-[11px] uppercase tracking-[0.25em] text-[#C9A227]">
-                Realtors Limited
-              </div>
-            </div>
+          <div className="relative z-10 inline-flex items-center rounded-2xl bg-white px-4 py-3 shadow-lg w-fit">
+            <Image
+              src="/images/logo.jpeg"
+              alt="Daktop 360 Realtors Limited"
+              width={160}
+              height={130}
+              className="h-12 w-auto object-contain"
+            />
           </div>
 
           <div className="relative z-10 max-w-sm">
@@ -73,18 +72,15 @@ function Shell({ children }: { children: React.ReactNode }) {
         <div className="flex w-full flex-1 items-center justify-center bg-[var(--dk-card)] px-6 py-12 sm:px-12 lg:w-1/2">
           <div className="w-full max-w-sm">
             {/* Mobile-only brand mark */}
-            <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--dk-dark)] text-lg font-bold text-[var(--dk-gold)]">
-                360
-              </div>
-              <div>
-                <div className="text-lg font-semibold tracking-wide text-[var(--dk-heading)]">
-                  DAKTOP360
-                </div>
-                <div className="text-[11px] uppercase tracking-[0.25em] text-[var(--dk-gold-deep)]">
-                  Realtors Limited
-                </div>
-              </div>
+            <div className="mb-8 flex items-center lg:hidden">
+              <Image
+                src="/images/logo.jpeg"
+                alt="Daktop 360 Realtors Limited"
+                width={160}
+                height={130}
+                className="h-14 w-auto object-contain"
+                priority
+              />
             </div>
 
             {children}
