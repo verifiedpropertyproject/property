@@ -12,6 +12,7 @@ import {
 } from "@/lib/availabilityStatus";
 import BuySellCard from "@/components/BuySellCard";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
+import ResaleSlider from "@/components/ResaleSlider";
 // import ThemeToggle from "@/components/ThemeToggle";
 import PremiumSelect from "./PremiumSelect";
 import Nav from "@/components/Nav";
@@ -161,6 +162,23 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   const galleryImages = await prisma.galleryImage.findMany({
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     select: { id: true, imageUrl: true, caption: true },
+  });
+
+  // Images for the homepage resale/auction slider (see components/ResaleSlider.tsx) — up to
+  // 5 of the most recent admin-listed resale properties. `resaleCategory: { not: null }` is
+  // the inverse of the `where` filter above, matching app/resale/page.tsx's own query, so this
+  // strip only ever surfaces properties Daktop lists directly (auctions, standard resales,
+  // distressed sales, foreclosures), never a regular owner/agent listing.
+  const resaleSlides = await prisma.property.findMany({
+    where: {
+      resaleCategory: { not: null },
+      status: "APPROVED",
+      paused: false,
+      seller: { suspended: false },
+    },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take: 5,
+    select: { id: true, imageUrl: true },
   });
 
   const properties = await prisma.property.findMany({
@@ -376,6 +394,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
             />
           )}
         </section>
+
+        <ResaleSlider slides={resaleSlides} />
 
         <BuySellCard session={session} />
       </div>

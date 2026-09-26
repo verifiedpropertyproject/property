@@ -1666,6 +1666,160 @@ button:focus-visible,
 }
 
 /* ==========================================================================
+   Resale slider — homepage promo strip for properties Daktop lists directly
+   (auctions, standard resales, distressed sales, foreclosures), sitting
+   between the main listings grid and the "Get started" section. Full-width
+   within .dk-container, same as the sections either side of it.
+
+   Pure CSS crossfade + slow Ken Burns zoom, no JS: each <img> shares one
+   keyframe (dkRsFadeN, N = image count) and is staggered with a negative
+   animation-delay so exactly one image is "on" at a time, round-robin —
+   same technique as .dk-fc-card above. Frozen automatically by the
+   prefers-reduced-motion rule near the top of this file.
+   ========================================================================== */
+
+.dk-rs-section {
+  margin: 44px 0;
+}
+
+.dk-rs-stage {
+  position: relative;
+  width: 100%;
+  height: clamp(300px, 42vw, 460px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--dk-dark);
+  box-shadow: 0 1px 2px var(--dk-shadow), 0 18px 40px -12px var(--dk-shadow-strong);
+}
+
+.dk-rs-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  will-change: opacity, transform;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.dk-rs-slide--fallback {
+  background: linear-gradient(135deg, var(--dk-dark) 0%, var(--dk-primary) 100%);
+  opacity: 1;
+  animation: none;
+}
+
+/* One image: static (no crossfade partner) but keeps a slow, continuous
+   Ken Burns drift so the panel never feels frozen. */
+.dk-rs-stage--1 .dk-rs-slide {
+  opacity: 1;
+  animation-name: dkRsKenBurnsSingle;
+  animation-duration: 18s;
+  animation-direction: alternate;
+}
+
+.dk-rs-stage--2 .dk-rs-slide { animation-name: dkRsFade2; animation-duration: 12s; }
+.dk-rs-stage--3 .dk-rs-slide { animation-name: dkRsFade3; animation-duration: 18s; }
+.dk-rs-stage--4 .dk-rs-slide { animation-name: dkRsFade4; animation-duration: 24s; }
+.dk-rs-stage--5 .dk-rs-slide { animation-name: dkRsFade5; animation-duration: 30s; }
+
+.dk-rs-slide--0 { animation-delay: 0s; }
+.dk-rs-slide--1 { animation-delay: -6s; }
+.dk-rs-slide--2 { animation-delay: -12s; }
+.dk-rs-slide--3 { animation-delay: -18s; }
+.dk-rs-slide--4 { animation-delay: -24s; }
+
+@keyframes dkRsKenBurnsSingle {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+@keyframes dkRsFade2 {
+  0%     { opacity: 1; transform: scale(1); }
+  42%    { opacity: 1; transform: scale(1.06); }
+  50%    { opacity: 0; transform: scale(1.08); }
+  100%   { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes dkRsFade3 {
+  0%        { opacity: 1; transform: scale(1); }
+  27.3333%  { opacity: 1; transform: scale(1.06); }
+  33.3333%  { opacity: 0; transform: scale(1.08); }
+  100%      { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes dkRsFade4 {
+  0%    { opacity: 1; transform: scale(1); }
+  20%   { opacity: 1; transform: scale(1.06); }
+  25%   { opacity: 0; transform: scale(1.08); }
+  100%  { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes dkRsFade5 {
+  0%    { opacity: 1; transform: scale(1); }
+  16%   { opacity: 1; transform: scale(1.06); }
+  20%   { opacity: 0; transform: scale(1.08); }
+  100%  { opacity: 0; transform: scale(1.08); }
+}
+
+.dk-rs-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(11, 46, 31, 0.82) 0%, rgba(11, 46, 31, 0.55) 45%, rgba(11, 46, 31, 0.18) 78%),
+    linear-gradient(0deg, rgba(11, 46, 31, 0.35) 0%, rgba(11, 46, 31, 0) 40%);
+  pointer-events: none;
+}
+
+.dk-rs-content {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: clamp(24px, 5vw, 56px);
+  max-width: 640px;
+}
+
+.dk-rs-kicker { color: var(--dk-gold-deep, #b9872f); }
+.dk-rs-kicker::before { background: #e0c37a; }
+
+.dk-rs-heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 12px;
+  font-size: clamp(22px, 2.8vw, 32px);
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+  max-width: 18ch;
+}
+
+.dk-rs-lede {
+  color: rgba(255, 255, 255, 0.86);
+  margin: 0 0 22px;
+  line-height: 1.65;
+  font-size: 15px;
+  max-width: 46ch;
+}
+
+.dk-rs-cta { align-self: flex-start; }
+
+@media (max-width: 640px) {
+  .dk-rs-content { max-width: 100%; padding: 22px; }
+  .dk-rs-lede { max-width: 100%; }
+  .dk-rs-scrim {
+    background:
+      linear-gradient(180deg, rgba(11, 46, 31, 0.35) 0%, rgba(11, 46, 31, 0.55) 55%, rgba(11, 46, 31, 0.88) 100%);
+  }
+}
+
+/* ==========================================================================
    Resale page theme — a deliberately distinct "auction house" palette so the
    resale marketplace (auctions, distressed sales, foreclosures) reads as its
    own space rather than a re-skin of the main site. Every .dk-* component
