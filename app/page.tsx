@@ -3,7 +3,6 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
-import NotificationBell from "@/components/NotificationBell";
 import PropertyListingGrid from "@/components/PropertyListingGrid";
 
 import { PROPERTY_TYPES, PROPERTY_TYPE_LABELS } from "@/lib/propertyConstants";
@@ -267,7 +266,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
             {session?.user ? (
               <div className="dk-hero-auth-row">
-                <NotificationBell />
                 <Link href="/dashboard" className="dk-hero-cta">
                   Go to your dashboard
                 </Link>
@@ -290,7 +288,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
             <h2 className="dk-search-title">Find a property</h2>
             <hr className="dk-search-rule" />
 
-            <form method="get">
+            <form method="get" action="/#listings">
               <div className="dk-quick-search-row">
                 <div className="dk-field dk-field--grow">
                   <label className="dk-field-label">Keyword search</label>
@@ -396,7 +394,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         <hr className="dk-divider" />
 
         {/* ---------- Listings ---------- */}
-        <section>
+        <section id="listings">
           <h2 className="dk-listings-heading">Premium listings in Nairobi &amp; Kiambu ({properties.length})</h2>
 
           {properties.length === 0 ? (

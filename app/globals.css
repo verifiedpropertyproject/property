@@ -243,6 +243,16 @@ button:focus-visible,
     transition-duration: 0.001ms !important;
   }
 }
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Search forms on the homepage and /resale submit to "#listings" (see the <form action="...">
+   attributes there) so pressing "Search" lands on the results instead of the page top. This
+   offset keeps the listings heading clear of the sticky .dk-nav bar when it does. */
+#listings {
+  scroll-margin-top: 88px;
+}
 
 /* ==========================================================================
    Nav — sits OUTSIDE .dk-page in the tree, so its rules live at this same
