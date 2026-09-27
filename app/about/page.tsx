@@ -148,7 +148,7 @@ export default async function AboutPage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/?listingType=SALE"
+              href="/?listingType=SALE#listings"
               className="rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-6 py-3 text-[14px] font-semibold text-white no-underline transition-colors duration-200 hover:bg-[var(--dk-primary-hover)]"
             >
               Buy Property

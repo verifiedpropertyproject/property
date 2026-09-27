@@ -21,7 +21,7 @@ type NavSession = {
 // (used for Home, since Buy Property also lives at "/" via a query string).
 const PRIMARY_LINKS = [
   { href: "/", label: "Home", exact: true },
-  { href: "/?listingType=SALE", label: "Buy Property" },
+  { href: "/?listingType=SALE#listings", label: "Buy Property" },
   { href: "/resale", label: "Resale Properties", tag: "New" },
   { href: "/dashboard", label: "Sell Property" },
   { href: "/about", label: "About Us" },

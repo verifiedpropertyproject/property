@@ -1,3 +1,5 @@
+import { RESALE_CATEGORIES, RESALE_CATEGORY_LABELS } from "@/lib/resaleCategory";
+
 export type ResaleSlide = {
   id: string;
   imageUrl: string | null;
@@ -18,7 +20,13 @@ const RESALE_HREF = "https://daktop360realtors.co.ke/resale";
  * app/globals.css) — no client JS, no timers, and it's automatically frozen
  * by the site-wide prefers-reduced-motion rule.
  */
-export default function ResaleSlider({ slides }: { slides: ResaleSlide[] }) {
+export default function ResaleSlider({
+  slides,
+  categoryCounts = {},
+}: {
+  slides: ResaleSlide[];
+  categoryCounts?: Record<string, number>;
+}) {
   const images = slides.filter((s) => s.imageUrl).slice(0, 8);
   const count = images.length;
 
@@ -61,6 +69,18 @@ export default function ResaleSlider({ slides }: { slides: ResaleSlide[] }) {
             Properties we list directly on the market&apos;s behalf — auctions, standard resales,
             distressed sales and foreclosures — kept separate from our regular owner and agent listings.
           </p>
+
+          <div className="dk-rs-chips">
+            {RESALE_CATEGORIES.map((category) => (
+              <a key={category} href={`/resale?resaleCategory=${category}`} className="dk-rs-chip">
+                {RESALE_CATEGORY_LABELS[category]}
+                {typeof categoryCounts[category] === "number" && (
+                  <span className="dk-rs-chip-count">{categoryCounts[category]}</span>
+                )}
+              </a>
+            ))}
+          </div>
+
           <a href={RESALE_HREF} className="dk-hero-cta dk-rs-cta">
             Browse resale &amp; auction listings
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

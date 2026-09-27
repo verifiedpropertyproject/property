@@ -196,6 +196,25 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     if (resaleSlides.length === before) break; // no property had a photo at this round
   }
 
+  // Per-category counts for the chip row under the slider copy (see components/ResaleSlider.tsx)
+  // — same filters as the query above, just grouped instead of selected, so "12 live" only ever
+  // counts properties a visitor could actually open from /resale right now.
+  const resaleCategoryCountRows = await prisma.property.groupBy({
+    by: ["resaleCategory"],
+    where: {
+      resaleCategory: { not: null },
+      status: "APPROVED",
+      paused: false,
+      seller: { suspended: false },
+    },
+    _count: { _all: true },
+  });
+  const resaleCategoryCounts: Record<string, number> = Object.fromEntries(
+    resaleCategoryCountRows
+      .filter((row) => row.resaleCategory)
+      .map((row) => [row.resaleCategory as string, row._count._all]),
+  );
+
   const properties = await prisma.property.findMany({
     where,
     include: {
@@ -409,7 +428,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           )}
         </section>
 
-        <ResaleSlider slides={resaleSlides} />
+        <ResaleSlider slides={resaleSlides} categoryCounts={resaleCategoryCounts} />
 
         <BuySellCard session={session} />
       </div>

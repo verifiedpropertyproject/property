@@ -1920,6 +1920,49 @@ button:focus-visible,
 
 .dk-rs-cta { align-self: flex-start; }
 
+.dk-rs-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 22px;
+}
+
+.dk-rs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  backdrop-filter: blur(2px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.dk-rs-chip:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #e0c37a;
+  transform: translateY(-1px);
+}
+
+.dk-rs-chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e0c37a;
+  color: #2a2210;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 @media (max-width: 640px) {
   .dk-rs-content { max-width: 100%; padding: 22px; }
   .dk-rs-lede { max-width: 100%; }
