@@ -19,7 +19,7 @@ const RESALE_HREF = "https://daktop360realtors.co.ke/resale";
  * by the site-wide prefers-reduced-motion rule.
  */
 export default function ResaleSlider({ slides }: { slides: ResaleSlide[] }) {
-  const images = slides.filter((s) => s.imageUrl).slice(0, 5);
+  const images = slides.filter((s) => s.imageUrl).slice(0, 8);
   const count = images.length;
 
   return (
@@ -41,6 +41,16 @@ export default function ResaleSlider({ slides }: { slides: ResaleSlide[] }) {
         )}
 
         <span className="dk-rs-scrim" aria-hidden="true" />
+
+        {count > 1 && (
+          <div className="dk-rs-dots" aria-hidden="true">
+            {images.map((slide, i) => (
+              <span key={slide.id} className="dk-rs-dot">
+                <span className={`dk-rs-dot-active dk-rs-slide--${i}`} />
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="dk-rs-content">
           <span className="dk-kicker dk-rs-kicker">Daktop direct listings</span>

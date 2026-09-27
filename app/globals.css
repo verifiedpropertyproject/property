@@ -1730,6 +1730,13 @@ button:focus-visible,
 .dk-rs-slide--2 { animation-delay: -12s; }
 .dk-rs-slide--3 { animation-delay: -18s; }
 .dk-rs-slide--4 { animation-delay: -24s; }
+.dk-rs-slide--5 { animation-delay: -30s; }
+.dk-rs-slide--6 { animation-delay: -36s; }
+.dk-rs-slide--7 { animation-delay: -42s; }
+
+.dk-rs-stage--6 .dk-rs-slide { animation-name: dkRsFade6; animation-duration: 36s; }
+.dk-rs-stage--7 .dk-rs-slide { animation-name: dkRsFade7; animation-duration: 42s; }
+.dk-rs-stage--8 .dk-rs-slide { animation-name: dkRsFade8; animation-duration: 48s; }
 
 @keyframes dkRsKenBurnsSingle {
   from { transform: scale(1); }
@@ -1763,6 +1770,75 @@ button:focus-visible,
   20%   { opacity: 0; transform: scale(1.08); }
   100%  { opacity: 0; transform: scale(1.08); }
 }
+
+@keyframes dkRsFade6 {
+  0%        { opacity: 1; transform: scale(1); }
+  13.1667%  { opacity: 1; transform: scale(1.06); }
+  16.6667%  { opacity: 0; transform: scale(1.08); }
+  100%      { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes dkRsFade7 {
+  0%        { opacity: 1; transform: scale(1); }
+  11.2857%  { opacity: 1; transform: scale(1.06); }
+  14.2857%  { opacity: 0; transform: scale(1.08); }
+  100%      { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes dkRsFade8 {
+  0%     { opacity: 1; transform: scale(1); }
+  10%    { opacity: 1; transform: scale(1.06); }
+  12.5%  { opacity: 0; transform: scale(1.08); }
+  100%   { opacity: 0; transform: scale(1.08); }
+}
+
+/* Progress dots — one per slide, synced to the exact same delay/keyframe as its image (the
+   selectors below just add `.dk-rs-dot-active` alongside `.dk-rs-slide` wherever a duration or
+   delay was set above), so a dot lights up in lockstep with its photo crossfading in. Purely
+   decorative/non-interactive: this is an autoplaying strip, not a manual carousel. */
+.dk-rs-dots {
+  position: absolute;
+  z-index: 3;
+  right: clamp(16px, 4vw, 28px);
+  bottom: clamp(14px, 3vw, 22px);
+  display: flex;
+  gap: 7px;
+}
+
+.dk-rs-dot {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.dk-rs-dot-active {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #e0c37a;
+  opacity: 0;
+  transform: scale(1.4);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.dk-rs-stage--2 .dk-rs-dot-active { animation-name: dkRsDot2; animation-duration: 12s; }
+.dk-rs-stage--3 .dk-rs-dot-active { animation-name: dkRsDot3; animation-duration: 18s; }
+.dk-rs-stage--4 .dk-rs-dot-active { animation-name: dkRsDot4; animation-duration: 24s; }
+.dk-rs-stage--5 .dk-rs-dot-active { animation-name: dkRsDot5; animation-duration: 30s; }
+.dk-rs-stage--6 .dk-rs-dot-active { animation-name: dkRsDot6; animation-duration: 36s; }
+.dk-rs-stage--7 .dk-rs-dot-active { animation-name: dkRsDot7; animation-duration: 42s; }
+.dk-rs-stage--8 .dk-rs-dot-active { animation-name: dkRsDot8; animation-duration: 48s; }
+
+@keyframes dkRsDot2 { 0% { opacity: 1; } 42% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes dkRsDot3 { 0% { opacity: 1; } 27.3333% { opacity: 1; } 33.3333% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes dkRsDot4 { 0% { opacity: 1; } 20% { opacity: 1; } 25% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes dkRsDot5 { 0% { opacity: 1; } 16% { opacity: 1; } 20% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes dkRsDot6 { 0% { opacity: 1; } 13.1667% { opacity: 1; } 16.6667% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes dkRsDot7 { 0% { opacity: 1; } 11.2857% { opacity: 1; } 14.2857% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes dkRsDot8 { 0% { opacity: 1; } 10% { opacity: 1; } 12.5% { opacity: 0; } 100% { opacity: 0; } }
 
 .dk-rs-scrim {
   position: absolute;

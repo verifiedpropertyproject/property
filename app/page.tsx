@@ -164,12 +164,19 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     select: { id: true, imageUrl: true, caption: true },
   });
 
-  // Images for the homepage resale/auction slider (see components/ResaleSlider.tsx) — up to
-  // 5 of the most recent admin-listed resale properties. `resaleCategory: { not: null }` is
-  // the inverse of the `where` filter above, matching app/resale/page.tsx's own query, so this
-  // strip only ever surfaces properties Daktop lists directly (auctions, standard resales,
-  // distressed sales, foreclosures), never a regular owner/agent listing.
-  const resaleSlides = await prisma.property.findMany({
+  // Images for the homepage resale/auction slider (see components/ResaleSlider.tsx).
+  // `resaleCategory: { not: null }` is the inverse of the `where` filter above, matching
+  // app/resale/page.tsx's own query, so this strip only ever surfaces properties Daktop lists
+  // directly (auctions, standard resales, distressed sales, foreclosures), never a regular
+  // owner/agent listing.
+  //
+  // A slider needs several images to actually feel like a slider, but a single resale listing
+  // is a perfectly normal state (this is a small, admin-curated pool, not the main listings
+  // grid) — so rather than one image per property, pull each property's whole photo gallery
+  // (PropertyImage, same one shown on its own detail page) and round-robin across properties.
+  // With just one resale property that alone is usually enough photos; with several it mixes
+  // properties together instead of exhausting one before moving to the next.
+  const resaleProperties = await prisma.property.findMany({
     where: {
       resaleCategory: { not: null },
       status: "APPROVED",
@@ -177,9 +184,27 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
       seller: { suspended: false },
     },
     orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-    take: 5,
-    select: { id: true, imageUrl: true },
+    take: 6,
+    select: {
+      id: true,
+      imageUrl: true,
+      images: { orderBy: { createdAt: "asc" }, select: { id: true, url: true } },
+    },
   });
+  const resalePhotosByProperty = resaleProperties.map((p) => {
+    const urls = [p.imageUrl, ...p.images.map((img) => img.url)].filter(
+      (url, i, arr): url is string => !!url && arr.indexOf(url) === i,
+    );
+    return urls.map((url, i) => ({ id: `${p.id}-${i}`, imageUrl: url }));
+  });
+  const resaleSlides: { id: string; imageUrl: string | null }[] = [];
+  for (let round = 0; resaleSlides.length < 8; round++) {
+    const before = resaleSlides.length;
+    for (const photos of resalePhotosByProperty) {
+      if (photos[round]) resaleSlides.push(photos[round]);
+    }
+    if (resaleSlides.length === before) break; // no property had a photo at this round
+  }
 
   const properties = await prisma.property.findMany({
     where,
