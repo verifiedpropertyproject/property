@@ -149,8 +149,8 @@ export default function HomepageGallery() {
       </div>
 
       <div className="dk-gallery-tracks">
-        <HighlightRow items={ROW_ONE} direction="left" duration="52s" />
-        <HighlightRow items={ROW_TWO} direction="right" duration="58s" />
+        <HighlightRow items={ROW_ONE} direction="left" duration="95s" />
+        <HighlightRow items={ROW_TWO} direction="right" duration="105s" />
       </div>
     </section>
   );

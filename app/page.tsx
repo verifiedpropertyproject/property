@@ -17,7 +17,6 @@ import ResaleSlider from "@/components/ResaleSlider";
 import PremiumSelect from "./PremiumSelect";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import Marquee from "@/components/Marquee";
 import HomepageGallery from "@/components/HomepageGallery";
 import PropertyBackground from "@/components/PropertyBackground";
 
@@ -416,7 +415,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
         <BuySellCard session={session} />
       </div>
-      <Marquee />
       <HomepageGallery />
       <Footer/>
 
