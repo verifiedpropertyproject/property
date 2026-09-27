@@ -156,14 +156,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     },
   });
 
-  // Admin-managed homepage gallery (see components/GalleryManager.tsx in the dashboard and
-  // app/api/gallery) — a simple slow-scrolling strip of infographics/promo images, entirely
-  // independent of any property listing.
-  const galleryImages = await prisma.galleryImage.findMany({
-    orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-    select: { id: true, imageUrl: true, caption: true },
-  });
-
   // Images for the homepage resale/auction slider (see components/ResaleSlider.tsx).
   // `resaleCategory: { not: null }` is the inverse of the `where` filter above, matching
   // app/resale/page.tsx's own query, so this strip only ever surfaces properties Daktop lists
@@ -425,7 +417,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         <BuySellCard session={session} />
       </div>
       <Marquee />
-      <HomepageGallery images={galleryImages} />
+      <HomepageGallery />
       <Footer/>
 
     </div>
