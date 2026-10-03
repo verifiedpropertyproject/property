@@ -4,6 +4,9 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import PasswordInput from "./PasswordInput";
+import PasswordRequirements from "./PasswordRequirements";
+import { validatePassword } from "@/lib/passwordPolicy";
 
 export default function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
@@ -16,6 +19,12 @@ export default function ResetPasswordForm({ token }: { token: string }) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match. Please re-enter them.");
@@ -73,16 +82,16 @@ export default function ResetPasswordForm({ token }: { token: string }) {
         >
           New password
         </label>
-        <input
+        <PasswordInput
           id="reset-password"
-          type="password"
+          autoComplete="new-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={6}
           placeholder="••••••••"
           className="w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3.5 py-2.5 text-sm text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]"
         />
+        <PasswordRequirements password={password} />
       </div>
 
       <div>
@@ -92,13 +101,12 @@ export default function ResetPasswordForm({ token }: { token: string }) {
         >
           Confirm new password
         </label>
-        <input
+        <PasswordInput
           id="reset-confirm-password"
-          type="password"
+          autoComplete="new-password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          minLength={6}
           placeholder="••••••••"
           className="w-full rounded-[var(--radius-sm)] border border-[var(--dk-border)] bg-[var(--dk-card)] px-3.5 py-2.5 text-sm text-[var(--dk-ink)] outline-none transition-colors duration-150 placeholder:text-[var(--dk-placeholder)] hover:border-[var(--dk-border-hover)] focus:border-[var(--dk-primary)] focus:shadow-[0_0_0_3px_var(--dk-primary-ring)]"
         />

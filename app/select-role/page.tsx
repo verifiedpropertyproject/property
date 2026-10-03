@@ -67,11 +67,11 @@ export default function SelectRolePage() {
       <div className="w-full max-w-md rounded-2xl border border-[var(--dk-border)] bg-[var(--dk-card)] p-8 shadow-[0_1px_3px_var(--dk-shadow)] sm:p-10">
         <div className="mb-6 flex items-center">
           <Image
-            src="/images/logo.jpeg"
+            src="/images/logo.svg"
             alt="Daktop 360 Realtors Limited"
             width={160}
             height={130}
-            className="h-12 w-auto object-contain"
+            className="h-12 w-auto object-contain dk-logo-img"
             priority
           />
         </div>

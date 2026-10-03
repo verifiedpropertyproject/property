@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import Nav from "@/components/Nav";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function LoginPage() {
 
           <div className="relative z-10 inline-flex items-center rounded-2xl bg-white px-4 py-3 shadow-lg w-fit">
             <Image
-              src="/images/logo.jpeg"
+              src="/images/logo.svg"
               alt="Daktop 360 Realtors Limited"
               width={160}
               height={130}
@@ -107,11 +108,11 @@ export default function LoginPage() {
             {/* Mobile-only brand mark */}
             <div className="mb-8 flex items-center lg:hidden">
               <Image
-                src="/images/logo.jpeg"
+                src="/images/logo.svg"
                 alt="Daktop 360 Realtors Limited"
                 width={160}
                 height={130}
-                className="h-14 w-auto object-contain"
+                className="h-14 w-auto object-contain dk-logo-img"
                 priority
               />
             </div>
@@ -142,11 +143,11 @@ export default function LoginPage() {
                 <label className="mb-1.5 block text-sm font-medium text-[var(--dk-ink)]">
                   Password
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   className="w-full rounded-xl border border-[var(--dk-border)] bg-[var(--dk-card)] px-4 py-3 text-sm text-[var(--dk-ink)] placeholder:text-[var(--dk-muted)] outline-none transition focus:border-[var(--dk-gold)] focus:ring-2 focus:ring-[var(--dk-gold)]/30"
                 />

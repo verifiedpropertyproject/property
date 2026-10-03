@@ -44,9 +44,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="fpw-page">
-      <Nav/>
+    <>
+      <Nav />
       <FpwStyles />
+      <div className="fpw-page">
       <div className="fpw-card">
         <p className="fpw-eyebrow">Account recovery</p>
         <h1 className="fpw-title">Forgot your password?</h1>
@@ -93,7 +94,8 @@ export default function ForgotPasswordPage() {
           </Link>
         </p>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -110,7 +112,7 @@ function FpwStyles() {
          the app, so this page follows light/dark mode instead of being stuck light-only. */
 
       .fpw-page {
-        min-height: 100vh;
+        min-height: calc(100vh - 72px);
         background: var(--dk-ivory);
         font-family: var(--font-body);
         color: var(--dk-ink);
@@ -130,6 +132,11 @@ function FpwStyles() {
         padding: 36px 32px;
         box-shadow: 0 1px 3px var(--dk-shadow);
         transition: background-color 0.2s ease, border-color 0.2s ease;
+      }
+
+      @media (max-width: 480px) {
+        .fpw-page { padding: 16px; align-items: flex-start; }
+        .fpw-card { padding: 28px 20px; }
       }
 
       .fpw-eyebrow {

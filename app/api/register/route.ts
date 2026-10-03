@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
+import { validatePassword } from "@/lib/passwordPolicy";
 import { issueVerificationLink } from "@/lib/emailVerification";
 import { isValidPhone, PHONE_FORMAT_HINT } from "@/lib/phoneValidation";
 import { REFERRAL_REWARD_AMOUNT, generateReferralCode } from "@/lib/referral";
@@ -18,8 +19,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Passwords do not match." }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return NextResponse.json({ error: passwordError }, { status: 400 });
     }
 
     // ADMIN is intentionally not a self-registerable role — see scripts/create-admin.js.

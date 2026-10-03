@@ -117,11 +117,11 @@ function ChevronIcon() {
       <div className="dk-nav-inner">
         <Link href="/" className="dk-nav-brand" onClick={() => setMobileOpen(false)}>
           <Image
-            src="/images/logo.jpeg"
+            src="/images/logo.svg"
             alt="Daktop 360 Realtors Limited"
             width={160}
             height={130}
-            className="dk-nav-logo"
+            className="dk-nav-logo dk-logo-img"
             priority
           />
         </Link>

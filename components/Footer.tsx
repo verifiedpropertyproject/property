@@ -40,7 +40,7 @@ export default function Footer() {
           <div className="max-w-xs">
             <Link href="/" className="inline-flex items-center rounded-lg bg-white px-4 py-3 no-underline">
               <Image
-                src="/images/logo.jpeg"
+                src="/images/logo.svg"
                 alt="Daktop 360 Realtors Limited"
                 width={160}
                 height={130}

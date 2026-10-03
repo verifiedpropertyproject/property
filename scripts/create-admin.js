@@ -119,8 +119,9 @@ async function main() {
     return;
   }
 
-  if (password.length < 6) {
-    console.error("Password must be at least 6 characters.");
+  // Same rules as lib/passwordPolicy.ts (duplicated since this is a plain Node script).
+  if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || !/[^A-Za-z0-9\s]/.test(password)) {
+    console.error("Password must be at least 8 characters and include letters, a number and a symbol (e.g. ! @ # $ %).");
     process.exitCode = 1;
     return;
   }

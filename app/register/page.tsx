@@ -7,6 +7,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { isValidPhone, PHONE_FORMAT_HINT, PHONE_INPUT_PATTERN } from "@/lib/phoneValidation";
 import { ROLE_LABELS } from "@/lib/propertyConstants";
+import PasswordInput from "@/components/PasswordInput";
+import PasswordRequirements from "@/components/PasswordRequirements";
+import { validatePassword } from "@/lib/passwordPolicy";
 
 const inputClass =
   "w-full rounded-xl border border-[var(--dk-border)] bg-[var(--dk-card)] px-4 py-3 text-sm text-[var(--dk-ink)] placeholder:text-[var(--dk-muted)] outline-none transition focus:border-[var(--dk-gold)] focus:ring-2 focus:ring-[var(--dk-gold)]/30";
@@ -48,7 +51,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="relative z-10 inline-flex items-center rounded-2xl bg-white px-4 py-3 shadow-lg w-fit">
             <Image
-              src="/images/logo.jpeg"
+              src="/images/logo.svg"
               alt="Daktop 360 Realtors Limited"
               width={160}
               height={130}
@@ -74,11 +77,11 @@ function Shell({ children }: { children: React.ReactNode }) {
             {/* Mobile-only brand mark */}
             <div className="mb-8 flex items-center lg:hidden">
               <Image
-                src="/images/logo.jpeg"
+                src="/images/logo.svg"
                 alt="Daktop 360 Realtors Limited"
                 width={160}
                 height={130}
-                className="h-14 w-auto object-contain"
+                className="h-14 w-auto object-contain dk-logo-img"
                 priority
               />
             </div>
@@ -108,6 +111,12 @@ export default function RegisterPage({ searchParams }: { searchParams?: { ref?: 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match. Please re-enter them.");
@@ -301,33 +310,30 @@ export default function RegisterPage({ searchParams }: { searchParams?: { ref?: 
           <label htmlFor="reg-password" className={labelClass}>
             Password
           </label>
-          <input
+          <PasswordInput
             id="reg-password"
             name="new-password"
-            type="password"
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
             placeholder="••••••••"
             className={inputClass}
           />
+          <PasswordRequirements password={password} />
         </div>
 
         <div>
           <label htmlFor="reg-confirm-password" className={labelClass}>
             Confirm password
           </label>
-          <input
+          <PasswordInput
             id="reg-confirm-password"
             name="confirm-password"
-            type="password"
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            minLength={6}
             placeholder="••••••••"
             className={inputClass}
           />
