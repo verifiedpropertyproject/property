@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { savePropertyVideo, deletePropertyVideo } from "@/lib/propertyImageStorage";
 import { VIDEO_MAX_SIZE_BYTES, ALLOWED_VIDEO_MIME_TYPES } from "@/lib/propertyConstants";
+import { isOwnedUploadUrl } from "@/lib/propertyUploadUrls";
 
 // Listings can't be edited once approved (see app/properties/[id]/edit/page.tsx), and the
 // video is part of the listing content, so it follows the same rule as photos.
@@ -46,23 +47,36 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const { property, error } = await loadOwnedEditableProperty(params.id, session.user.id);
     if (error) return error;
 
-    const formData = await req.formData();
-    const file = formData.get("video");
-    if (!(file instanceof File) || file.size === 0) {
-      return NextResponse.json({ error: "Choose a video to upload." }, { status: 400 });
-    }
+    // Either JSON { videoUrl } (uploaded straight to Vercel Blob by the browser — avoids the
+    // ~4.5MB request limit; size/type were enforced when the upload token was issued) or the old
+    // multipart form (local dev fallback).
+    let newUrl: string;
+    if ((req.headers.get("content-type") || "").includes("application/json")) {
+      const body = await req.json();
+      const videoUrl = typeof body?.videoUrl === "string" ? body.videoUrl : "";
+      if (!videoUrl || !isOwnedUploadUrl(videoUrl, session.user.id)) {
+        return NextResponse.json({ error: "The uploaded video isn't valid. Please upload it again." }, { status: 400 });
+      }
+      newUrl = videoUrl;
+    } else {
+      const formData = await req.formData();
+      const file = formData.get("video");
+      if (!(file instanceof File) || file.size === 0) {
+        return NextResponse.json({ error: "Choose a video to upload." }, { status: 400 });
+      }
 
-    if (file.size > VIDEO_MAX_SIZE_BYTES) {
-      return NextResponse.json(
-        { error: `The video must be under ${Math.round(VIDEO_MAX_SIZE_BYTES / (1024 * 1024))}MB.` },
-        { status: 400 }
-      );
-    }
-    if (!ALLOWED_VIDEO_MIME_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Videos must be MP4, WebM, or MOV files." }, { status: 400 });
-    }
+      if (file.size > VIDEO_MAX_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: `The video must be under ${Math.round(VIDEO_MAX_SIZE_BYTES / (1024 * 1024))}MB.` },
+          { status: 400 }
+        );
+      }
+      if (!ALLOWED_VIDEO_MIME_TYPES.includes(file.type)) {
+        return NextResponse.json({ error: "Videos must be MP4, WebM, or MOV files." }, { status: 400 });
+      }
 
-    const newUrl = await savePropertyVideo(file, property!.id);
+      newUrl = await savePropertyVideo(file, property!.id);
+    }
 
     // Best-effort cleanup of the old video, if any — never block the new one on it.
     if (property!.videoUrl) {

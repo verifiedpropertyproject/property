@@ -25,6 +25,7 @@ import {
 } from "@/lib/propertyConstants";
 import type { User } from "@prisma/client";
 import { ADMIN_ROLES } from "@/lib/roles";
+import { isOwnedUploadUrl } from "@/lib/propertyUploadUrls";
 
 const EDITABLE_STATUSES = ["PENDING", "CHANGES_REQUESTED", "REJECTED"];
 
@@ -77,6 +78,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const placeId = str(formData, "placeId");
     const clearLocation = str(formData, "clearLocation") === "true";
     const imageFile = formData.get("image");
+    // Cover photo the browser already uploaded straight to Vercel Blob (avoids the ~4.5MB request limit).
+    const imageUrlInput = str(formData, "imageUrl");
 
     if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
       return NextResponse.json(
@@ -184,8 +187,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       }
     }
 
+    if (imageUrlInput && !isOwnedUploadUrl(imageUrlInput, session.user.id)) {
+      return NextResponse.json({ error: "The uploaded photo isn't valid. Please upload it again." }, { status: 400 });
+    }
+
     let validatedImage: File | null = null;
-    if (imageFile instanceof File && imageFile.size > 0) {
+    if (!imageUrlInput && imageFile instanceof File && imageFile.size > 0) {
       if (imageFile.size > IMAGE_MAX_SIZE_BYTES) {
         return NextResponse.json(
           { error: `Image is too large. Max size is ${IMAGE_MAX_SIZE_BYTES / (1024 * 1024)}MB.` },
@@ -201,7 +208,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     // A photo is mandatory — if there's neither an existing one nor a new upload here, this
     // listing predates the mandatory-photo rule (or something went wrong client-side) and can't
     // be saved until one is provided.
-    if (!validatedImage && !property.imageUrl) {
+    if (!validatedImage && !imageUrlInput && !property.imageUrl) {
       return NextResponse.json({ error: "A photo is required for the listing. Please upload one." }, { status: 400 });
     }
 
@@ -211,7 +218,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const isResubmission = property.status !== "PENDING";
 
     let imageUrl = property.imageUrl;
-    if (validatedImage) {
+    if (imageUrlInput) {
+      await deletePropertyImage(property.imageUrl);
+      imageUrl = imageUrlInput;
+    } else if (validatedImage) {
       await deletePropertyImage(property.imageUrl);
       imageUrl = await savePropertyImage(validatedImage, property.id);
     }

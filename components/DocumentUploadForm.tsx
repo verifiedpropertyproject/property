@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABELS } from "@/lib/documentTypes";
+import { uploadDocumentDirect } from "@/lib/clientDocumentUpload";
 
 const DOCUMENT_TYPE_OPTIONS = [
   { value: "", label: "-- Not specified --" },
@@ -15,6 +16,7 @@ export default function DocumentUploadForm({ propertyId }: { propertyId: string 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [documentType, setDocumentType] = useState("");
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -32,18 +34,37 @@ export default function DocumentUploadForm({ propertyId }: { propertyId: string 
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      for (const file of Array.from(files)) {
-        formData.append("files", file);
+      // Straight to the private Blob store (our own API rejects requests over ~4.5MB), then send
+      // only the file names. If Blob isn't set up (local dev) the first upload returns null and
+      // the files are posted in the form instead.
+      const list = Array.from(files);
+      const uploaded: { storedName: string; fileName: string }[] = [];
+      try {
+        for (let i = 0; i < list.length; i++) {
+          setProgress(`Uploading file ${i + 1} of ${list.length}...`);
+          const result = await uploadDocumentDirect(list[i], propertyId);
+          if (!result) break;
+          uploaded.push(result);
+        }
+      } catch (uploadErr: any) {
+        setError(`Couldn't upload your file${uploadErr?.message ? ` (${uploadErr.message})` : ""}. Check your connection and try again.`);
+        return;
       }
-      if (documentType) {
-        formData.append("documentType", documentType);
-      }
+      setProgress("Saving...");
 
-      const res = await fetch(`/api/properties/${propertyId}/documents`, {
-        method: "POST",
-        body: formData,
-      });
+      let res: Response;
+      if (uploaded.length === list.length) {
+        res = await fetch(`/api/properties/${propertyId}/documents`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ documentType: documentType || undefined, uploaded }),
+        });
+      } else {
+        const formData = new FormData();
+        for (const file of list) formData.append("files", file);
+        if (documentType) formData.append("documentType", documentType);
+        res = await fetch(`/api/properties/${propertyId}/documents`, { method: "POST", body: formData });
+      }
 
       const data = await res.json().catch(() => ({}));
 
@@ -61,6 +82,7 @@ export default function DocumentUploadForm({ propertyId }: { propertyId: string 
     } catch (err) {
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
+      setProgress("");
       setLoading(false);
     }
   }
@@ -114,7 +136,7 @@ export default function DocumentUploadForm({ propertyId }: { propertyId: string 
         disabled={loading}
         className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Submitting..." : "Submit document"}
+        {loading ? progress || "Submitting..." : "Submit document"}
       </button>
     </form>
   );

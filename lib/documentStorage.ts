@@ -21,6 +21,8 @@ const ALLOWED_MIME_TYPES = new Set([
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ]);
 
+export const ALLOWED_DOCUMENT_MIME_TYPES = Array.from(ALLOWED_MIME_TYPES);
+
 export function isAllowedFileType(mimeType: string) {
   return ALLOWED_MIME_TYPES.has(mimeType);
 }
@@ -33,7 +35,7 @@ export function randomStoredName(originalName: string) {
 // Documents use their own PRIVATE blob store (separate from the public one used for property
 // photos), since a single Vercel Blob store can't mix public and private access. Its token is
 // under a custom prefix so it doesn't collide with the photos store's BLOB_READ_WRITE_TOKEN.
-const DOCUMENTS_BLOB_TOKEN = process.env.doc_READ_WRITE_TOKEN;
+export const DOCUMENTS_BLOB_TOKEN = process.env.doc_READ_WRITE_TOKEN;
 
 function isBlobConfigured() {
   return Boolean(DOCUMENTS_BLOB_TOKEN);
@@ -69,6 +71,24 @@ export async function saveDocument(file: File, propertyId: string, storedName: s
   await fs.mkdir(dir, { recursive: true });
   const buffer = Buffer.from(await file.arrayBuffer());
   await fs.writeFile(localPath(propertyId, storedName), buffer);
+}
+
+/**
+ * For documents the browser uploaded straight to Blob: looks up what is actually stored (size and
+ * type as recorded by Blob, not what the client claims). Returns null if nothing is there.
+ */
+export async function statDocument(
+  propertyId: string,
+  storedName: string
+): Promise<{ size: number; contentType: string } | null> {
+  if (!isBlobConfigured()) return null;
+  try {
+    const { head } = await import("@vercel/blob");
+    const info = await head(blobPathname(propertyId, storedName), { token: DOCUMENTS_BLOB_TOKEN });
+    return { size: info.size, contentType: info.contentType };
+  } catch {
+    return null;
+  }
 }
 
 export async function readDocument(propertyId: string, storedName: string): Promise<Buffer> {

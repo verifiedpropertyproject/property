@@ -7,6 +7,7 @@ import { isAdminRole } from "@/lib/roles";
 import { saveGalleryImage } from "@/lib/galleryImageStorage";
 import { IMAGE_MAX_SIZE_BYTES, ALLOWED_IMAGE_MIME_TYPES } from "@/lib/propertyConstants";
 import { MAX_HOMEPAGE_GALLERY_IMAGES } from "@/lib/galleryConstants";
+import { isOwnedUploadUrl } from "@/lib/propertyUploadUrls";
 
 // Public — the homepage carousel reads this with no auth needed.
 export async function GET() {
@@ -31,16 +32,30 @@ export async function POST(req: Request) {
 
     const existingCount = await prisma.galleryImage.count();
 
-    const formData = await req.formData();
-    const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
-    const captionRaw = formData.get("caption");
-    const caption = typeof captionRaw === "string" && captionRaw.trim() ? captionRaw.trim() : null;
+    // JSON { imageUrls, caption } = images the browser already uploaded straight to Vercel Blob
+    // (avoids the ~4.5MB request limit); otherwise the old multipart form (local dev fallback).
+    let files: File[] = [];
+    let uploadedUrls: string[] = [];
+    let caption: string | null = null;
+    if ((req.headers.get("content-type") || "").includes("application/json")) {
+      const body = await req.json();
+      uploadedUrls = Array.isArray(body?.imageUrls) ? body.imageUrls.filter((u: unknown): u is string => typeof u === "string") : [];
+      caption = typeof body?.caption === "string" && body.caption.trim() ? body.caption.trim() : null;
+      if (!uploadedUrls.every((u) => isOwnedUploadUrl(u, session.user.id))) {
+        return NextResponse.json({ error: "One of the uploaded images isn't valid. Please upload it again." }, { status: 400 });
+      }
+    } else {
+      const formData = await req.formData();
+      files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+      const captionRaw = formData.get("caption");
+      caption = typeof captionRaw === "string" && captionRaw.trim() ? captionRaw.trim() : null;
+    }
 
-    if (files.length === 0) {
+    if (files.length + uploadedUrls.length === 0) {
       return NextResponse.json({ error: "Choose at least one image to upload." }, { status: 400 });
     }
 
-    if (existingCount + files.length > MAX_HOMEPAGE_GALLERY_IMAGES) {
+    if (existingCount + files.length + uploadedUrls.length > MAX_HOMEPAGE_GALLERY_IMAGES) {
       return NextResponse.json(
         {
           error: `The homepage gallery can have at most ${MAX_HOMEPAGE_GALLERY_IMAGES} images (it already has ${existingCount}).`,
@@ -64,7 +79,7 @@ export async function POST(req: Request) {
     const maxOrderRow = await prisma.galleryImage.aggregate({ _max: { order: true } });
     let nextOrder = (maxOrderRow._max.order ?? -1) + 1;
 
-    const urls = await Promise.all(files.map((file) => saveGalleryImage(file)));
+    const urls = uploadedUrls.length > 0 ? uploadedUrls : await Promise.all(files.map((file) => saveGalleryImage(file)));
     await prisma.galleryImage.createMany({
       data: urls.map((imageUrl) => ({
         imageUrl,

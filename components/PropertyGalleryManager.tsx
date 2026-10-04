@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { MAX_GALLERY_IMAGES } from "@/lib/propertyConstants";
+import { uploadPropertyMedia } from "@/lib/clientBlobUpload";
 
 type GalleryImage = { id: string; url: string };
 
@@ -15,7 +17,9 @@ export default function PropertyGalleryManager({
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -31,15 +35,38 @@ export default function PropertyGalleryManager({
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      for (const file of Array.from(files)) {
-        formData.append("images", file);
+      // Straight to Vercel Blob (our own API rejects requests over ~4.5MB), then send only the
+      // URLs. If Blob isn't set up (local dev) the first upload returns null and we post the files.
+      const list = Array.from(files);
+      const userId = (session?.user as { id?: string } | undefined)?.id;
+      const urls: string[] = [];
+      if (userId) {
+        try {
+          for (let i = 0; i < list.length; i++) {
+            setProgress(`Uploading photo ${i + 1} of ${list.length}...`);
+            const url = await uploadPropertyMedia(list[i], userId);
+            if (!url) break;
+            urls.push(url);
+          }
+        } catch (uploadErr: any) {
+          setError(`Couldn't upload your photos${uploadErr?.message ? ` (${uploadErr.message})` : ""}. Check your connection and try again.`);
+          return;
+        }
       }
+      setProgress("Saving...");
 
-      const res = await fetch(`/api/properties/${propertyId}/images`, {
-        method: "POST",
-        body: formData,
-      });
+      let res: Response;
+      if (urls.length === list.length && urls.length > 0) {
+        res = await fetch(`/api/properties/${propertyId}/images`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrls: urls }),
+        });
+      } else {
+        const formData = new FormData();
+        for (const file of list) formData.append("images", file);
+        res = await fetch(`/api/properties/${propertyId}/images`, { method: "POST", body: formData });
+      }
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -53,6 +80,7 @@ export default function PropertyGalleryManager({
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
+      setProgress("");
     }
   }
 
@@ -126,7 +154,7 @@ export default function PropertyGalleryManager({
             onClick={handleUpload}
             className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Uploading..." : "Add photos"}
+            {loading ? progress || "Uploading..." : "Add photos"}
           </button>
           <small className="text-xs text-[var(--dk-muted)]"> Up to {remaining} more — JPEG, PNG, or WEBP, max 5MB each.</small>
         </div>

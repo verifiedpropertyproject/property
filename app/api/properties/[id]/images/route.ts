@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiError";
 import { savePropertyImage } from "@/lib/propertyImageStorage";
 import { IMAGE_MAX_SIZE_BYTES, ALLOWED_IMAGE_MIME_TYPES, MAX_GALLERY_IMAGES } from "@/lib/propertyConstants";
+import { isOwnedUploadUrl } from "@/lib/propertyUploadUrls";
 
 // Listings can't be edited once approved (see app/properties/[id]/edit/page.tsx), and the
 // gallery is part of the listing content, so it follows the same rule.
@@ -39,14 +40,26 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       );
     }
 
-    const formData = await req.formData();
-    const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+    // Two ways in: JSON { imageUrls } (photos the browser already uploaded straight to Vercel Blob,
+    // which avoids the ~4.5MB request limit) or the old multipart form (local dev fallback).
+    let uploadedUrls: string[] = [];
+    let files: File[] = [];
+    if ((req.headers.get("content-type") || "").includes("application/json")) {
+      const body = await req.json();
+      uploadedUrls = Array.isArray(body?.imageUrls) ? body.imageUrls.filter((u: unknown): u is string => typeof u === "string") : [];
+      if (!uploadedUrls.every((u) => isOwnedUploadUrl(u, session.user.id))) {
+        return NextResponse.json({ error: "One of the uploaded photos isn't valid. Please upload it again." }, { status: 400 });
+      }
+    } else {
+      const formData = await req.formData();
+      files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+    }
 
-    if (files.length === 0) {
+    if (files.length + uploadedUrls.length === 0) {
       return NextResponse.json({ error: "Choose at least one photo to upload." }, { status: 400 });
     }
 
-    if (property._count.images + files.length > MAX_GALLERY_IMAGES) {
+    if (property._count.images + files.length + uploadedUrls.length > MAX_GALLERY_IMAGES) {
       return NextResponse.json(
         {
           error: `A listing can have at most ${MAX_GALLERY_IMAGES} additional photos (this listing already has ${property._count.images}).`,
@@ -67,7 +80,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       }
     }
 
-    const urls = await Promise.all(files.map((file) => savePropertyImage(file, property.id)));
+    const urls = uploadedUrls.length > 0 ? uploadedUrls : await Promise.all(files.map((file) => savePropertyImage(file, property.id)));
     await prisma.propertyImage.createMany({
       data: urls.map((url) => ({ url, propertyId: property.id })),
     });

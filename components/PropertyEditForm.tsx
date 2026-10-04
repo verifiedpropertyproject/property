@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { uploadPropertyMedia } from "@/lib/clientBlobUpload";
 import LocationPicker, { type PickedLocation } from "@/components/LocationPicker";
 import {
   PROPERTY_TYPES,
@@ -77,7 +79,9 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
         }
       : null
   );
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -152,7 +156,22 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       }
       const imageFile = imageInputRef.current?.files?.[0];
       if (imageFile) {
-        formData.append("image", imageFile);
+        // Straight to Vercel Blob first (our own API rejects requests over ~4.5MB); only the URL
+        // goes with the form. Falls back to posting the file itself when Blob isn't set up (local dev).
+        const userId = (session?.user as { id?: string } | undefined)?.id;
+        let coverUrl: string | null = null;
+        if (userId) {
+          try {
+            setUploadStatus("Uploading photo...");
+            coverUrl = await uploadPropertyMedia(imageFile, userId);
+          } catch (uploadErr: any) {
+            setError(`Couldn't upload the photo${uploadErr?.message ? ` (${uploadErr.message})` : ""}. Check your connection and try again.`);
+            return;
+          }
+          setUploadStatus("Saving...");
+        }
+        if (coverUrl) formData.append("imageUrl", coverUrl);
+        else formData.append("image", imageFile);
       }
 
       const res = await fetch(`/api/properties/${property.id}/edit`, {
@@ -174,6 +193,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
+      setUploadStatus("");
     }
   }
 
@@ -460,7 +480,7 @@ export default function PropertyEditForm({ property, isAgent }: { property: Edit
         disabled={loading}
         className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Saving..." : "Save and resubmit for review"}
+        {loading ? uploadStatus || "Saving..." : "Save and resubmit for review"}
       </button>
     </form>
   );

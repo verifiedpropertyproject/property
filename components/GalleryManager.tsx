@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { MAX_HOMEPAGE_GALLERY_IMAGES } from "@/lib/galleryConstants";
+import { uploadPropertyMedia } from "@/lib/clientBlobUpload";
 
 type GalleryImage = { id: string; imageUrl: string; caption: string | null };
 
@@ -10,7 +12,9 @@ export default function GalleryManager({ images }: { images: GalleryImage[] }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const captionRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -26,15 +30,40 @@ export default function GalleryManager({ images }: { images: GalleryImage[] }) {
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      for (const file of Array.from(files)) {
-        formData.append("images", file);
+      // Straight to Vercel Blob (our own API rejects requests over ~4.5MB), then send only the
+      // URLs. If Blob isn't set up (local dev) the first upload returns null and we post the files.
+      const list = Array.from(files);
+      const caption = captionRef.current?.value.trim() || "";
+      const userId = (session?.user as { id?: string } | undefined)?.id;
+      const urls: string[] = [];
+      if (userId) {
+        try {
+          for (let i = 0; i < list.length; i++) {
+            setProgress(`Uploading image ${i + 1} of ${list.length}...`);
+            const url = await uploadPropertyMedia(list[i], userId);
+            if (!url) break;
+            urls.push(url);
+          }
+        } catch (uploadErr: any) {
+          setError(`Couldn't upload your images${uploadErr?.message ? ` (${uploadErr.message})` : ""}. Check your connection and try again.`);
+          return;
+        }
       }
-      if (captionRef.current?.value.trim()) {
-        formData.append("caption", captionRef.current.value.trim());
-      }
+      setProgress("Saving...");
 
-      const res = await fetch("/api/gallery", { method: "POST", body: formData });
+      let res: Response;
+      if (urls.length === list.length && urls.length > 0) {
+        res = await fetch("/api/gallery", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrls: urls, caption }),
+        });
+      } else {
+        const formData = new FormData();
+        for (const file of list) formData.append("images", file);
+        if (caption) formData.append("caption", caption);
+        res = await fetch("/api/gallery", { method: "POST", body: formData });
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error || `Failed to upload (status ${res.status}).`);
@@ -48,6 +77,7 @@ export default function GalleryManager({ images }: { images: GalleryImage[] }) {
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
+      setProgress("");
     }
   }
 
@@ -179,7 +209,7 @@ export default function GalleryManager({ images }: { images: GalleryImage[] }) {
             onClick={handleUpload}
             className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Uploading..." : "Add images"}
+            {loading ? progress || "Uploading..." : "Add images"}
           </button>
           <small className="text-xs text-[var(--dk-muted)]">
             Up to {remaining} more — JPEG, PNG, or WEBP, max 5MB each.

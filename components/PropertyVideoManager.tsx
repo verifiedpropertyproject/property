@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { VIDEO_MAX_SIZE_BYTES } from "@/lib/propertyConstants";
+import { useSession } from "next-auth/react";
+import { VIDEO_MAX_SIZE_BYTES, ALLOWED_VIDEO_MIME_TYPES } from "@/lib/propertyConstants";
+import { uploadPropertyMedia } from "@/lib/clientBlobUpload";
 
 export default function PropertyVideoManager({
   propertyId,
@@ -13,7 +15,9 @@ export default function PropertyVideoManager({
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState("");
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,15 +31,44 @@ export default function PropertyVideoManager({
       return;
     }
 
+    if (!ALLOWED_VIDEO_MIME_TYPES.includes(file.type)) {
+      setError("Videos must be MP4, WebM, or MOV files.");
+      return;
+    }
+    if (file.size > VIDEO_MAX_SIZE_BYTES) {
+      setError(`The video is too large. Max size is ${maxMb}MB.`);
+      return;
+    }
+
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("video", file);
+      // Straight to Vercel Blob (our own API rejects requests over ~4.5MB), then send only the
+      // URL. If Blob isn't set up (local dev) this returns null and we post the file instead.
+      const userId = (session?.user as { id?: string } | undefined)?.id;
+      let videoUrl: string | null = null;
+      if (userId) {
+        try {
+          setProgress("Uploading video (this can take a minute)...");
+          videoUrl = await uploadPropertyMedia(file, userId);
+        } catch (uploadErr: any) {
+          setError(`Couldn't upload the video${uploadErr?.message ? ` (${uploadErr.message})` : ""}. Check your connection and try again.`);
+          return;
+        }
+        setProgress("Saving...");
+      }
 
-      const res = await fetch(`/api/properties/${propertyId}/video`, {
-        method: "POST",
-        body: formData,
-      });
+      let res: Response;
+      if (videoUrl) {
+        res = await fetch(`/api/properties/${propertyId}/video`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoUrl }),
+        });
+      } else {
+        const formData = new FormData();
+        formData.append("video", file);
+        res = await fetch(`/api/properties/${propertyId}/video`, { method: "POST", body: formData });
+      }
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -49,6 +82,7 @@ export default function PropertyVideoManager({
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
+      setProgress("");
     }
   }
 
@@ -112,7 +146,7 @@ export default function PropertyVideoManager({
           onClick={handleUpload}
           className="inline-flex items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-4 py-2 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Uploading..." : videoUrl ? "Replace video" : "Add video"}
+          {loading ? progress || "Uploading..." : videoUrl ? "Replace video" : "Add video"}
         </button>
         <small className="text-xs text-[var(--dk-muted)]"> MP4, WebM, or MOV, max {maxMb}MB. Uploading a new video replaces the current one.</small>
       </div>
