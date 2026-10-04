@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "postinstall": "prisma generate",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "delete-users": "node scripts/delete-users.js"
   },
   "dependencies": {
     "@prisma/client": "5.18.0",
