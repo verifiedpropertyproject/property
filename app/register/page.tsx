@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import { ROLE_LABELS } from "@/lib/propertyConstants";
 import PasswordInput from "@/components/PasswordInput";
 import PasswordRequirements from "@/components/PasswordRequirements";
 import { validatePassword } from "@/lib/passwordPolicy";
+import { saveReferralCookie, readReferralCookie, clearReferralCookie } from "@/lib/referralCookie";
 
 const inputClass =
   "w-full rounded-xl border border-[var(--dk-border)] bg-[var(--dk-card)] px-4 py-3 text-sm text-[var(--dk-ink)] placeholder:text-[var(--dk-muted)] outline-none transition focus:border-[var(--dk-gold)] focus:ring-2 focus:ring-[var(--dk-gold)]/30";
@@ -96,7 +97,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 export default function RegisterPage({ searchParams }: { searchParams?: { ref?: string; role?: string } }) {
   const router = useRouter();
-  const referralCode = searchParams?.ref?.trim() || "";
+  const urlRef = searchParams?.ref?.trim() || "";
+  const [referralCode, setReferralCode] = useState(urlRef);
+  // null = not checked yet, true/false = whether the code belongs to a real account.
+  const [codeValid, setCodeValid] = useState<boolean | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -107,6 +111,37 @@ export default function RegisterPage({ searchParams }: { searchParams?: { ref?: 
   const [loading, setLoading] = useState(false);
   const [verifyUrl, setVerifyUrl] = useState("");
   const [emailSent, setEmailSent] = useState(false);
+
+  // Remember the code from the link (and fall back to a remembered one if they came back without
+  // it), so it also survives "Sign up with Google", which leaves the site and returns.
+  useEffect(() => {
+    if (urlRef) {
+      saveReferralCookie(urlRef);
+      setReferralCode(urlRef);
+    } else {
+      const saved = readReferralCookie();
+      if (saved) setReferralCode(saved);
+    }
+  }, [urlRef]);
+
+  useEffect(() => {
+    if (!referralCode) {
+      setCodeValid(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/referral/validate?code=${encodeURIComponent(referralCode)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        setCodeValid(!!d.valid);
+        if (!d.valid) clearReferralCookie();
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [referralCode]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -148,6 +183,8 @@ export default function RegisterPage({ searchParams }: { searchParams?: { ref?: 
         setError(data.error || `Something went wrong (status ${res.status}).`);
         return;
       }
+
+      clearReferralCookie();
 
       const result = await signIn("credentials", {
         email,
@@ -246,10 +283,16 @@ export default function RegisterPage({ searchParams }: { searchParams?: { ref?: 
         Join Daktop360 to browse, list, or manage properties.
       </p>
 
-      {referralCode && (
+      {referralCode && codeValid !== false && (
         <p className="mt-4 rounded-xl border border-[var(--dk-border)] bg-[var(--dk-ivory)] px-4 py-2.5 text-sm text-[var(--dk-ink)]">
-          You were referred with code <span className="font-semibold">{referralCode}</span> — they&apos;ll earn a
-          referral reward once you make a successful purchase.
+          You were referred with code <span className="font-semibold">{referralCode}</span>. The person who
+          shared it earns a reward once Daktop360 confirms your purchase.
+        </p>
+      )}
+      {referralCode && codeValid === false && (
+        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200">
+          The referral code <span className="font-semibold">{referralCode}</span> wasn&apos;t recognised, so no
+          referral will be recorded. Ask the person who sent it to check their link.
         </p>
       )}
 

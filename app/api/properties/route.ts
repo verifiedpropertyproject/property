@@ -35,6 +35,7 @@ import {
 import { RESALE_CATEGORIES } from "@/lib/resaleCategory";
 import type { User } from "@prisma/client";
 import { ADMIN_ROLES, isAdminRole } from "@/lib/roles";
+import { isOwnedUploadUrl } from "@/lib/propertyUploadUrls";
 
 function str(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -90,6 +91,12 @@ export async function POST(req: Request) {
     // edit page (see PropertyVideoManager / app/api/properties/[id]/video).
     const videoFileRaw = formData.get("video");
     const videoFile = videoFileRaw instanceof File && videoFileRaw.size > 0 ? videoFileRaw : null;
+    // Media the browser already uploaded straight to Vercel Blob (see app/api/uploads/property):
+    // only the URLs arrive here, so the request stays tiny. Each must sit in this user's own
+    // upload folder — otherwise anyone could point a listing at an arbitrary URL.
+    const imageUrlInput = str(formData, "imageUrl");
+    const galleryUrlInputs = formData.getAll("galleryImageUrls").filter((v): v is string => typeof v === "string" && v.trim() !== "").map((v) => v.trim());
+    const videoUrlInput = str(formData, "videoUrl");
 
     if (!title || !description || !location || !propertyType || !listingType || !priceRaw) {
       return NextResponse.json(
@@ -232,17 +239,33 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!(imageFile instanceof File) || imageFile.size === 0) {
-      return NextResponse.json({ error: "A photo is required for the listing." }, { status: 400 });
+    const uploadedAlready = imageUrlInput !== "";
+    if (uploadedAlready) {
+      // Size/type were already enforced when the upload token was issued (see the upload route).
+      const urlsToCheck = [imageUrlInput, ...galleryUrlInputs, ...(videoUrlInput ? [videoUrlInput] : [])];
+      if (!urlsToCheck.every((u) => isOwnedUploadUrl(u, session.user.id))) {
+        return NextResponse.json({ error: "One of the uploaded files isn't valid. Please upload it again." }, { status: 400 });
+      }
+    } else {
+      if (!(imageFile instanceof File) || imageFile.size === 0) {
+        return NextResponse.json({ error: "A photo is required for the listing." }, { status: 400 });
+      }
+      if (imageFile.size > IMAGE_MAX_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: `Image is too large. Max size is ${IMAGE_MAX_SIZE_BYTES / (1024 * 1024)}MB.` },
+          { status: 400 }
+        );
+      }
+      if (!ALLOWED_IMAGE_MIME_TYPES.includes(imageFile.type)) {
+        return NextResponse.json({ error: "Image must be a JPEG, PNG, or WEBP file." }, { status: 400 });
+      }
     }
-    if (imageFile.size > IMAGE_MAX_SIZE_BYTES) {
+
+    if (galleryUrlInputs.length > MAX_GALLERY_IMAGES) {
       return NextResponse.json(
-        { error: `Image is too large. Max size is ${IMAGE_MAX_SIZE_BYTES / (1024 * 1024)}MB.` },
+        { error: `You can upload at most ${MAX_GALLERY_IMAGES} additional photos.` },
         { status: 400 }
       );
-    }
-    if (!ALLOWED_IMAGE_MIME_TYPES.includes(imageFile.type)) {
-      return NextResponse.json({ error: "Image must be a JPEG, PNG, or WEBP file." }, { status: 400 });
     }
 
     if (galleryFiles.length > MAX_GALLERY_IMAGES) {
@@ -315,19 +338,21 @@ export async function POST(req: Request) {
       },
     });
 
-    const imageUrl = await savePropertyImage(imageFile, property.id);
+    const imageUrl = uploadedAlready ? imageUrlInput : await savePropertyImage(imageFile as File, property.id);
     await prisma.property.update({ where: { id: property.id }, data: { imageUrl } });
     property.imageUrl = imageUrl;
 
-    if (galleryFiles.length > 0) {
-      const galleryUrls = await Promise.all(galleryFiles.map((file) => savePropertyImage(file, property.id)));
+    const galleryUrls = uploadedAlready
+      ? galleryUrlInputs
+      : await Promise.all(galleryFiles.map((file) => savePropertyImage(file, property.id)));
+    if (galleryUrls.length > 0) {
       await prisma.propertyImage.createMany({
         data: galleryUrls.map((url) => ({ url, propertyId: property.id })),
       });
     }
 
-    if (videoFile) {
-      const videoUrl = await savePropertyVideo(videoFile, property.id);
+    const videoUrl = uploadedAlready ? videoUrlInput || null : videoFile ? await savePropertyVideo(videoFile, property.id) : null;
+    if (videoUrl) {
       await prisma.property.update({ where: { id: property.id }, data: { videoUrl } });
       property.videoUrl = videoUrl;
     }

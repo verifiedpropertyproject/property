@@ -5,7 +5,8 @@ import { handleApiError } from "@/lib/apiError";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { issueVerificationLink } from "@/lib/emailVerification";
 import { isValidPhone, PHONE_FORMAT_HINT } from "@/lib/phoneValidation";
-import { REFERRAL_REWARD_AMOUNT, generateReferralCode } from "@/lib/referral";
+import { generateReferralCode } from "@/lib/referral";
+import { recordReferral } from "@/lib/referralServer";
 
 export async function POST(req: Request) {
   try {
@@ -77,20 +78,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // If they signed up via someone else's referral link, credit that person. A missing/invalid
-    // code is not an error — it just means no referral is recorded, same as signing up with no
-    // code at all.
-    if (typeof ref === "string" && ref.trim()) {
-      const referrer = await prisma.user.findUnique({ where: { referralCode: ref.trim().toUpperCase() } });
-      if (referrer && referrer.id !== user.id) {
-        await prisma.referral.create({
-          data: {
-            referrerId: referrer.id,
-            referredUserId: user.id,
-            rewardAmount: REFERRAL_REWARD_AMOUNT,
-          },
-        });
-      }
+    // If they signed up via someone else's referral link, record it (starts as "awaiting
+    // purchase"). A missing/invalid code is not an error, and a failure here must never stop the
+    // signup itself, so it's only logged.
+    try {
+      await recordReferral(user.id, ref);
+    } catch (err) {
+      console.error("Failed to record referral:", err);
     }
 
     const { verifyUrl, emailSent } = await issueVerificationLink(user.id, user.email);

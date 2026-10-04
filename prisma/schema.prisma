@@ -44,7 +44,7 @@ datasource db {
 // Referral.payoutStatus: "PENDING" | "PAID"
 //   The reward is tracked in-app so the referrer can see what they're owed; actually paying it
 //   out (e.g. M-Pesa) happens outside the app, with an admin flipping this to PAID afterward —
-//   see app/api/admin/referrals/[id]/payout/route.ts. See lib/referral.ts for the reward amount
+//   see app/api/admin/referrals/[id]/status/route.ts. See lib/referral.ts for the reward amount
 //   and every other constant/label for this feature.
 
 model User {
@@ -132,6 +132,20 @@ model Referral {
   rewardAmount Float
   payoutStatus String    @default("PENDING")
   paidAt       DateTime?
+
+  // Referral lifecycle (derived — see getReferralStage in lib/referral.ts):
+  //   AWAITING_PURCHASE  -> purchaseConfirmedAt is null (they signed up, nothing confirmed yet)
+  //   PURCHASE_CONFIRMED -> purchaseConfirmedAt set, payoutStatus still PENDING (reward is due)
+  //   PAID               -> payoutStatus = "PAID" (admin has paid the referrer manually)
+  // Buyers pay outside the website, so an admin confirms the purchase by hand and records what
+  // they checked in purchaseNote (the referrer can see this note). The payout itself is also
+  // manual (e.g. M-Pesa); paymentReference is where the admin keeps that transaction code.
+  purchaseConfirmedAt DateTime?
+  purchaseNote        String?
+  // Plain text (name/email of the admin at the time) rather than a relation, so deleting an
+  // admin account never blocks or cascades into the referral history.
+  purchaseConfirmedBy String?
+  paymentReference    String?
 
   referrerId String
   referrer   User   @relation("referralsMade", fields: [referrerId], references: [id], onDelete: Cascade)

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { isValidPhone, PHONE_FORMAT_HINT, PHONE_INPUT_PATTERN } from "@/lib/phoneValidation";
 import { ROLE_LABELS } from "@/lib/propertyConstants";
+import { readReferralCookie, clearReferralCookie } from "@/lib/referralCookie";
 
 const inputClass =
   "w-full rounded-xl border border-[var(--dk-border)] bg-[var(--dk-card)] px-4 py-3 text-sm text-[var(--dk-ink)] placeholder:text-[var(--dk-muted)] outline-none transition focus:border-[var(--dk-gold)] focus:ring-2 focus:ring-[var(--dk-gold)]/30";
@@ -38,7 +39,7 @@ export default function SelectRolePage() {
       const res = await fetch("/api/select-role", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role, phone }),
+        body: JSON.stringify({ role, phone, ref: readReferralCookie() || undefined }),
       });
 
       if (!res.ok) {
@@ -47,6 +48,7 @@ export default function SelectRolePage() {
         return;
       }
 
+      clearReferralCookie();
       await update();
       router.push("/dashboard");
     } catch (err) {

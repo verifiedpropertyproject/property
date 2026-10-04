@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { uploadPropertyMedia } from "@/lib/clientBlobUpload";
 import LocationPicker, { type PickedLocation } from "@/components/LocationPicker";
 import {
   PROPERTY_TYPES,
@@ -22,7 +24,10 @@ import {
   LOCATION_MIN_LENGTH,
   DEFAULT_COMMISSION_RATE,
   MAX_GALLERY_IMAGES,
+  IMAGE_MAX_SIZE_BYTES,
+  ALLOWED_IMAGE_MIME_TYPES,
   VIDEO_MAX_SIZE_BYTES,
+  ALLOWED_VIDEO_MIME_TYPES,
   commissionAgreementText,
   getPropertyTypeFields,
 } from "@/lib/propertyConstants";
@@ -82,7 +87,9 @@ export default function PropertyForm({
   const [commissionAgreed, setCommissionAgreed] = useState(false);
   const [signedName, setSignedName] = useState("");
   const [requestIdentityVerification, setRequestIdentityVerification] = useState(false);
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [error, setError] = useState("");
 
   const fields = getPropertyTypeFields(propertyType);
@@ -141,9 +148,73 @@ export default function PropertyForm({
       return;
     }
 
+    // Friendly size/type checks up front, so people hear about a too-big file right away rather
+    // than after waiting on an upload.
+    const coverFile = imageInputRef.current?.files?.[0];
+    const extraPhotos = Array.from(galleryInputRef.current?.files ?? []);
+    const tourVideo = videoInputRef.current?.files?.[0];
+    for (const f of [coverFile, ...extraPhotos]) {
+      if (!f) continue;
+      if (!ALLOWED_IMAGE_MIME_TYPES.includes(f.type)) {
+        setError(`"${f.name}" isn't a JPEG, PNG, or WEBP photo.`);
+        return;
+      }
+      if (f.size > IMAGE_MAX_SIZE_BYTES) {
+        setError(`"${f.name}" is too large. Each photo can be at most ${IMAGE_MAX_SIZE_BYTES / (1024 * 1024)}MB.`);
+        return;
+      }
+    }
+    if (tourVideo) {
+      if (!ALLOWED_VIDEO_MIME_TYPES.includes(tourVideo.type)) {
+        setError("The video must be an MP4, WebM, or MOV file.");
+        return;
+      }
+      if (tourVideo.size > VIDEO_MAX_SIZE_BYTES) {
+        setError(`The video is too large. Max size is ${Math.round(VIDEO_MAX_SIZE_BYTES / (1024 * 1024))}MB.`);
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
+      // Photos and video go straight from the browser to Vercel Blob (our own API can't accept a
+      // request over ~4.5MB on Vercel — that was the "413" error), and the listing request below
+      // then carries only their URLs. If Blob isn't configured (local dev), uploadPropertyMedia
+      // returns null and we fall back to posting the files in the form like before.
+      const userId = (session?.user as { id?: string } | undefined)?.id;
+      let coverUrl: string | null = null;
+      let galleryUrls: string[] = [];
+      let videoUrl: string | null = null;
+      let uploadedDirect = false;
+
+      if (userId && coverFile) {
+        try {
+          setUploadStatus("Uploading cover photo...");
+          coverUrl = await uploadPropertyMedia(coverFile, userId);
+          if (coverUrl) {
+            uploadedDirect = true;
+            for (let i = 0; i < extraPhotos.length; i++) {
+              setUploadStatus(`Uploading photo ${i + 1} of ${extraPhotos.length}...`);
+              const url = await uploadPropertyMedia(extraPhotos[i], userId);
+              if (!url) throw new Error("Upload failed.");
+              galleryUrls.push(url);
+            }
+            if (tourVideo) {
+              setUploadStatus("Uploading video (this can take a minute)...");
+              videoUrl = await uploadPropertyMedia(tourVideo, userId);
+              if (!videoUrl) throw new Error("Upload failed.");
+            }
+          }
+        } catch (uploadErr: any) {
+          setError(
+            `Couldn't upload your photos/video${uploadErr?.message ? ` (${uploadErr.message})` : ""}. Check your connection and try again.`
+          );
+          return;
+        }
+      }
+      setUploadStatus(uploadedDirect ? "Saving listing..." : "");
+
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
@@ -166,19 +237,14 @@ export default function PropertyForm({
         formData.append("address", pin.address);
         if (pin.placeId) formData.append("placeId", pin.placeId);
       }
-      const imageFile = imageInputRef.current?.files?.[0];
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
-      const galleryFiles = galleryInputRef.current?.files;
-      if (galleryFiles) {
-        for (const file of Array.from(galleryFiles)) {
-          formData.append("galleryImages", file);
-        }
-      }
-      const videoFile = videoInputRef.current?.files?.[0];
-      if (videoFile) {
-        formData.append("video", videoFile);
+      if (uploadedDirect) {
+        formData.append("imageUrl", coverUrl as string);
+        for (const url of galleryUrls) formData.append("galleryImageUrls", url);
+        if (videoUrl) formData.append("videoUrl", videoUrl);
+      } else {
+        if (coverFile) formData.append("image", coverFile);
+        for (const file of extraPhotos) formData.append("galleryImages", file);
+        if (tourVideo) formData.append("video", tourVideo);
       }
       formData.append("commissionAgreed", "true");
       formData.append("signedName", signedName.trim());
@@ -204,6 +270,7 @@ export default function PropertyForm({
       setError("Could not reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
+      setUploadStatus("");
     }
   }
 
@@ -555,7 +622,7 @@ export default function PropertyForm({
         disabled={loading}
         className="inline-flex w-fit items-center justify-center rounded-[var(--radius-sm)] bg-[var(--dk-primary)] px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-150 hover:bg-[var(--dk-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? submittingLabel : submitLabel}
+        {loading ? uploadStatus || submittingLabel : submitLabel}
       </button>
     </form>
   );

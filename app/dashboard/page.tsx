@@ -20,8 +20,7 @@ import PhoneForm from "@/components/PhoneForm";
 import ProfileNameForm from "@/components/ProfileNameForm";
 import IdentityVerificationRequestForm from "@/components/IdentityVerificationRequestForm";
 import ReferAndEarn from "@/components/ReferAndEarn";
-import ReferralPayoutButton from "@/components/ReferralPayoutButton";
-import { getPayoutStatusLabel, getPayoutStatusBadgeClass } from "@/lib/referral";
+import AdminReferralList from "@/components/AdminReferralList";
 import { ROLE_LABELS, getRoleLabel, getPropertyTypeLabel } from "@/lib/propertyConstants";
 import { isAdminRole, isSuperAdminRole } from "@/lib/roles";
 import { getAvailabilityLabel } from "@/lib/availabilityStatus";
@@ -48,8 +47,8 @@ type MyReferral = Referral & {
 };
 
 type AnyReferral = Referral & {
-  referrer: Pick<User, "name" | "email">;
-  referredUser: Pick<User, "name" | "email">;
+  referrer: Pick<User, "name" | "email" | "phone">;
+  referredUser: Pick<User, "name" | "email" | "phone">;
 };
 
 type ManagedProperty = Property & {
@@ -347,8 +346,8 @@ export default async function DashboardPage({
     if (isAdminRole(role)) {
       allReferrals = await prisma.referral.findMany({
         include: {
-          referrer: { select: { name: true, email: true } },
-          referredUser: { select: { name: true, email: true } },
+          referrer: { select: { name: true, email: true, phone: true } },
+          referredUser: { select: { name: true, email: true, phone: true } },
         },
         orderBy: { createdAt: "desc" },
       });
@@ -969,32 +968,7 @@ export default async function DashboardPage({
               {allReferrals.length === 0 ? (
                 <p className="text-sm text-[var(--dk-muted)]">No referrals yet.</p>
               ) : (
-                <ul className="flex flex-col gap-2.5">
-                  {allReferrals.map((r) => (
-                    <li
-                      key={r.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--dk-border)] px-4 py-3 text-sm"
-                    >
-                      <div>
-                        <p className="m-0 text-[var(--dk-ink)]">
-                          <span className="font-medium">{r.referrer.name || r.referrer.email}</span> referred{" "}
-                          <span className="font-medium">{r.referredUser.name || r.referredUser.email}</span>
-                        </p>
-                        <p className="m-0 mt-0.5 text-xs text-[var(--dk-muted)]">
-                          {new Date(r.createdAt).toLocaleDateString()} — KSh {r.rewardAmount.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          className={`dk-badge inline-block rounded-full ${getPayoutStatusBadgeClass(r.payoutStatus)}`}
-                        >
-                          {getPayoutStatusLabel(r.payoutStatus)}
-                        </span>
-                        <ReferralPayoutButton referralId={r.id} currentStatus={r.payoutStatus} />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <AdminReferralList referrals={allReferrals} currentUserId={currentUserId} />
               )}
             </Section>
           </div>
