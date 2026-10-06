@@ -173,7 +173,7 @@ export default async function ResalePage({ searchParams }: { searchParams: Searc
           <div className="dk-hero">
             <header className="dk-hero-intro">
               <span className="dk-kicker">Auction, distressed &amp; foreclosure sales</span>
-              <h1 className="dk-heading">Resale properties in Nairobi &amp; Kiambu</h1>
+              <h1 className="dk-heading">Resale properties in Kenya</h1>
               <p className="dk-lede">
                 Properties the Daktop team is listing directly on the market&apos;s behalf — auctions, standard
                 resales, distressed sales and foreclosures — kept separate from our regular owner and agent

@@ -1971,7 +1971,10 @@ button:focus-visible,
 }
 
 @media (max-width: 640px) {
-  .dk-rs-content { max-width: 100%; padding: 22px; }
+  /* Let the stage grow with its text so the heading is never clipped on phones */
+  .dk-rs-stage { height: auto; min-height: 300px; }
+  .dk-rs-content { max-width: 100%; padding: 22px 22px 40px; height: auto; min-height: 300px; }
+  .dk-rs-heading { max-width: 100%; }
   .dk-rs-lede { max-width: 100%; }
   .dk-rs-scrim {
     background:

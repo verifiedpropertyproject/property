@@ -11,7 +11,7 @@ const ROW_ONE = [
 
 const ROW_TWO = [
   "Zero Hidden Fees",
-  "Nairobi & Kiambu",
+  "Kenya",
   "Book a Viewing",
   "Move-In Ready",
   "Long-Term Rentals",

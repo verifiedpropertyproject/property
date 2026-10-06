@@ -12,7 +12,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "Daktop360 Realtors Limited",
-  description: "Buy and Sell premium properties across Nairobi and Kiambu",
+  description: "Buy and Sell premium properties across Kenya",
 };
 
 // Same brand contact number shown in the Footer and /contact — kept as one constant here so

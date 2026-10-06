@@ -52,7 +52,7 @@ const ROW_TWO: Highlight[] = [
     icon: <path d="M14 3l-9 9 4 4 9-9-4-4zM6 14l-3 6 6-3M17 6l1-1M20 3l1 1" />,
   },
   {
-    label: "Nairobi & Kiambu Coverage",
+    label: "Kenya Coverage",
     detail: "Boots on the ground locally",
     icon: (
       <path d="M12 21s-6.5-5.6-6.5-11A6.5 6.5 0 1119 10c0 5.4-6.5 11-6.5 11zM12 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />

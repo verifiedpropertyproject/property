@@ -274,12 +274,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <div className="dk-hero">
           <header className="dk-hero-intro">
             <div className="flex items-center justify-between gap-3">
-              <span className="dk-kicker">Premium property, Nairobi &amp; Kiambu</span>
+              <span className="dk-kicker">Premium property, Kenya</span>
               
             </div>
-            <h1 className="dk-heading">Premium, company-verified properties in Nairobi and Kiambu</h1>
+            <h1 className="dk-heading">Premium, company-verified properties in Kenya</h1>
             <p className="dk-lede">
-              Buy and sell premium homes, land and commercial property across Nairobi and Kiambu, with verified
+              Buy and sell premium homes, land and commercial property across Kenya, with verified
               ownership and professional due diligence on every listing.
             </p>
 
@@ -414,7 +414,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
         {/* ---------- Listings ---------- */}
         <section id="listings">
-          <h2 className="dk-listings-heading">Premium listings in Nairobi &amp; Kiambu ({properties.length})</h2>
+          <h2 className="dk-listings-heading">Premium listings in Kenya ({properties.length})</h2>
 
           {properties.length === 0 ? (
             <p className="dk-empty-state">No premium properties match your search. Try adjusting your filters.</p>

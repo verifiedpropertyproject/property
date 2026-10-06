@@ -120,14 +120,14 @@ export function getPropertyTypeFields(propertyType: string) {
 export const PRICE_MIN = 10_000;
 export const PRICE_MAX = 10_000_000_000;
 
-// DAKTOP360 positions itself as a premium marketplace for Nairobi & Kiambu — this floor
+// DAKTOP360 positions itself as a premium marketplace for Kenya — this floor
 // applies only to properties FOR SALE. Rentals (monthly rent, naturally far below any
 // property-value threshold) are exempt and still only bound by the general PRICE_MIN above.
 export const SALE_PRICE_MIN = 7_000_000;
 
 export const PRIME_PROPERTY_NOTICE =
   "DAKTOP360 is a premium property listing platform focused on properties in prime areas of " +
-  "Nairobi & Kiambu, worth KSh 10M and above. Properties that don't meet this criteria might " +
+  "Kenya, worth KSh 10M and above. Properties that don't meet this criteria might " +
   "not be approved.";
 
 
